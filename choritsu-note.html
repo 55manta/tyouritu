@@ -1,0 +1,1154 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>調律ノート — 試作</title>
+<style>
+  :root {
+    /* ピアノ：象牙(ivory)＋黒檀(ebony)＋真鍮(brass) に 市場標準のティールを1点差し */
+    --ground: #F4F2EC; --surface: #FFFFFF; --surface-2: #EDEAE1;
+    --ink: #1E1C17; --ink-2: #5E594F; --ink-3: #948E80;
+    --line: #E7E2D6; --line-strong: #D6CFBF;
+    --accent: #0E8F83; --accent-ink: #0A6A60; --accent-soft: #DBEFEB; --on-accent: #FFFFFF;
+    --brass: #B0873A; --brass-soft: #F0E7D2;
+    --overdue: #C6503A; --overdue-soft: #F6E2DB;
+    --due: #0E8F83; --due-soft: #DBEFEB;
+    --next: #3E77AC; --next-soft: #E3ECF4;
+    --dormant: #B0873A; --dormant-soft: #F0E7D2;
+    --calm: #6E7A70; --calm-soft: #E7EAE4;
+    --shadow: 0 1px 2px rgba(30,28,23,.05), 0 8px 24px rgba(30,28,23,.08);
+    --shadow-lift: 0 6px 16px rgba(30,28,23,.12), 0 18px 40px rgba(30,28,23,.18);
+    --font-sans: -apple-system, BlinkMacSystemFont, system-ui, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic", "Noto Sans JP", "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #12110D; --surface: #1B1A15; --surface-2: #25231C;
+      --ink: #F2EFE6; --ink-2: #B0A999; --ink-3: #7C7565;
+      --line: #2E2B22; --line-strong: #3C3830;
+      --accent: #2CC2B0; --accent-ink: #63D8C7; --accent-soft: #0F302D; --on-accent: #04231F;
+      --brass: #D9B063; --brass-soft: #2E2612;
+      --overdue: #EC8067; --overdue-soft: #37231C;
+      --due: #2CC2B0; --due-soft: #0F302D;
+      --next: #82B0DC; --next-soft: #19273A;
+      --dormant: #D9B063; --dormant-soft: #2E2612;
+      --calm: #9DA99B; --calm-soft: #20241D;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+      --shadow-lift: 0 6px 16px rgba(0,0,0,.45), 0 18px 40px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #F4F2EC; --surface: #FFFFFF; --surface-2: #EDEAE1;
+    --ink: #1E1C17; --ink-2: #5E594F; --ink-3: #948E80;
+    --line: #E7E2D6; --line-strong: #D6CFBF;
+    --accent: #0E8F83; --accent-ink: #0A6A60; --accent-soft: #DBEFEB; --on-accent: #FFFFFF;
+    --brass: #B0873A; --brass-soft: #F0E7D2;
+    --overdue: #C6503A; --overdue-soft: #F6E2DB;
+    --due: #0E8F83; --due-soft: #DBEFEB;
+    --next: #3E77AC; --next-soft: #E3ECF4;
+    --dormant: #B0873A; --dormant-soft: #F0E7D2;
+    --calm: #6E7A70; --calm-soft: #E7EAE4;
+    --shadow: 0 1px 2px rgba(30,28,23,.05), 0 8px 24px rgba(30,28,23,.08);
+    --shadow-lift: 0 6px 16px rgba(30,28,23,.12), 0 18px 40px rgba(30,28,23,.18);
+  }
+  :root[data-theme="dark"] {
+    --ground: #12110D; --surface: #1B1A15; --surface-2: #25231C;
+    --ink: #F2EFE6; --ink-2: #B0A999; --ink-3: #7C7565;
+    --line: #2E2B22; --line-strong: #3C3830;
+    --accent: #2CC2B0; --accent-ink: #63D8C7; --accent-soft: #0F302D; --on-accent: #04231F;
+    --brass: #D9B063; --brass-soft: #2E2612;
+    --overdue: #EC8067; --overdue-soft: #37231C;
+    --due: #2CC2B0; --due-soft: #0F302D;
+    --next: #82B0DC; --next-soft: #19273A;
+    --dormant: #D9B063; --dormant-soft: #2E2612;
+    --calm: #9DA99B; --calm-soft: #20241D;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    --shadow-lift: 0 6px 16px rgba(0,0,0,.45), 0 18px 40px rgba(0,0,0,.5);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .stage { background: radial-gradient(120% 55% at 50% 0%, color-mix(in srgb, var(--accent) 6%, var(--ground)) 0%, var(--ground) 60%); height: 100vh; height: 100dvh; overflow: hidden; display: flex; justify-content: center; font-family: var(--font-sans); color: var(--ink); -webkit-font-smoothing: antialiased; }
+  .phone { width: 100%; max-width: 440px; background: var(--ground); height: 100vh; height: 100dvh; position: relative; display: flex; flex-direction: column; border-left: 1px solid var(--line); border-right: 1px solid var(--line); overflow: hidden; }
+
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 13px; background: var(--ground); border-bottom: 1px solid var(--line); flex: 0 0 auto; z-index: 20; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand .fork { width: 15px; height: 22px; flex: 0 0 auto; }
+  .brand .fork svg { width: 15px; height: 22px; stroke: var(--accent); fill: none; stroke-width: 1.7; }
+  .brand .keys { display: flex; gap: 2px; align-items: flex-start; }
+  .brand .keys i { width: 5px; height: 18px; border-radius: 0 0 2px 2px; background: var(--ink); display: block; }
+  .brand .keys i.b { height: 11px; background: var(--brass); }
+  .brand .mark { font-size: 20px; font-weight: 800; letter-spacing: .02em; color: var(--ink); }
+  .theme-btn { border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 16px; display: grid; place-items: center; transition: transform .15s ease; }
+  .theme-btn:active { transform: scale(.92); }
+
+  .scroll { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 4px 0 28px; }
+  .view { display: none; padding: 18px 20px 0; animation: fade .28s ease; }
+  .view.active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .view, .phone * { animation: none !important; transition: none !important; } }
+
+  .eyebrow { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent-ink); font-weight: 700; margin: 0 0 6px; }
+  .view-title { font-size: 25px; font-weight: 800; margin: 0 0 2px; letter-spacing: -.01em; text-wrap: balance; }
+  .view-sub { color: var(--ink-2); font-size: 13.5px; margin: 0 0 18px; line-height: 1.65; }
+  .mini-label { font-size: 13px; font-weight: 700; color: var(--ink-2); margin: 0 0 9px; letter-spacing: .02em; }
+
+  /* hero + piano keyboard motif */
+  .hero { position: relative; overflow: hidden; background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 12%, var(--surface)), var(--surface)); border: 1px solid var(--line-strong); border-radius: 18px; padding: 20px 20px 32px; box-shadow: var(--shadow); margin-bottom: 14px; }
+  .pianobar { position: absolute; left: 0; right: 0; bottom: 0; height: 18px; border-top: 1px solid #cbc2b0;
+    background-image:
+      repeating-linear-gradient(90deg, rgba(0,0,0,0) 0 8px, #17140f 8px 13px, rgba(0,0,0,0) 13px 26px),
+      repeating-linear-gradient(90deg, #f4f0e6 0 12px, #cbc2b0 12px 13px);
+    background-size: 26px 62%, 13px 100%; background-position: 5px top, 0 0; background-repeat: repeat-x, repeat-x; }
+  .hero .lead { font-size: 13px; color: var(--ink-2); margin: 0 0 4px; position: relative; }
+  .hero .big { display: flex; align-items: baseline; gap: 8px; position: relative; }
+  .hero .big b { font-size: 48px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .hero .big span { font-size: 15px; color: var(--ink-2); font-weight: 600; }
+  .hero .note { font-size: 13px; color: var(--ink-2); margin: 12px 0 0; line-height: 1.6; padding-top: 12px; border-top: 1px dashed var(--line-strong); position: relative; }
+  .hero .note b { color: var(--overdue); font-weight: 700; }
+  .hero .sub-stat { font-size: 12.5px; color: var(--ink-2); margin-top: 8px; position: relative; }
+  .hero .sub-stat b { color: var(--accent-ink); font-variant-numeric: tabular-nums; }
+
+  .roi { display: flex; align-items: center; gap: 12px; background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line)); border-radius: 14px; padding: 13px 15px; margin-bottom: 22px; cursor: pointer; }
+  .roi svg { width: 22px; height: 22px; stroke: var(--accent-ink); fill: none; stroke-width: 1.9; flex: 0 0 auto; }
+  .roi .txt { font-size: 13px; color: var(--ink-2); line-height: 1.5; }
+  .roi .txt b { color: var(--accent-ink); font-size: 15px; font-variant-numeric: tabular-nums; }
+  .roi .chev { margin-left: auto; color: var(--ink-3); font-size: 18px; }
+
+  .sec-head { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }
+  .sec-head h3 { font-size: 14.5px; font-weight: 700; margin: 0; letter-spacing: .02em; }
+  .sec-head .count { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .sec-head .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .dot.overdue { background: var(--overdue); } .dot.due { background: var(--due); }
+  .dot.next { background: var(--next); } .dot.dormant { background: var(--dormant); } .dot.appt { background: var(--accent); }
+  .sec + .sec { margin-top: 24px; }
+  .sec-note { font-size: 12.5px; color: var(--ink-2); background: var(--surface-2); border-radius: 10px; padding: 10px 12px; margin: 0 0 10px; line-height: 1.6; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 15px; box-shadow: var(--shadow); margin-bottom: 10px; }
+  .card.dormant-card { border-color: color-mix(in srgb, var(--dormant) 35%, var(--line)); }
+  .crow { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .cname { font-size: 16.5px; font-weight: 700; margin: 0 0 3px; letter-spacing: .01em; }
+  .cmeta { font-size: 13px; color: var(--ink-2); line-height: 1.6; }
+  .cmeta .piano { color: var(--ink); font-weight: 600; }
+  .cmeta .fee { color: var(--accent-ink); font-weight: 600; }
+  .pill { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; letter-spacing: .02em; }
+  .pill.overdue { background: var(--overdue-soft); color: var(--overdue); }
+  .pill.due { background: var(--due-soft); color: var(--accent-ink); }
+  .pill.next { background: var(--next-soft); color: var(--next); }
+  .pill.dormant { background: var(--dormant-soft); color: var(--dormant); }
+  .pill.calm { background: var(--calm-soft); color: var(--calm); }
+  .pill.appt { background: var(--accent); color: var(--on-accent); }
+
+  .card-actions { display: flex; gap: 7px; margin-top: 13px; }
+  .btn { border: none; border-radius: 12px; padding: 13px; min-height: 48px; font-size: 14.5px; font-weight: 700; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: transform .12s ease, filter .2s ease; color: var(--ink); }
+  .btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.9; flex: 0 0 auto; }
+  .btn:active { transform: scale(.97); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn.primary { background: var(--accent); color: var(--on-accent); flex: 2; }
+  .btn.primary:hover { filter: brightness(1.06); }
+  .btn.ghost { background: var(--surface-2); color: var(--ink-2); flex: 1; }
+  .btn.icon-only { flex: 0 0 auto; width: 48px; padding: 0; background: var(--surface-2); color: var(--ink-2); }
+  .btn.done-state { background: var(--calm-soft); color: var(--calm); cursor: default; flex: 1; }
+  .btn.done-state:active { transform: none; }
+  .btn.link { background: none; color: var(--ink-3); text-decoration: underline; padding: 6px 4px; min-height: 0; flex: 0 0 auto; font-size: 12.5px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  /* 今日の訪問 */
+  .today-card { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line)); border-left: 4px solid var(--accent); border-radius: 14px; padding: 13px 14px; box-shadow: var(--shadow); margin-bottom: 10px; }
+  .today-card .li-main { flex: 1; min-width: 0; cursor: pointer; }
+  .today-actions { display: flex; gap: 6px; flex: 0 0 auto; }
+  .today-actions .btn, .today-actions a.btn { width: 46px; min-height: 46px; padding: 0; background: var(--surface-2); color: var(--accent-ink); border-radius: 12px; text-decoration: none; }
+  .cell-link { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 2px; }
+
+  /* 時期プール → 予約化ボタン */
+  .pool-btn { flex: 0 0 auto; border: none; background: var(--accent-soft); color: var(--accent-ink); border-radius: 11px; min-height: 42px; padding: 0 12px; font-size: 12.5px; font-weight: 700; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+  .pool-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.9; }
+  .pool-btn:active { transform: scale(.96); }
+
+  /* かんたん登録の折りたたみ */
+  .more-fields { border: 1px solid var(--line); border-radius: 13px; margin: 6px 0 18px; background: var(--surface); overflow: hidden; }
+  .more-fields summary { padding: 15px 14px; font-weight: 700; cursor: pointer; color: var(--accent-ink); font-size: 14px; list-style: none; display: flex; align-items: center; justify-content: space-between; }
+  .more-fields summary::-webkit-details-marker { display: none; }
+  .more-fields summary::after { content: "＋"; font-size: 16px; color: var(--ink-3); }
+  .more-fields[open] summary::after { content: "－"; }
+  .more-fields[open] summary { border-bottom: 1px solid var(--line); }
+  .more-fields .inner { padding: 16px 14px 4px; }
+
+  .skip-row { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); }
+  .skip-row .txt { font-size: 13px; color: var(--ink-3); }
+
+  .empty { text-align: center; color: var(--ink-3); font-size: 13.5px; padding: 28px 10px; line-height: 1.7; }
+  .empty svg { width: 30px; height: 30px; stroke: var(--accent); fill: none; stroke-width: 1.5; display: block; margin: 0 auto 8px; opacity: .85; }
+
+  .segmented { display: flex; background: var(--surface-2); border-radius: 12px; padding: 3px; margin-bottom: 14px; gap: 3px; }
+  .segmented button { flex: 1; border: none; background: none; padding: 10px 0; font-size: 13.5px; font-weight: 700; font-family: inherit; color: var(--ink-2); border-radius: 9px; cursor: pointer; }
+  .segmented button.sel { background: var(--surface); color: var(--accent-ink); box-shadow: var(--shadow); }
+
+  .search { width: 100%; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 13px 14px; font-size: 16px; font-family: inherit; margin-bottom: 14px; }
+  .search::placeholder { color: var(--ink-3); }
+  .search:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .list-item { display: flex; align-items: center; gap: 12px; padding: 14px 4px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .list-item:active { background: var(--surface-2); }
+  .avatar { width: 42px; height: 42px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-ink); display: grid; place-items: center; font-size: 17px; font-weight: 700; flex: 0 0 auto; }
+  .li-main { flex: 1; min-width: 0; }
+  .li-name { font-size: 16px; font-weight: 700; margin: 0 0 2px; }
+  .li-sub { font-size: 12.5px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .li-tail { text-align: right; }
+  .li-date { font-size: 11.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; margin-top: 4px; }
+  .li-order { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-size: 13px; font-weight: 800; flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+  .result-count { font-size: 12px; color: var(--ink-3); margin: -6px 0 12px; }
+
+  /* agenda (予定リスト) */
+  .ag-month { font-size: 13px; font-weight: 800; color: var(--ink); margin: 20px 0 8px; display: flex; align-items: center; gap: 8px; }
+  .ag-month:first-of-type { margin-top: 4px; }
+  .ag-month .badge { font-size: 11px; font-weight: 700; color: var(--accent-ink); background: var(--accent-soft); border-radius: 999px; padding: 2px 8px; }
+  .ag-month .cnt { font-size: 11.5px; color: var(--ink-3); font-weight: 600; }
+  .appt-row { display: flex; align-items: center; gap: 12px; padding: 12px 13px; background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 12px; margin-bottom: 8px; box-shadow: var(--shadow); cursor: pointer; }
+  .appt-date { text-align: center; flex: 0 0 auto; width: 46px; }
+  .appt-date .d { font-size: 20px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+  .appt-date .m { font-size: 10.5px; color: var(--ink-3); font-weight: 700; }
+  .appt-date .wd { font-size: 10px; color: var(--accent-ink); font-weight: 700; }
+
+  .fab { position: absolute; right: 18px; bottom: 80px; z-index: 25; background: var(--accent); color: var(--on-accent); border: none; border-radius: 16px; padding: 14px 20px; font-size: 14.5px; font-weight: 700; font-family: inherit; cursor: pointer; box-shadow: var(--shadow-lift); display: inline-flex; align-items: center; gap: 7px; }
+  .fab:active { transform: scale(.95); }
+
+  .tabbar { position: relative; flex: 0 0 auto; z-index: 30; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--surface); border-top: 1px solid var(--line-strong); padding: 8px 0 calc(8px + env(safe-area-inset-bottom)); }
+  .tabbar::before { content: ""; position: absolute; top: -1px; left: 0; right: 0; height: 3px; background-image: repeating-linear-gradient(to right, var(--ink) 0 2px, transparent 2px 4px, var(--brass) 4px 5px, transparent 5px 10px); opacity: .3; }
+  .tab { border: none; background: none; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--ink-3); padding: 5px 0; }
+  .tab svg { width: 21px; height: 21px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .tab span { font-size: 10px; font-weight: 700; letter-spacing: .01em; }
+  .tab.active { color: var(--accent-ink); }
+
+  .detail-head { display: flex; align-items: center; gap: 13px; margin-bottom: 18px; }
+  .detail-head .avatar { width: 54px; height: 54px; border-radius: 14px; font-size: 22px; }
+  .detail-head h2 { font-size: 22px; margin: 0 0 3px; font-weight: 800; letter-spacing: -.01em; }
+  .detail-head .sub { font-size: 12.5px; color: var(--ink-2); }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; margin-bottom: 18px; }
+  .info-cell { background: var(--surface); padding: 12px 14px; }
+  .info-cell.full { grid-column: 1 / -1; }
+  .info-cell .k { font-size: 11px; color: var(--ink-3); letter-spacing: .04em; margin-bottom: 3px; }
+  .info-cell .v { font-size: 14.5px; font-weight: 600; color: var(--ink); }
+  .info-cell .v.muted { color: var(--ink-3); font-weight: 500; }
+  .info-cell .v.appt { color: var(--accent-ink); }
+  .timeline { border-left: 2px solid var(--line-strong); margin-left: 6px; padding-left: 16px; }
+  .tl-item { position: relative; padding-bottom: 16px; }
+  .tl-item::before { content: ""; position: absolute; left: -23px; top: 3px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid var(--ground); }
+  .tl-date { font-size: 12.5px; color: var(--accent-ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .tl-body { font-size: 13.5px; color: var(--ink-2); margin-top: 2px; line-height: 1.6; }
+  .tl-photo { margin-top: 8px; width: 96px; height: 96px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line-strong); display: block; }
+  .tl-receipt { background: none; border: none; color: var(--accent-ink); font-family: inherit; font-size: 12.5px; font-weight: 700; text-decoration: underline; cursor: pointer; padding: 4px 0 0; }
+  .via-tag { display: inline-block; font-size: 10px; font-weight: 700; color: var(--accent-ink); background: var(--accent-soft); border-radius: 999px; padding: 2px 7px; margin-left: 6px; vertical-align: 1px; }
+  .back-btn { background: none; border: none; color: var(--ink-2); font-family: inherit; font-size: 14.5px; cursor: pointer; padding: 6px 0; margin-bottom: 6px; display: inline-flex; align-items: center; gap: 4px; }
+  .detail-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 20px; }
+  .detail-actions .primary { grid-column: 1 / -1; }
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 13px; font-weight: 700; color: var(--ink-2); margin-bottom: 6px; letter-spacing: .02em; }
+  .field .hint { font-size: 12px; color: var(--ink-3); margin-top: 5px; line-height: 1.55; }
+  .field input, .field select, .field textarea { width: 100%; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 11px; padding: 13px; font-size: 16px; font-family: inherit; }
+  .field textarea { resize: vertical; min-height: 64px; line-height: 1.5; }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .form-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .fieldset-title { font-size: 12px; font-weight: 700; color: var(--accent-ink); letter-spacing: .06em; text-transform: uppercase; margin: 22px 0 12px; padding-top: 4px; border-top: 1px solid var(--line); }
+  .fieldset-title:first-of-type { margin-top: 0; border-top: none; padding-top: 0; }
+
+  .photo-drop { display: flex; align-items: center; gap: 12px; }
+  .photo-thumb { width: 72px; height: 72px; border-radius: 11px; object-fit: cover; border: 1px solid var(--line-strong); display: none; }
+  .photo-btn { border: 1px dashed var(--line-strong); background: var(--surface-2); color: var(--ink-2); border-radius: 11px; padding: 13px 15px; font-size: 13.5px; font-weight: 700; font-family: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .photo-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+
+  .r-picked { display: flex; align-items: center; gap: 12px; background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 13px; padding: 12px 14px; margin-bottom: 14px; }
+  .r-picked .avatar { width: 38px; height: 38px; font-size: 15px; border-radius: 10px; }
+  .r-picked .li-main { flex: 1; } .r-picked .li-name { font-size: 15px; }
+  .r-cand { border: 1px solid var(--line); border-radius: 13px; overflow: hidden; margin-bottom: 16px; box-shadow: var(--shadow); }
+  .r-cand .list-item { padding: 12px 13px; background: var(--surface); }
+  .r-cand .list-item:last-child { border-bottom: none; }
+  .r-results { border: 1px solid var(--line-strong); border-radius: 13px; overflow: hidden; margin-bottom: 14px; max-height: 300px; overflow-y: auto; }
+  .r-results .list-item { padding: 12px; } .r-results .list-item:last-child { border-bottom: none; }
+
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .cal-nav .lbl { font-size: 17px; font-weight: 800; }
+  .cal-nav button { border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2); width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 15px; display: grid; place-items: center; }
+  .cal-nav button:active { transform: scale(.92); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px; }
+  .cal-wd { text-align: center; font-size: 11px; color: var(--ink-3); font-weight: 700; padding-bottom: 4px; }
+  .cal-day { position: relative; aspect-ratio: 1; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-size: 13.5px; font-variant-numeric: tabular-nums; color: var(--ink); font-family: inherit; }
+  .cal-day.blank { background: none; border: none; cursor: default; }
+  .cal-day.today { border-color: var(--accent); border-width: 2px; font-weight: 700; }
+  .cal-day.sel { background: var(--accent); color: var(--on-accent); }
+  .cal-day .dots { display: flex; gap: 2px; margin-top: 3px; }
+  .cal-day .dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--due); display: block; }
+  .cal-day .dots i.appt { background: var(--accent); box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--accent) 40%, transparent); }
+  .cal-day.sel .dots i { background: color-mix(in srgb, var(--on-accent) 85%, transparent); }
+  .cal-legend { display: flex; gap: 16px; font-size: 12px; color: var(--ink-2); margin-bottom: 18px; }
+  .cal-legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .cal-legend i { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+  .cal-legend i.appt { background: var(--accent); } .cal-legend i.due { background: color-mix(in srgb,var(--due) 45%, var(--surface-2)); }
+  .cal-day-list { margin-top: 6px; }
+
+  .map-panel { position: relative; width: 100%; padding-top: 78%; border-radius: 16px; overflow: hidden;
+    background: radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 55%),
+      repeating-linear-gradient(0deg, color-mix(in srgb, var(--ink) 4%, transparent) 0 1px, transparent 1px 22px),
+      repeating-linear-gradient(90deg, color-mix(in srgb, var(--ink) 4%, transparent) 0 1px, transparent 1px 22px), var(--surface-2);
+    border: 1px solid var(--line-strong); margin-bottom: 10px; }
+  .map-pin { position: absolute; transform: translate(-50%,-50%); border: none; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; padding: 0; }
+  .map-pin .bubble { width: 42px; height: 42px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-size: 15px; font-weight: 800; box-shadow: var(--shadow-lift); border: 3px solid var(--ground); font-variant-numeric: tabular-nums; transition: transform .15s ease; }
+  .map-pin.sel .bubble { transform: scale(1.14); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 30%, transparent), var(--shadow-lift); }
+  .map-pin .tag { font-size: 11.5px; font-weight: 700; color: var(--ink); background: var(--surface); padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line-strong); white-space: nowrap; }
+  .map-note { font-size: 12px; color: var(--ink-3); text-align: center; margin: 0 0 18px; line-height: 1.6; }
+  .map-list-head { font-size: 13.5px; font-weight: 700; margin: 4px 0 10px; color: var(--ink); }
+
+  .rev-hero { background: var(--surface); border: 1px solid var(--line-strong); border-radius: 18px; padding: 18px 20px; box-shadow: var(--shadow); margin-bottom: 14px; }
+  .rev-hero .k { font-size: 12.5px; color: var(--ink-2); margin: 0 0 4px; }
+  .rev-hero .v { font-size: 36px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .rev-hero .v small { font-size: 16px; font-weight: 700; color: var(--ink-2); }
+  .rev-split { display: flex; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line-strong); }
+  .rev-split .cellv { flex: 1; }
+  .rev-split .cellv .kk { font-size: 11.5px; color: var(--ink-3); margin-bottom: 2px; }
+  .rev-split .cellv .vv { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .rev-split .cellv .vv.accent { color: var(--accent-ink); }
+  .chart { display: flex; align-items: flex-end; gap: 8px; height: 128px; padding: 4px 2px 0; margin-bottom: 4px; }
+  .chart .col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+  .chart .bar { width: 100%; max-width: 38px; border-radius: 7px 7px 3px 3px; background: color-mix(in srgb, var(--accent) 30%, var(--surface-2)); min-height: 3px; }
+  .chart .col.cur .bar { background: var(--accent); }
+  .chart .lbl { font-size: 10.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .chart .amt { font-size: 10px; color: var(--ink-2); font-variant-numeric: tabular-nums; font-weight: 700; }
+  .rev-list-item { display: flex; align-items: center; gap: 12px; padding: 13px 4px; border-bottom: 1px solid var(--line); }
+  .rev-list-item .li-main { flex: 1; min-width: 0; }
+  .rev-list-item .yen { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .scrim { position: absolute; inset: 0; background: rgba(10,10,8,.5); z-index: 40; display: none; align-items: flex-end; justify-content: center; }
+  .scrim.open { display: flex; animation: fade .2s ease; }
+  .sheet { background: var(--surface); width: 100%; border-radius: 20px 20px 0 0; padding: 22px 20px calc(26px + env(safe-area-inset-bottom)); box-shadow: var(--shadow-lift); animation: rise .28s cubic-bezier(.2,.8,.2,1); max-height: 90vh; overflow-y: auto; }
+  @keyframes rise { from { transform: translateY(100%); } to { transform: none; } }
+  .sheet h3 { font-size: 19px; margin: 0 0 3px; font-weight: 800; }
+  .sheet .to { font-size: 13px; color: var(--ink-2); margin-bottom: 14px; }
+  .msg-preview { background: var(--surface-2); border: 1px solid var(--line); border-radius: 13px; padding: 14px 15px; font-size: 14px; line-height: 1.7; color: var(--ink); white-space: pre-wrap; margin-bottom: 8px; }
+  .msg-photo { width: 90px; height: 90px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line-strong); margin: 0 0 10px; display: block; }
+  .channel { display: flex; gap: 8px; margin-bottom: 6px; }
+  .chan-pick { flex: 1; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 11px; padding: 10px 6px; font-size: 12.5px; font-weight: 700; font-family: inherit; color: var(--ink-2); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .chan-pick svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .chan-pick.sel { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
+  .chan-pick:disabled { opacity: .4; cursor: not-allowed; }
+  .chan-unreg { font-size: 11.5px; color: var(--overdue); text-align: center; margin: 0 0 14px; }
+  .send-note { font-size: 12px; color: var(--ink-3); line-height: 1.6; margin: 10px 0 4px; padding: 10px 12px; background: var(--surface-2); border-radius: 10px; }
+  .demo-tag { font-size: 11px; color: var(--ink-3); text-align: center; margin-top: 10px; }
+  .copy-link { display: block; text-align: center; font-size: 13px; color: var(--accent-ink); background: none; border: none; font-family: inherit; cursor: pointer; padding: 8px 0; width: 100%; text-decoration: underline; }
+  .est-total { display: flex; align-items: baseline; justify-content: space-between; margin: 6px 0 2px; padding-top: 12px; border-top: 1px solid var(--line-strong); }
+  .est-total .k { font-size: 13.5px; font-weight: 700; } .est-total .v { font-size: 23px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+  .toast { position: absolute; bottom: 92px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--ground); font-size: 13.5px; font-weight: 600; padding: 13px 18px; border-radius: 12px; box-shadow: var(--shadow-lift); z-index: 50; opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; max-width: 88%; text-align: center; line-height: 1.5; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+
+<div class="stage">
+  <div class="phone">
+    <div class="topbar">
+      <div class="brand">
+        <span class="fork"><svg viewBox="0 0 15 22"><path d="M4 2v7a3.5 3.5 0 0 0 7 0V2M7.5 12.5V20"/></svg></span>
+        <span class="keys"><i></i><i class="b"></i><i></i><i class="b"></i><i></i></span>
+        <span class="mark">調律ノート</span>
+      </div>
+      <button class="theme-btn" id="themeBtn" aria-label="表示テーマを切り替え">◐</button>
+    </div>
+
+    <div class="scroll" id="scroll">
+      <!-- HOME -->
+      <section class="view active" id="view-home">
+        <p class="eyebrow">今日の見はり</p>
+        <h1 class="view-title">調律のご案内</h1>
+        <p class="view-sub">前回の調律から時期が来たお客様を、自動でお知らせ。案内はワンタップです。</p>
+        <div id="todayStrip"></div>
+        <div class="hero">
+          <p class="lead">今すぐご案内すべきお客様</p>
+          <div class="big"><b id="dueCount">0</b><span>件</span></div>
+          <p class="note" id="heroNote"></p>
+          <p class="sub-stat" id="heroSub"></p>
+          <div class="pianobar"></div>
+        </div>
+        <div class="roi" id="roiBanner">
+          <svg viewBox="0 0 24 24"><path d="M12 3v18M7 8c0-2 2.2-3 5-3s5 1 5 3-2 3-5 3-5 1-5 3 2.2 3 5 3 5-1 5-3"/></svg>
+          <span class="txt" id="roiText"></span>
+          <span class="chev">›</span>
+        </div>
+        <div id="reminderList"></div>
+      </section>
+
+      <!-- SCHEDULE (予定) -->
+      <section class="view" id="view-calendar">
+        <p class="eyebrow">これからの予定</p>
+        <h1 class="view-title">予定</h1>
+        <p class="view-sub"><b>予約</b>＝日付が決まった訪問、<b>時期</b>＝調律の目安を迎えるお客様。日付が決まったら「予約にする」でカレンダーに載ります。</p>
+        <div class="segmented">
+          <button data-sview="list" class="sel">リスト</button>
+          <button data-sview="cal">カレンダー</button>
+        </div>
+        <div id="agendaWrap"></div>
+        <div id="calWrap" style="display:none">
+          <div class="cal-nav"><button id="calPrev" aria-label="前の月">‹</button><span class="lbl" id="calLabel"></span><button id="calNext" aria-label="次の月">›</button></div>
+          <div class="cal-legend"><span><i class="appt"></i>予約（日付が決まった訪問）</span></div>
+          <div class="cal-grid" id="calGrid"></div>
+          <div class="cal-day-list" id="calDayList"></div>
+          <div id="calPool"></div>
+        </div>
+      </section>
+
+      <!-- CUSTOMERS -->
+      <section class="view" id="view-customers">
+        <p class="eyebrow">お客様台帳</p>
+        <h1 class="view-title">お客様</h1>
+        <p class="view-sub">全てのお客様の情報と調律の履歴を、この一冊に。</p>
+        <div class="segmented">
+          <button data-cview="list" class="sel">一覧</button>
+          <button data-cview="map">地図</button>
+        </div>
+        <div id="custListWrap">
+          <input class="search" id="search" placeholder="お名前・ご住所・ピアノで検索" />
+          <div class="result-count" id="resultCount"></div>
+          <div id="customerList"></div>
+        </div>
+        <div id="custMapWrap" style="display:none">
+          <div class="map-panel" id="mapPanel"></div>
+          <p class="map-note">※ エリアごとの人数をまとめた簡易マップです。ピンをタップすると、そのエリアのお客様を表示します。</p>
+          <div id="mapListResult"></div>
+        </div>
+      </section>
+
+      <!-- DETAIL -->
+      <section class="view" id="view-detail"></section>
+
+      <!-- ADD -->
+      <section class="view" id="view-add">
+        <button class="back-btn" data-nav="customers">‹ 戻る</button>
+        <h1 class="view-title">お客様を追加</h1>
+        <p class="view-sub">まずは<b>3項目だけ</b>でOK。詳しい情報は、あとからいつでも追加できます。</p>
+        <div class="field"><label>お名前 *</label><input id="f-name" placeholder="例：山田 花子"></div>
+        <div class="field"><label>前回の調律日 *</label><input id="f-last" type="date"></div>
+        <div class="field"><label>電話番号・SMS</label><input id="f-phone" placeholder="例：090-1234-5678"></div>
+        <div class="field"><label>次回までの目安</label>
+          <select id="f-interval"><option value="12">1年ごと（標準）</option><option value="6">半年ごと</option><option value="24">2年ごと</option></select>
+        </div>
+        <details class="more-fields">
+          <summary>詳しい情報を追加する（あとからでもOK）</summary>
+          <div class="inner">
+            <div class="field"><label>ピアノの機種</label><input id="f-piano" placeholder="例：YAMAHA U3"></div>
+            <div class="field"><label>調律料金の目安（円）</label><input id="f-fee" inputmode="numeric" placeholder="例：13000"></div>
+            <div class="field"><label>ご住所・地域</label><input id="f-area" placeholder="例：横浜市青葉区"></div>
+            <div class="field"><label>設置環境</label>
+              <select id="f-env"><option>リビング（一般家庭）</option><option>和室</option><option>防音室</option><option>音楽教室</option><option>学校・ホール</option></select>
+            </div>
+            <div class="field"><label>メールアドレス</label><input id="f-email" type="email" placeholder="例：hanako@example.com"></div>
+            <div class="field"><label>LINE名（つながっている場合）</label><input id="f-line" placeholder="例：はなこ（LINE表示名）"></div>
+            <div class="field"><label>SNS（任意）</label><input id="f-sns" placeholder="例：Instagram @hanako_piano"></div>
+            <div class="field"><label>メモ</label><textarea id="f-memo" placeholder="例：低音の弦が1本サビ気味。次回要チェック。"></textarea></div>
+          </div>
+        </details>
+        <div class="form-actions">
+          <button class="btn ghost" data-nav="customers" style="flex:1">やめる</button>
+          <button class="btn primary" id="saveCustomer" style="flex:2">登録する</button>
+        </div>
+      </section>
+
+      <!-- RECORD -->
+      <section class="view" id="view-record">
+        <p class="eyebrow">現場で入力</p>
+        <h1 class="view-title">調律を記録</h1>
+        <p class="view-sub">候補から選ぶか、検索して選びます。写真も残せます。</p>
+        <div id="rQuickWrap">
+          <p class="mini-label">今日、記録しそうなお客様</p>
+          <div class="r-cand" id="rQuick"></div>
+        </div>
+        <div class="field" id="r-pick-field">
+          <label>または、検索して選ぶ</label>
+          <input id="r-search" placeholder="お名前・ご住所・ピアノで検索">
+          <div class="r-results" id="rResults" style="display:none"></div>
+        </div>
+        <div class="r-picked" id="rPicked" style="display:none"></div>
+        <div id="r-form-body" style="display:none">
+          <div class="field"><label>調律した日</label><input id="r-date" type="date"></div>
+          <div class="field"><label>作業内容</label>
+            <select id="r-work"><option>調律</option><option>調律＋整調</option><option>調律＋修理</option><option>整音</option><option>点検のみ</option></select>
+          </div>
+          <div class="field"><label>料金（円）</label><input id="r-fee" inputmode="numeric" placeholder="例：13000"></div>
+          <div class="field"><label>現場の写真（任意）</label>
+            <div class="photo-drop">
+              <label class="photo-btn"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>写真を追加<input type="file" id="r-photo" accept="image/*" style="display:none"></label>
+              <img class="photo-thumb" id="r-photo-thumb" alt="添付写真">
+            </div>
+          </div>
+          <div class="field"><label>今回のメモ</label><textarea id="r-memo" placeholder="例：湿度高め。防湿剤の交換を提案。"></textarea></div>
+          <div class="field"><label>次回のご案内予定日</label><input id="r-next" type="date">
+            <p class="hint">周期から自動で入っていますが、日付は自由に変更できます。</p>
+          </div>
+          <div class="form-actions">
+            <button class="btn ghost" id="rChange" style="flex:1">お客様を変更</button>
+            <button class="btn primary" id="saveRecord" style="flex:2">記録して次回予定をセット</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- REVENUE -->
+      <section class="view" id="view-revenue">
+        <p class="eyebrow">お金の見える化</p>
+        <h1 class="view-title">売上</h1>
+        <p class="view-sub">日々の記録から自動で集計。確定申告の下ごしらえもここから。</p>
+        <div class="rev-hero">
+          <p class="k">今月の売上</p>
+          <p class="v" id="revMonthTotal">0<small>円</small></p>
+          <div class="rev-split">
+            <div class="cellv"><div class="kk">ご案内から生まれた売上</div><div class="vv accent" id="revViaReminder">0円</div></div>
+            <div class="cellv"><div class="kk">件数</div><div class="vv" id="revCount">0件</div></div>
+          </div>
+        </div>
+        <div class="sec-head"><h3>月別の売上（直近6ヶ月）</h3></div>
+        <div class="chart" id="revChart"></div>
+        <div class="sec-head" style="margin-top:20px"><h3>今月の記録</h3><span class="count" id="revListCount"></span></div>
+        <div id="revList"></div>
+      </section>
+    </div>
+
+    <button class="fab" id="fab">＋ お客様</button>
+
+    <nav class="tabbar">
+      <button class="tab active" data-nav="home"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>ご案内</span></button>
+      <button class="tab" data-nav="calendar"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.4"/><path d="M3.5 9.5h17"/><path d="M8 3v4M16 3v4"/></svg><span>予定</span></button>
+      <button class="tab" data-nav="customers"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c0-3 2.4-5 5.5-5s5.5 2 5.5 5"/><circle cx="17.5" cy="9" r="2.6"/><path d="M16 15c2.6.2 4.5 2 4.5 5"/></svg><span>お客様</span></button>
+      <button class="tab" data-nav="record"><svg viewBox="0 0 24 24"><path d="M4 20l4-1L19 8a2 2 0 0 0-3-3L5 16l-1 4z"/><path d="M14 6l4 4"/></svg><span>記録</span></button>
+      <button class="tab" data-nav="revenue"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg><span>売上</span></button>
+    </nav>
+
+    <div class="scrim" id="scrim"><div class="sheet" id="sheet"></div></div>
+    <div class="toast" id="toast"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var KEY = "choritsu_note_v9";
+  var WD = ["日","月","火","水","木","金","土"];
+
+  var ICON = {
+    send: '<svg viewBox="0 0 24 24"><path d="M21 4L3 11.5l7 2.5m11-10l-4.5 16-6.5-6M21 4l-10 10"/></svg>',
+    skip: '<svg viewBox="0 0 24 24"><path d="M5 5l14 14M5 19L19 5"/></svg>',
+    log:  '<svg viewBox="0 0 24 24"><path d="M4 20l4-1L19 8a2 2 0 0 0-3-3L5 16l-1 4z"/><path d="M14 6l4 4"/></svg>',
+    quote:'<svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>',
+    share:'<svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8 11l8-4M8 13l8 4"/></svg>',
+    appt: '<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.4"/><path d="M3.5 9.5h17"/><path d="M8 3v4M16 3v4"/><path d="M9 14l2 2 4-4"/></svg>',
+    note: '<svg viewBox="0 0 24 24"><circle cx="8" cy="18" r="3"/><path d="M11 18V5l9-2v13"/><circle cx="17" cy="16" r="3"/></svg>',
+    line: '<svg viewBox="0 0 24 24"><path d="M21 11.5c0 3.9-4 7-9 7-1 0-2-.1-2.9-.4L4 20l1.3-3.9A7.5 6 0 0 1 3 11.5C3 7 7.5 3.5 12 3.5S21 7 21 11.5z"/></svg>',
+    sms:  '<svg viewBox="0 0 24 24"><path d="M4 5h16v11H8l-4 4V5z"/></svg>',
+    mail: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 6l9 7 9-7"/></svg>'
+  };
+
+  function today() { var d = new Date(); d.setHours(0,0,0,0); return d; }
+  function iso(d) { return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }
+  function fromIso(s) { var p = s.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+  function addMonths(d, m) { var day=d.getDate(); var n=new Date(d.getFullYear(), d.getMonth()+m, 1); var dim=new Date(n.getFullYear(), n.getMonth()+1, 0).getDate(); n.setDate(Math.min(day, dim)); return n; }
+  function addDays(d, n) { var r = new Date(d); r.setDate(r.getDate()+n); return r; }
+  function monthsAgo(m) { return addMonths(today(), -m); }
+  function fmtJ(d) { return d.getFullYear() + "年" + (d.getMonth()+1) + "月"; }
+  function fmtJd(d) { return d.getFullYear() + "年" + (d.getMonth()+1) + "月" + d.getDate() + "日"; }
+  function monthIndex(d) { return d.getFullYear()*12 + d.getMonth(); }
+  function sameYMD(a,b) { return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+  function yen(n) { return Number(n||0).toLocaleString(); }
+
+  function seed() {
+    var mk = function (o) {
+      var last = monthsAgo(o.ago); last.setDate(o.day || 12);
+      return { id: "c"+Math.random().toString(36).slice(2,9), name:o.name, piano:o.piano, fee:o.fee||13000,
+        phone:o.phone||"", email:o.email||"", line:o.line||"", sns:o.sns||"", area:o.area, env:o.env,
+        last: iso(last), interval:o.interval, appt: o.appt||"", memo:o.memo||"", remindedCycle:null, skippedCycle:null,
+        history: (o.hist||[]).map(function (h) { var d=monthsAgo(h.ago); d.setDate(h.day||o.day||12); return { date:iso(d), work:h.work, fee:h.fee, memo:h.memo||"", photo:null, via:!!h.via }; }) };
+    };
+    return [
+      mk({name:"佐藤 美咲",piano:"YAMAHA U3",fee:13000,phone:"090-2244-1188",email:"m.sato@example.com",line:"みさき",area:"横浜市都筑区",env:"リビング（一般家庭）",ago:14,interval:12,appt:iso(addDays(today(),25)),memo:"娘さんが受験期。夜間の使用が多い。",hist:[{ago:14,work:"調律",fee:13000,memo:"問題なし"},{ago:26,work:"調律＋整調",fee:18000}]}),
+      mk({name:"鈴木 音楽教室",piano:"KAWAI RX-2（グランド）",fee:16000,phone:"045-777-3300",email:"info@suzuki-music.example.com",area:"川崎市中原区",env:"音楽教室",ago:13,interval:12,appt:iso(today()),memo:"発表会前は早めに。",hist:[{ago:13,work:"調律",fee:16000},{ago:25,work:"調律",fee:16000}]}),
+      mk({name:"田中 誠一",piano:"YAMAHA C3（グランド）",fee:18000,phone:"090-5566-7788",line:"タナカ",area:"東京都世田谷区",env:"防音室",ago:15,interval:12,memo:"整音にこだわり。",hist:[{ago:15,work:"調律＋整音",fee:22000}]}),
+      mk({name:"高橋 さくら",piano:"KAWAI K-300",fee:13000,phone:"080-1212-3434",email:"sakura.t@example.com",line:"さくらん",area:"横浜市青葉区",env:"リビング（一般家庭）",ago:12,interval:12,appt:iso(addDays(today(),5)),memo:"お子様が習い始め。",hist:[{ago:12,work:"調律",fee:13000}]}),
+      mk({name:"渡辺 家",piano:"YAMAHA U1",fee:13000,phone:"045-333-2211",area:"横浜市港北区",env:"和室",ago:11,interval:12,memo:"10年ぶりに調律を再開。",hist:[{ago:11,work:"調律＋修理",fee:24000,memo:"ハンマー2本交換"}]}),
+      mk({name:"伊藤 ピアノ studio",piano:"STEINWAY B-211",fee:20000,phone:"03-6655-4433",email:"studio@ito-piano.example.com",line:"伊藤スタジオ",area:"東京都目黒区",env:"防音室",ago:5,interval:6,memo:"半年ごと契約。",hist:[{ago:5,work:"調律",fee:20000,via:true},{ago:11,work:"調律",fee:20000}]}),
+      mk({name:"山本 洋子",piano:"YAMAHA U3",fee:13000,phone:"090-8899-0011",area:"川崎市高津区",env:"リビング（一般家庭）",ago:8,interval:12,memo:"コーラスの伴奏。",hist:[{ago:8,work:"調律",fee:13000}]}),
+      mk({name:"中村 学園",piano:"YAMAHA グランド ×2",fee:26000,phone:"045-222-9999",email:"soumu@nakamura-gakuen.example.com",area:"横浜市西区",env:"学校・ホール",ago:6,interval:12,memo:"年度初めに一括。",hist:[{ago:6,work:"調律",fee:26000,via:true}]}),
+      mk({name:"小林 あゆみ",piano:"KAWAI ND-21",fee:13000,phone:"080-4545-6767",email:"ayumi.k@example.com",line:"あゆ",area:"東京都大田区",env:"リビング（一般家庭）",ago:20,interval:12,memo:"習慣づけ中。",hist:[{ago:20,work:"調律",fee:13000}]}),
+      mk({name:"森 由紀",piano:"YAMAHA U1",fee:13000,phone:"090-3131-2020",line:"ゆき",area:"横浜市戸塚区",env:"リビング（一般家庭）",ago:30,interval:12,memo:"進学後、足が遠のいている。",hist:[{ago:30,work:"調律",fee:13000}]}),
+      mk({name:"岡田 家",piano:"YAMAHA U3",fee:13000,phone:"044-555-6363",area:"川崎市麻生区",env:"和室",ago:40,interval:12,memo:"3年以上ご無沙汰。",hist:[{ago:40,work:"調律",fee:13000}]}),
+      mk({name:"近藤 バレエ教室",piano:"YAMAHA G2",fee:15000,phone:"03-4444-8181",email:"kondo@ballet.example.com",area:"東京都品川区",env:"音楽教室",ago:1,interval:12,memo:"毎年5月ごろ。",hist:[{ago:1,work:"調律",fee:15000,via:true},{ago:13,work:"調律",fee:15000}]}),
+      mk({name:"石井 家",piano:"KAWAI BL-61",fee:13000,phone:"090-7777-2323",line:"いしい",area:"横浜市南区",env:"リビング（一般家庭）",ago:0,day:4,interval:12,memo:"今月調律済み。",hist:[{ago:0,day:4,work:"調律",fee:13000,via:true},{ago:12,work:"調律",fee:13000}]}),
+      mk({name:"藤田 良子",piano:"YAMAHA UX",fee:14000,phone:"080-9898-5454",area:"川崎市宮前区",env:"和室",ago:0,day:2,interval:12,memo:"",hist:[{ago:0,day:2,work:"調律＋整調",fee:19000},{ago:12,work:"調律",fee:14000}]}),
+      mk({name:"青木 ホール",piano:"STEINWAY D-274",fee:30000,phone:"045-666-1212",email:"hall@aoki.example.com",area:"横浜市中区",env:"学校・ホール",ago:2,interval:6,memo:"コンサート前は都度依頼。",hist:[{ago:2,work:"調律",fee:30000},{ago:8,work:"調律＋整音",fee:38000}]})
+    ];
+  }
+
+  var state = load();
+  function load() { try { var raw = localStorage.getItem(KEY); if (raw) return JSON.parse(raw); } catch (e) {} var s = seed(); save(s); return s; }
+  function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s || state)); } catch (e) {} }
+
+  function dueDate(c) { return addMonths(fromIso(c.last), c.interval); }
+  function cycleKey(c) { var d = dueDate(c); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
+  function diffMonths(c) { return monthIndex(dueDate(c)) - monthIndex(today()); }
+  function status(c) { var d = diffMonths(c); if (d <= -12) return "dormant"; if (d < 0) return "overdue"; if (d === 0) return "due"; if (d === 1) return "next"; return "calm"; }
+  function reminded(c) { return c.remindedCycle === cycleKey(c); }
+  function skipped(c) { return c.skippedCycle === cycleKey(c); }
+  function hasAppt(c) { return c.appt && fromIso(c.appt) >= today(); }
+  function intervalText(c) { return c.interval===6?"半年":c.interval===24?"2年":"1年"; }
+
+  var $ = function (id) { return document.getElementById(id); };
+  function find(id) { for (var i=0;i<state.length;i++) if (state[i].id===id) return state[i]; return null; }
+  function esc(s) { return String(s==null?"":s).replace(/[&<>"]/g, function (m){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]; }); }
+  function initials(name) { return name.trim().charAt(0); }
+  var toastTimer;
+  function toast(msg) { var t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(function(){t.classList.remove("show");},3400); }
+
+  /* ---------- HOME ---------- */
+  function mapUrl(area) { return "https://maps.google.com/?q=" + encodeURIComponent(area); }
+  function renderToday() {
+    var t = iso(today());
+    var todays = state.filter(function (c) { return c.appt === t; });
+    if (!todays.length) { $("todayStrip").innerHTML = ""; return; }
+    var h = '<div class="sec-head"><span class="dot appt"></span><h3>今日の訪問</h3><span class="count">'+todays.length+'件</span></div>';
+    h += todays.map(function (c) {
+      return '<div class="today-card">'
+        + '<div class="li-main" data-detail="'+c.id+'"><p class="li-name">'+esc(c.name)+'</p><p class="li-sub">'+esc(c.piano)+' ・ '+esc(c.area||"")+'</p></div>'
+        + '<div class="today-actions">'
+        + (c.phone ? '<a class="btn" href="tel:'+esc(c.phone)+'" aria-label="電話する"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg></a>' : '')
+        + (c.area ? '<a class="btn" href="'+mapUrl(c.area)+'" target="_blank" rel="noopener" aria-label="地図を開く"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.4-7-11a7 7 0 0 1 14 0c0 4.6-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></a>' : '')
+        + '<button class="btn" data-record="'+c.id+'" aria-label="記録する">'+ICON.log+'</button>'
+        + '</div></div>';
+    }).join("");
+    $("todayStrip").innerHTML = h + '<div style="height:12px"></div>';
+  }
+  function renderHome() {
+    renderToday();
+    var g = {overdue:[], due:[], next:[], dormant:[]};
+    state.forEach(function (c) { var s = status(c); if (g[s]) g[s].push(c); });
+    var sortFn = function (a,b) { return monthIndex(dueDate(a)) - monthIndex(dueDate(b)); };
+    Object.keys(g).forEach(function (k) { g[k].sort(sortFn); });
+    $("dueCount").textContent = g.overdue.length + g.due.length;
+    var note = $("heroNote");
+    if (g.overdue.length) note.innerHTML = "うち <b>"+g.overdue.length+"件</b> は時期を過ぎています。放っておくと離れてしまう前に、今日ひと声かけましょう。";
+    else if (g.due.length) note.innerHTML = "今月が調律の目安のお客様です。忘れないうちにご案内を。";
+    else note.innerHTML = "今すぐご案内が必要なお客様はいません。よい状態です。";
+    $("heroSub").innerHTML = "来月の予定：<b>"+g.next.length+"件</b>　／　掘り起こし候補：<b>"+g.dormant.length+"件</b>";
+    var mi = monthIndex(today()), viaSum = 0;
+    state.forEach(function (c) { c.history.forEach(function (h) { if (h.via && monthIndex(fromIso(h.date))===mi) viaSum += (+h.fee||0); }); });
+    $("roiText").innerHTML = viaSum > 0 ? "今月、ご案内から生まれた売上：<b>"+yen(viaSum)+"円</b>" : "ご案内から予約が入ると、生まれた売上がここに表示されます";
+
+    var html = "";
+    html += section("超過している", "overdue", g.overdue);
+    html += section("今月が目安", "due", g.due, "今月");
+    html += section("来月が目安", "next", g.next, "来月");
+    if (g.dormant.length) {
+      html += '<div class="sec"><div class="sec-head"><span class="dot dormant"></span><h3>掘り起こしたいお客様</h3><span class="count">'+g.dormant.length+'件</span></div>'
+        + '<p class="sec-note">1年以上ご無沙汰のお客様です。「久しぶりのご挨拶」として、気兼ねのない文面でお声がけします。</p>';
+      g.dormant.forEach(function (c) { html += reminderCard(c, "dormant"); });
+      html += '</div>';
+    }
+    if (!g.overdue.length && !g.due.length && !g.next.length && !g.dormant.length)
+      html = '<div class="empty">'+ICON.note+'しばらくご案内の予定はありません。<br>「予定」タブから今後の見通しを確認できます。</div>';
+    $("reminderList").innerHTML = html;
+    bindCardButtons();
+  }
+  $("roiBanner").onclick = function () { show("revenue"); };
+
+  function section(title, cls, arr, badgeText) {
+    if (!arr.length) return "";
+    var h = '<div class="sec"><div class="sec-head"><span class="dot '+cls+'"></span><h3>'+title+'</h3><span class="count">'+arr.length+'件</span></div>';
+    arr.forEach(function (c) { h += reminderCard(c, cls, badgeText); });
+    return h + '</div>';
+  }
+  function badgeFor(c, cls, badgeText) {
+    if (badgeText) return badgeText;
+    if (cls === "dormant") { var d = -diffMonths(c); return (d>=12? Math.floor(d/12)+"年" : d+"ヶ月")+"ご無沙汰"; }
+    if (cls === "overdue") { var m = monthIndex(today()) - monthIndex(dueDate(c)); return m<=0?"今月":m+"ヶ月超過"; }
+    return "今月";
+  }
+  function reminderCard(c, cls, badgeText) {
+    var dd = dueDate(c);
+    var feeLine = c.fee ? ' ・ <span class="fee">目安 '+yen(c.fee)+'円</span>' : '';
+    var apptLine = hasAppt(c) ? '<br><span style="color:var(--accent-ink);font-weight:700">予約：'+fmtJd(fromIso(c.appt))+'</span>' : '';
+    var h = '<div class="card'+(cls==="dormant"?" dormant-card":"")+'">'
+      + '<div class="crow"><div><p class="cname">'+esc(c.name)+'</p>'
+      + '<div class="cmeta"><span class="piano">'+esc(c.piano)+'</span>'+feeLine+'<br>前回 '+fmtJ(fromIso(c.last))+' ・ 目安 '+fmtJ(dd)+apptLine+'</div></div>'
+      + '<span class="pill '+cls+'">'+badgeFor(c, cls, badgeText)+'</span></div>';
+    if (reminded(c)) h += '<div class="card-actions"><button class="btn done-state">'+ICON.send+' 案内済み</button><button class="btn icon-only" data-record="'+c.id+'" aria-label="記録">'+ICON.log+'</button></div>';
+    else if (skipped(c)) h += '<div class="skip-row"><span class="txt">今回は見送りました</span><button class="btn link" data-undo="'+c.id+'">取り消す</button></div>';
+    else {
+      var sendLabel = cls==="dormant" ? "久しぶりのご挨拶" : "ご案内を送る";
+      h += '<div class="card-actions"><button class="btn primary" data-remind="'+c.id+'">'+ICON.send+' '+sendLabel+'</button>'
+        + '<button class="btn ghost" data-skip="'+c.id+'">'+ICON.skip+' 見送る</button>'
+        + '<button class="btn icon-only" data-record="'+c.id+'" aria-label="記録">'+ICON.log+'</button></div>';
+    }
+    return h + '</div>';
+  }
+
+  function bindCardButtons() {
+    document.querySelectorAll("[data-remind]").forEach(function (b) { b.onclick = function () { openReminder(b.getAttribute("data-remind")); }; });
+    document.querySelectorAll("[data-record]").forEach(function (b) { b.onclick = function () { gotoRecord(b.getAttribute("data-record")); }; });
+    document.querySelectorAll("[data-skip]").forEach(function (b) { b.onclick = function () { doSkip(b.getAttribute("data-skip")); }; });
+    document.querySelectorAll("[data-undo]").forEach(function (b) { b.onclick = function () { undoSkip(b.getAttribute("data-undo")); }; });
+    document.querySelectorAll("[data-detail]").forEach(function (el) { el.onclick = function () { renderDetail(el.getAttribute("data-detail")); }; });
+    document.querySelectorAll("[data-receipt]").forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); var p=b.getAttribute("data-receipt").split("|"); openReceipt(p[0], +p[1]); }; });
+    document.querySelectorAll("[data-appt-quick]").forEach(function (b) { b.onclick = function (e) { e.stopPropagation(); openAppt(b.getAttribute("data-appt-quick")); }; });
+  }
+  function doSkip(id) { var c=find(id); if(!c)return; c.skippedCycle=cycleKey(c); save(); refreshAll(id); toast("今回のご案内は見送りました。"); }
+  function undoSkip(id) { var c=find(id); if(!c)return; c.skippedCycle=null; save(); refreshAll(id); toast("見送りを取り消しました。"); }
+  function refreshAll(detailId) { renderHome(); renderCustomers($("search").value); renderSchedule(); renderRevenue(); if (detailId && $("view-detail").classList.contains("active")) renderDetail(detailId); }
+
+  /* ---------- send sheet ---------- */
+  var pendingChannel = null;
+  function channelState(c) { return [ {key:"LINE",label:"LINE",icon:ICON.line,ok:!!c.line}, {key:"SMS",label:"SMS",icon:ICON.sms,ok:!!c.phone}, {key:"メール",label:"メール",icon:ICON.mail,ok:!!c.email} ]; }
+  function channelPickerHTML(chs) {
+    return '<div class="channel">'+chs.map(function (ch) { return '<button class="chan-pick'+(ch.key===pendingChannel?' sel':'')+'" data-chan="'+ch.key+'" '+(ch.ok?'':'disabled')+'>'+ch.icon+'<span>'+ch.label+'</span></button>'; }).join("")+'</div>'
+      + (chs.every(function(ch){return !ch.ok;}) ? '<p class="chan-unreg">連絡先が未登録です。お客様の詳細から登録してください。</p>' : '');
+  }
+  function bindChannelPicks(sheet) { sheet.querySelectorAll("[data-chan]").forEach(function (b) { b.onclick = function () { pendingChannel = b.getAttribute("data-chan"); sheet.querySelectorAll("[data-chan]").forEach(function (x){ x.classList.remove("sel"); }); b.classList.add("sel"); }; }); }
+  function sendVia(channel, c, msg) { try {
+      if (channel === "SMS" && c.phone) window.location.href = "sms:"+c.phone+"?body="+encodeURIComponent(msg);
+      else if (channel === "メール" && c.email) window.location.href = "mailto:"+c.email+"?subject="+encodeURIComponent("ピアノ調律のご案内")+"&body="+encodeURIComponent(msg);
+      else if (channel === "LINE") window.open("line://msg/text/"+encodeURIComponent(msg), "_blank");
+    } catch (e) {} }
+  function copyText(text) { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function(){toast("文章をコピーしました。");}, function(){toast("コピーできませんでした。");}); else toast("このブラウザではコピーを実行できません。"); }
+  function closeSheet() { $("scrim").classList.remove("open"); }
+  $("scrim").addEventListener("click", function (e) { if (e.target === $("scrim")) closeSheet(); });
+
+  function openSendSheet(opts) {
+    var c = opts.customer, chs = channelState(c);
+    var firstOk = chs.filter(function(ch){return ch.ok;})[0]; pendingChannel = firstOk ? firstOk.key : "LINE";
+    var sheet = $("sheet");
+    sheet.innerHTML = '<h3>'+esc(opts.title)+'</h3><p class="to">'+esc(opts.subtitle)+'</p>'
+      + channelPickerHTML(chs)
+      + (opts.photo ? '<img class="msg-photo" src="'+opts.photo+'" alt="添付写真">' : '')
+      + '<div class="msg-preview">'+esc(opts.message)+'</div>'
+      + '<button class="copy-link" id="copyMsg">この文章をコピーする</button>'
+      + '<p class="send-note">'+esc(opts.note || "送信すると、お使いのLINE／SMS／メールアプリが開きます。お客様からの返信は、そのアプリ側でご確認ください。")+'</p>'
+      + '<div class="form-actions"><button class="btn ghost" id="cancelSend" style="flex:1">閉じる</button>'
+      + '<button class="btn primary" id="doSend" style="flex:2">'+ICON.send+' '+esc(opts.sendLabel||"この内容で送る")+'</button></div>'
+      + '<p class="demo-tag">※ これは試作です。実際の送信動作は簡易的な模擬実装です。</p>';
+    $("scrim").classList.add("open");
+    bindChannelPicks(sheet);
+    $("copyMsg").onclick = function () { copyText(opts.message + (opts.photo?"\n（写真を添付します）":"")); };
+    $("cancelSend").onclick = closeSheet;
+    $("doSend").onclick = function () { sendVia(pendingChannel, c, opts.message); closeSheet(); if (opts.onSent) opts.onSent(pendingChannel); };
+  }
+
+  function messageFor(c, gentle) {
+    var m = c.name + " 様\n\nいつもお世話になっております。ピアノ調律の○○です。\n";
+    if (gentle) m += "その後、"+c.piano+"の調子はいかがでしょうか。前回から少しお時間が空きましたが、久しぶりの調律も気兼ねなくお任せください。\n";
+    else m += "前回の調律から約"+intervalText(c)+"が経ちました。そろそろ"+c.piano+"の調律はいかがでしょうか。\n";
+    if (c.fee) m += "\n【調律料金の目安】"+yen(c.fee)+"円（税込）\n※ピアノの状態により変わる場合があります。\n";
+    m += "\nご都合のよい日を2〜3ついただけましたら、こちらで調整いたします。お気軽にご返信ください。";
+    return m;
+  }
+  function openReminder(id) {
+    var c = find(id); if (!c) return; var gentle = status(c) === "dormant";
+    openSendSheet({ customer:c, title: gentle?"久しぶりのご挨拶":"ご案内を送る", subtitle: c.name+" 様（"+c.piano+"）", message: messageFor(c, gentle),
+      onSent: function (ch) { c.remindedCycle = cycleKey(c); c.skippedCycle = null; save(); refreshAll(id); toast(ch+(gentle?"でご挨拶を送りました。":"の送信画面を開きました。予約のお返事を待ちましょう。")); } });
+  }
+
+  function openEstimate(id) {
+    var c = find(id); if (!c) return;
+    var chs = channelState(c); var firstOk = chs.filter(function(ch){return ch.ok;})[0]; pendingChannel = firstOk ? firstOk.key : "LINE";
+    var sheet = $("sheet");
+    sheet.innerHTML = '<h3>お見積もりを送る</h3><p class="to">'+esc(c.name)+' 様（'+esc(c.piano)+'）</p>'
+      + '<div class="field"><label>調律料金</label><input id="est-base" inputmode="numeric" value="'+(c.fee||13000)+'"></div>'
+      + '<div class="field"><label>追加作業の名目（任意）</label><input id="est-extra-label" placeholder="例：弦の交換・クリーニング"></div>'
+      + '<div class="field"><label>追加作業の見込み額（任意）</label><input id="est-extra" inputmode="numeric" placeholder="例：5000"></div>'
+      + '<div class="est-total"><span class="k">合計（税込）</span><span class="v" id="est-total-v"></span></div>'
+      + channelPickerHTML(chs) + '<div class="msg-preview" id="est-preview"></div>'
+      + '<button class="copy-link" id="copyEst">この見積もりをコピーする</button>'
+      + '<div class="form-actions"><button class="btn ghost" id="cancelSend" style="flex:1">閉じる</button><button class="btn primary" id="doSendEst" style="flex:2">'+ICON.send+' 見積もりを送る</button></div>'
+      + '<p class="demo-tag">※ これは試作です。実際の送信動作は簡易的な模擬実装です。</p>';
+    $("scrim").classList.add("open"); bindChannelPicks(sheet);
+    function estMsg() {
+      var base = parseInt($("est-base").value,10)||0, extra = parseInt($("est-extra").value,10)||0, label = $("est-extra-label").value.trim() || "追加作業", total = base + extra;
+      $("est-total-v").textContent = yen(total)+"円";
+      var m = "お見積もり\n"+c.name+" 様（"+c.piano+"）\n\n・調律料金　"+yen(base)+"円\n";
+      if (extra > 0) m += "・"+label+"　"+yen(extra)+"円\n";
+      m += "────────────\n合計　"+yen(total)+"円（税込）\n\n※実際のピアノの状態により変わる場合があります。まずは一度拝見できればと思います。";
+      $("est-preview").textContent = m; return m;
+    }
+    ["est-base","est-extra","est-extra-label"].forEach(function (id) { $(id).addEventListener("input", estMsg); });
+    estMsg();
+    $("copyEst").onclick = function () { copyText(estMsg()); };
+    $("cancelSend").onclick = closeSheet;
+    $("doSendEst").onclick = function () { sendVia(pendingChannel, c, estMsg()); closeSheet(); toast(pendingChannel+"で見積もりを送りました。"); };
+  }
+
+  function openShareKarte(id) {
+    var c = find(id); if (!c) return; if (!c.history.length) { toast("共有できる作業記録がありません。"); return; }
+    var latest = c.history.slice().sort(function(a,b){return b.date.localeCompare(a.date);})[0], next = dueDate(c);
+    var m = c.name + " 様\n\n本日は調律のご依頼をありがとうございました。\n・作業内容：" + latest.work + "\n" + (latest.fee ? "・料金：" + yen(latest.fee) + "円\n" : "") + "・次回の目安：" + fmtJ(next) + "頃\n" + (latest.memo ? "\n" + latest.memo + "\n" : "") + "\nまたピアノのことで気になる点があれば、いつでもご連絡ください。";
+    openSendSheet({ customer:c, title:"作業内容をお客様に共有", subtitle: c.name+" 様（"+fmtJd(fromIso(latest.date))+"の作業）", message:m, photo:latest.photo||null, sendLabel:"お客様に送る",
+      note: latest.photo ? "写真つきで送る場合は、送信画面が開いたあとに写真を添付してください。" : undefined, onSent: function (ch) { toast(ch+"でお客様に共有しました。"); } });
+  }
+
+  function openReceipt(cid, hidx) {
+    var c = find(cid); if (!c || !c.history[hidx]) return; var h = c.history[hidx];
+    var m = "領収書\n\n" + c.name + " 様\n\n金額：" + yen(h.fee) + "円（税込）\n但し：ピアノ" + h.work + "代として\n日付：" + fmtJd(fromIso(h.date)) + "\n\n上記の金額を正に領収いたしました。\n○○ピアノ調律事務所";
+    openSendSheet({ customer:c, title:"領収書を送る", subtitle: c.name+" 様（"+fmtJd(fromIso(h.date))+"・"+yen(h.fee)+"円）", message:m, sendLabel:"領収書を送る",
+      note:"収入印紙や適格請求書（インボイス）が必要な場合は、書面での発行をご検討ください。", onSent: function (ch) { toast(ch+"で領収書を送りました。"); } });
+  }
+
+  /* ---------- appointment ---------- */
+  function openAppt(id) {
+    var c = find(id); if (!c) return;
+    var sheet = $("sheet");
+    sheet.innerHTML = '<h3>訪問予約を入れる</h3><p class="to">'+esc(c.name)+' 様（'+esc(c.piano)+'）</p>'
+      + '<div class="field"><label>訪問日</label><input type="date" id="appt-date" value="'+(c.appt || iso(today()))+'"></div>'
+      + '<p class="send-note">「目安」とは別に、お客様と日程が決まったらここに入れておきます。予定タブに表示されます。</p>'
+      + '<div class="form-actions">'
+      + (c.appt ? '<button class="btn ghost" id="apptClear" style="flex:1">予約を取消</button>' : '')
+      + '<button class="btn primary" id="apptSave" style="flex:2">'+ICON.appt+' 予約を保存</button></div>';
+    $("scrim").classList.add("open");
+    $("apptSave").onclick = function () { c.appt = $("appt-date").value || ""; save(); closeSheet(); refreshAll(id); toast(c.appt ? fmtJd(fromIso(c.appt))+" に予約を入れました。" : "予約日を空にしました。"); };
+    if ($("apptClear")) $("apptClear").onclick = function () { c.appt = ""; save(); closeSheet(); refreshAll(id); toast("予約を取り消しました。"); };
+  }
+
+  /* ---------- customers ---------- */
+  var custView = "list";
+  document.querySelectorAll("[data-cview]").forEach(function (b) {
+    b.onclick = function () {
+      custView = b.getAttribute("data-cview");
+      document.querySelectorAll("[data-cview]").forEach(function (x){ x.classList.toggle("sel", x===b); });
+      $("custListWrap").style.display = custView==="list" ? "" : "none";
+      $("custMapWrap").style.display = custView==="map" ? "" : "none";
+      $("fab").style.display = (custView==="list") ? "inline-flex" : "none";
+      if (custView === "map") renderMap();
+    };
+  });
+  function pillFor(c) {
+    if (hasAppt(c)) return '<span class="pill appt">予約あり</span>';
+    var s = status(c);
+    return s==="overdue" ? '<span class="pill overdue">超過</span>' : s==="due" ? '<span class="pill due">今月</span>'
+      : s==="next" ? '<span class="pill next">来月</span>' : s==="dormant" ? '<span class="pill dormant">ご無沙汰</span>' : '<span class="pill calm">落ち着き</span>';
+  }
+  function custRow(c, orderNum) {
+    var tail = hasAppt(c) ? '予約 '+fmtJ(fromIso(c.appt)) : '目安 '+fmtJ(dueDate(c));
+    return '<div class="list-item" data-detail="'+c.id+'">'
+      + (orderNum ? '<div class="li-order">'+orderNum+'</div>' : '<div class="avatar">'+esc(initials(c.name))+'</div>')
+      + '<div class="li-main"><p class="li-name">'+esc(c.name)+'</p><p class="li-sub">'+esc(c.piano)+' ・ '+esc(c.area)+'</p></div>'
+      + '<div class="li-tail">'+pillFor(c)+'<div class="li-date">'+tail+'</div></div></div>';
+  }
+  function renderCustomers(filter) {
+    filter = (filter||"").trim();
+    var arr = state.slice().sort(function (a,b){ return monthIndex(dueDate(a)) - monthIndex(dueDate(b)); });
+    if (filter) arr = arr.filter(function (c){ return (c.name+c.area+c.piano).indexOf(filter) >= 0; });
+    $("resultCount").textContent = filter ? arr.length+"件 見つかりました" : "全"+arr.length+"件";
+    if (!arr.length) { $("customerList").innerHTML = '<div class="empty">該当するお客様が見つかりません。</div>'; return; }
+    $("customerList").innerHTML = arr.map(function (c){ return custRow(c); }).join("");
+    bindCardButtons();
+  }
+
+  /* ---------- map ---------- */
+  var MAP_POS = { "横浜市":{x:28,y:70}, "川崎市":{x:47,y:52}, "東京都":{x:66,y:28}, "その他":{x:84,y:60} };
+  var AREA_ORDER = { "横浜市":0, "川崎市":1, "東京都":2, "その他":3 };
+  function areaBucket(area) { if(!area)return "その他"; if(area.indexOf("横浜")>=0)return "横浜市"; if(area.indexOf("川崎")>=0)return "川崎市"; if(area.indexOf("東京")>=0)return "東京都"; return "その他"; }
+  function routeSort(a, b) { return (AREA_ORDER[areaBucket(a.area)]-AREA_ORDER[areaBucket(b.area)]) || a.name.localeCompare(b.name); }
+  var mapSel = null;
+  function renderMap() {
+    var groups = {};
+    state.forEach(function (c){ var b=areaBucket(c.area); (groups[b]=groups[b]||[]).push(c); });
+    $("mapPanel").innerHTML = Object.keys(groups).map(function (b) {
+      var pos = MAP_POS[b] || MAP_POS["その他"];
+      return '<button class="map-pin'+(mapSel===b?' sel':'')+'" style="left:'+pos.x+'%;top:'+pos.y+'%" data-bucket="'+esc(b)+'"><span class="bubble">'+groups[b].length+'</span><span class="tag">'+esc(b)+'</span></button>';
+    }).join("");
+    $("mapPanel").querySelectorAll("[data-bucket]").forEach(function (btn) { btn.onclick = function () { var b=btn.getAttribute("data-bucket"); mapSel = (mapSel===b)?null:b; renderMap(); }; });
+    renderMapList(groups);
+  }
+  function renderMapList(groups) {
+    if (!mapSel) { $("mapListResult").innerHTML = ""; return; }
+    var arr = ((groups && groups[mapSel]) || []).slice().sort(function(a,b){return monthIndex(dueDate(a))-monthIndex(dueDate(b));});
+    $("mapListResult").innerHTML = '<p class="map-list-head">'+esc(mapSel)+' のお客様（'+arr.length+'件）</p>' + arr.map(function (c){ return custRow(c); }).join("");
+    bindCardButtons();
+  }
+
+  /* ---------- schedule (予定：リスト + カレンダー) ---------- */
+  var sView = "list";
+  document.querySelectorAll("[data-sview]").forEach(function (b) {
+    b.onclick = function () {
+      sView = b.getAttribute("data-sview");
+      document.querySelectorAll("[data-sview]").forEach(function (x){ x.classList.toggle("sel", x===b); });
+      $("agendaWrap").style.display = sView==="list" ? "" : "none";
+      $("calWrap").style.display = sView==="cal" ? "" : "none";
+      if (sView === "cal") renderCalendar(); else renderAgenda();
+    };
+  });
+  function renderSchedule() { if (sView === "cal") renderCalendar(); else renderAgenda(); }
+
+  function renderAgenda() {
+    var t = today(), mi = monthIndex(t), html = "";
+    // 予約が入っているお客様（日付確定）
+    var appts = state.filter(hasAppt).sort(function(a,b){ return a.appt.localeCompare(b.appt); });
+    if (appts.length) {
+      html += '<div class="ag-month"><span class="badge">予約確定</span><span class="cnt">'+appts.length+'件</span></div>';
+      appts.forEach(function (c) {
+        var d = fromIso(c.appt);
+        html += '<div class="appt-row" data-detail="'+c.id+'"><div class="appt-date"><div class="m">'+(d.getMonth()+1)+'月</div><div class="d">'+d.getDate()+'</div><div class="wd">'+WD[d.getDay()]+'</div></div>'
+          + '<div class="li-main"><p class="li-name">'+esc(c.name)+'</p><p class="li-sub">'+esc(c.piano)+' ・ '+esc(c.area)+'</p></div></div>';
+      });
+    }
+    // 目安による予定（月別・先まで）
+    var buckets = {};
+    state.forEach(function (c) {
+      if (hasAppt(c)) return;
+      var dm = Math.max(monthIndex(dueDate(c)), mi); // 過去分は今月に畳む
+      (buckets[dm] = buckets[dm] || []).push(c);
+    });
+    var keys = Object.keys(buckets).map(Number).sort(function(a,b){return a-b;});
+    keys.forEach(function (k) {
+      var off = k - mi;
+      var d = addMonths(t, off);
+      var label = off===0 ? "今月（"+fmtJ(d)+"）" : off===1 ? "来月（"+fmtJ(d)+"）" : fmtJ(d);
+      var arr = buckets[k].slice().sort(function(a,b){ return monthIndex(dueDate(a))-monthIndex(dueDate(b)) || a.name.localeCompare(b.name); });
+      html += '<div class="ag-month">'+esc(label)+'<span class="cnt">'+arr.length+'件・日付未定</span></div>';
+      html += arr.map(function (c){ return poolRow(c); }).join("");
+    });
+    if (!html) html = '<div class="empty">'+ICON.appt+'これからの予定はありません。</div>';
+    $("agendaWrap").innerHTML = html;
+    bindCardButtons();
+  }
+
+  var calRef = new Date(today().getFullYear(), today().getMonth(), 1);
+  var calSelected = null;
+  function poolRow(c) {
+    var over = status(c)==="overdue" || status(c)==="dormant";
+    return '<div class="list-item" data-detail="'+c.id+'">'
+      + '<div class="avatar">'+esc(initials(c.name))+'</div>'
+      + '<div class="li-main"><p class="li-name">'+esc(c.name)+'</p><p class="li-sub">'+esc(c.piano)+' ・ 目安 '+fmtJ(dueDate(c))+(over?'（超過）':'')+'</p></div>'
+      + '<button class="pool-btn" data-appt-quick="'+c.id+'">'+ICON.appt+' 予約にする</button>'
+      + '</div>';
+  }
+  function renderCalendar() {
+    var y = calRef.getFullYear(), m = calRef.getMonth();
+    $("calLabel").textContent = y+"年"+(m+1)+"月";
+    var dim = new Date(y, m+1, 0).getDate(), startWd = new Date(y, m, 1).getDay();
+    var apptByDay = {};
+    state.forEach(function (c){
+      if (hasAppt(c)) { var a=fromIso(c.appt); if(a.getFullYear()===y&&a.getMonth()===m){ (apptByDay[a.getDate()]=apptByDay[a.getDate()]||[]).push(c); } }
+    });
+    var h = WD.map(function(w){return '<div class="cal-wd">'+w+'</div>';}).join("");
+    for (var i=0;i<startWd;i++) h += '<div class="cal-day blank"></div>';
+    for (var d=1; d<=dim; d++) {
+      var dateObj = new Date(y,m,d), isToday = sameYMD(dateObj, today()), isSel = calSelected===d;
+      var dots = (apptByDay[d]||[]).slice(0,3).map(function(){ return '<i class="appt"></i>'; }).join("");
+      h += '<button class="cal-day'+(isToday?' today':'')+(isSel?' sel':'')+'" data-day="'+d+'">'+d+(dots?'<span class="dots">'+dots+'</span>':'')+'</button>';
+    }
+    $("calGrid").innerHTML = h;
+    $("calGrid").querySelectorAll("[data-day]").forEach(function (btn){ btn.onclick = function(){ calSelected = +btn.getAttribute("data-day"); renderCalendar(); }; });
+    renderCalDayList(apptByDay);
+    renderCalPool();
+  }
+  function renderCalDayList(apptByDay) {
+    if (!calSelected) { $("calDayList").innerHTML = '<p class="view-sub" style="margin:0">日付をタップすると、その日の予約を表示します。</p>'; return; }
+    var y = calRef.getFullYear(), m = calRef.getMonth(), label = y+"年"+(m+1)+"月"+calSelected+"日";
+    var appts = apptByDay[calSelected]||[];
+    if (!appts.length) { $("calDayList").innerHTML = '<p class="view-sub" style="margin:0">'+label+' の予約はありません。</p>'; return; }
+    appts.sort(routeSort);
+    var h = '<p class="map-list-head">'+label+' の予約（'+appts.length+'件）</p>';
+    if (appts.length >= 2) h += '<p class="sec-note">近いエリアでまとめた訪問順の提案です。</p>';
+    h += appts.map(function(c, i){ return custRow(c, appts.length>=2 ? (i+1) : 0); }).join("");
+    $("calDayList").innerHTML = h;
+    bindCardButtons();
+  }
+  function renderCalPool() {
+    var y = calRef.getFullYear(), m = calRef.getMonth(), mIdx = y*12+m, tIdx = monthIndex(today());
+    if (mIdx < tIdx) { $("calPool").innerHTML = ""; return; } // 過去の月にプールは出さない
+    var pool = state.filter(function (c) {
+      if (hasAppt(c)) return false;
+      var dm = Math.max(monthIndex(dueDate(c)), tIdx); // 超過分は今月に畳む
+      return dm === mIdx;
+    }).sort(function (a,b){ return monthIndex(dueDate(a)) - monthIndex(dueDate(b)) || a.name.localeCompare(b.name); });
+    if (!pool.length) { $("calPool").innerHTML = ""; return; }
+    $("calPool").innerHTML =
+        '<div class="sec-head" style="margin-top:20px"><span class="dot due"></span><h3>'+(m+1)+'月に時期を迎える（日付未定）</h3><span class="count">'+pool.length+'件</span></div>'
+      + '<p class="sec-note">まだ日付が決まっていないお客様です。日程が決まったら「予約にする」でカレンダーに載ります。</p>'
+      + pool.map(poolRow).join("");
+    bindCardButtons();
+  }
+  $("calPrev").onclick = function () { calRef = addMonths(calRef, -1); calSelected = null; renderCalendar(); };
+  $("calNext").onclick = function () { calRef = addMonths(calRef, 1); calSelected = null; renderCalendar(); };
+
+  /* ---------- revenue ---------- */
+  function renderRevenue() {
+    var mi = monthIndex(today()), monthly = {}, thisMonth = [], viaSum = 0, total = 0;
+    state.forEach(function (c) { c.history.forEach(function (h, idx) {
+      var fee = +h.fee || 0; if (!fee) return; var hm = monthIndex(fromIso(h.date));
+      monthly[hm] = (monthly[hm]||0) + fee;
+      if (hm === mi) { total += fee; if (h.via) viaSum += fee; thisMonth.push({c:c, h:h, idx:idx}); }
+    }); });
+    $("revMonthTotal").innerHTML = yen(total) + "<small>円</small>";
+    $("revViaReminder").textContent = yen(viaSum) + "円";
+    $("revCount").textContent = thisMonth.length + "件";
+    var max = 1, cols = [];
+    for (var k = 5; k >= 0; k--) { var v = monthly[mi-k]||0; if (v > max) max = v; cols.push({off:k, v:v}); }
+    $("revChart").innerHTML = cols.map(function (col) {
+      var d = addMonths(today(), -col.off), hpx = Math.max(3, Math.round(col.v / max * 96));
+      return '<div class="col'+(col.off===0?' cur':'')+'"><span class="amt">'+(col.v?Math.round(col.v/1000)+'k':'')+'</span><div class="bar" style="height:'+hpx+'px"></div><span class="lbl">'+(d.getMonth()+1)+'月</span></div>';
+    }).join("");
+    thisMonth.sort(function (a,b){ return b.h.date.localeCompare(a.h.date); });
+    $("revListCount").textContent = thisMonth.length + "件";
+    $("revList").innerHTML = thisMonth.length ? thisMonth.map(function (r) {
+      return '<div class="rev-list-item"><div class="avatar">'+esc(initials(r.c.name))+'</div>'
+        + '<div class="li-main"><p class="li-name">'+esc(r.c.name)+(r.h.via?'<span class="via-tag">ご案内から</span>':'')+'</p><p class="li-sub">'+esc(r.h.work)+' ・ '+fmtJd(fromIso(r.h.date))+'</p></div>'
+        + '<div style="text-align:right"><div class="yen">'+yen(r.h.fee)+'円</div><button class="tl-receipt" data-receipt="'+r.c.id+'|'+r.idx+'">領収書</button></div></div>';
+    }).join("") : '<div class="empty">今月の記録はまだありません。<br>「記録」タブから調律を記録すると、ここに集計されます。</div>';
+    bindCardButtons();
+  }
+
+  /* ---------- detail ---------- */
+  function renderDetail(id) {
+    var c = find(id); if (!c) return;
+    var s = status(c);
+    var pill = hasAppt(c) ? '<span class="pill appt">予約 '+fmtJd(fromIso(c.appt))+'</span>'
+      : s==="overdue"?'<span class="pill overdue">超過</span>':s==="due"?'<span class="pill due">今月が目安</span>':s==="next"?'<span class="pill next">来月が目安</span>':s==="dormant"?'<span class="pill dormant">長期ご無沙汰</span>':'<span class="pill calm">落ち着いています</span>';
+    var hist = c.history.map(function (h, idx){ return {h:h, idx:idx}; }).sort(function(a,b){return b.h.date.localeCompare(a.h.date);});
+    var tl = hist.length ? hist.map(function (r) { var h = r.h;
+      return '<div class="tl-item"><div class="tl-date">'+fmtJd(fromIso(h.date))+'</div><div class="tl-body">'+esc(h.work)+(h.fee?' ・ '+yen(h.fee)+'円':'')+(h.via?'<span class="via-tag">ご案内から</span>':'')+(h.memo?'<br>'+esc(h.memo):'')+'</div>'
+        + (h.photo?'<img class="tl-photo" src="'+h.photo+'" alt="作業写真">':'') + (h.fee?'<button class="tl-receipt" data-receipt="'+c.id+'|'+r.idx+'">領収書を送る</button>':'') + '</div>';
+    }).join("") : '<div class="tl-body" style="color:var(--ink-3)">まだ記録がありません。</div>';
+
+    $("view-detail").innerHTML =
+        '<button class="back-btn" data-nav="customers">‹ お客様一覧へ</button>'
+      + '<div class="detail-head"><div class="avatar">'+esc(initials(c.name))+'</div><div><h2>'+esc(c.name)+' 様</h2><div class="sub">'+pill+' ・ 次回目安 '+fmtJ(dueDate(c))+'</div></div></div>'
+      + '<div class="info-grid">'
+      +   cell("ピアノ", c.piano, true) + cell("調律料金の目安", c.fee?yen(c.fee)+"円":"—", false, !c.fee)
+      +   cell("前回の調律", fmtJd(fromIso(c.last))) + cell("調律の周期", intervalText(c)+"ごと")
+      +   '<div class="info-cell"><div class="k">訪問予約</div><div class="v'+(hasAppt(c)?' appt':' muted')+'">'+(hasAppt(c)?fmtJd(fromIso(c.appt)):"未設定")+'</div></div>'
+      +   cell("設置環境", c.env)
+      +   (c.area ? '<div class="info-cell full"><div class="k">ご住所・地域（タップで地図）</div><div class="v"><a class="cell-link" href="'+mapUrl(c.area)+'" target="_blank" rel="noopener">'+esc(c.area)+' ↗</a></div></div>' : cell("ご住所・地域","—",true,true))
+      +   (c.phone ? '<div class="info-cell"><div class="k">電話・SMS（タップで発信）</div><div class="v"><a class="cell-link" href="tel:'+esc(c.phone)+'">'+esc(c.phone)+'</a></div></div>' : cell("電話・SMS","—",false,true))
+      +   cell("メール", c.email||"—", false, !c.email)
+      +   cell("LINE", c.line||"未登録", false, !c.line) + (c.sns?cell("SNS", c.sns):cell("SNS","未登録",false,true))
+      +   (c.memo? cell("メモ", c.memo, true) : "")
+      + '</div>'
+      + (skipped(c) ? '<div class="skip-row" style="margin-bottom:16px"><span class="txt">今回のご案内は見送り中</span><button class="btn link" data-undo="'+c.id+'">取り消す</button></div>' : "")
+      + '<div class="sec-head"><h3>調律の履歴</h3><span class="count">'+hist.length+'件</span></div>'
+      + '<div class="timeline">'+tl+'</div>'
+      + '<div class="detail-actions">'
+      +   '<button class="btn primary" data-remind="'+c.id+'">'+ICON.send+' ご案内を送る</button>'
+      +   '<button class="btn ghost" data-appt="'+c.id+'">'+ICON.appt+' 予約日</button>'
+      +   '<button class="btn ghost" data-estimate="'+c.id+'">'+ICON.quote+' 見積もり</button>'
+      +   '<button class="btn ghost" data-share="'+c.id+'">'+ICON.share+' 作業を共有</button>'
+      +   '<button class="btn ghost" data-record="'+c.id+'" style="grid-column:1/-1">'+ICON.log+' 記録する</button>'
+      + '</div>';
+    show("detail");
+    bindCardButtons();
+    $("view-detail").querySelectorAll("[data-nav]").forEach(bindNav);
+    $("view-detail").querySelectorAll("[data-estimate]").forEach(function (b){ b.onclick = function(){ openEstimate(b.getAttribute("data-estimate")); }; });
+    $("view-detail").querySelectorAll("[data-share]").forEach(function (b){ b.onclick = function(){ openShareKarte(b.getAttribute("data-share")); }; });
+    $("view-detail").querySelectorAll("[data-appt]").forEach(function (b){ b.onclick = function(){ openAppt(b.getAttribute("data-appt")); }; });
+  }
+  function cell(k, v, full, muted) { return '<div class="info-cell'+(full?' full':'')+'"><div class="k">'+k+'</div><div class="v'+(muted?' muted':'')+'">'+esc(v)+'</div></div>'; }
+
+  /* ---------- add ---------- */
+  $("saveCustomer").onclick = function () {
+    var name = $("f-name").value.trim(), last = $("f-last").value;
+    if (!name) { toast("お名前を入力してください。"); return; }
+    if (!last) { toast("前回の調律日を入力してください。"); return; }
+    state.push({ id:"c"+Math.random().toString(36).slice(2,9), name:name, piano:$("f-piano").value.trim()||"（未登録）",
+      fee: parseInt($("f-fee").value,10)||13000, phone:$("f-phone").value.trim(), email:$("f-email").value.trim(),
+      line:$("f-line").value.trim(), sns:$("f-sns").value.trim(), area:$("f-area").value.trim(), env:$("f-env").value,
+      last:last, interval:+$("f-interval").value, appt:"", memo:$("f-memo").value.trim(),
+      remindedCycle:null, skippedCycle:null, history:[{ date:last, work:"調律", fee:"", memo:"登録時の前回記録", photo:null, via:false }] });
+    save();
+    ["f-name","f-piano","f-fee","f-phone","f-email","f-line","f-sns","f-area","f-memo"].forEach(function(id){$(id).value="";});
+    $("f-last").value="";
+    toast(name+" 様を登録しました。");
+    refreshAll(); show("customers");
+  };
+
+  /* ---------- record ---------- */
+  var recordSelectedId = null, pendingPhoto = null;
+  function recordCandidates() {
+    var t = today(), seen = {}, list = [];
+    state.filter(hasAppt).sort(function(a,b){return a.appt.localeCompare(b.appt);}).forEach(function(c){ if(!seen[c.id]){seen[c.id]=1; c._tag="予約 "+fmtJ(fromIso(c.appt)); list.push(c);} });
+    state.filter(function(c){ var s=status(c); return s==="overdue"||s==="due"; }).sort(function(a,b){return monthIndex(dueDate(a))-monthIndex(dueDate(b));}).forEach(function(c){ if(!seen[c.id]){seen[c.id]=1; c._tag=status(c)==="overdue"?"超過":"今月"; list.push(c);} });
+    return list.slice(0,6);
+  }
+  function renderRecordQuick() {
+    var list = recordCandidates();
+    if (!list.length) { $("rQuickWrap").style.display = "none"; return; }
+    $("rQuickWrap").style.display = "";
+    $("rQuick").innerHTML = list.map(function (c) {
+      return '<div class="list-item" data-pick="'+c.id+'"><div class="avatar">'+esc(initials(c.name))+'</div>'
+        + '<div class="li-main"><p class="li-name">'+esc(c.name)+'</p><p class="li-sub">'+esc(c.piano)+'</p></div>'
+        + '<div class="li-tail">'+pillFor(c)+'</div></div>';
+    }).join("");
+    $("rQuick").querySelectorAll("[data-pick]").forEach(function (el){ el.onclick=function(){ pickRecordCustomer(el.getAttribute("data-pick")); }; });
+  }
+  function rSearchResults(q) {
+    q = (q||"").trim();
+    if (!q) { $("rResults").style.display="none"; $("rResults").innerHTML=""; return; }
+    var arr = state.filter(function(c){return (c.name+c.area+c.piano).indexOf(q)>=0;}).slice(0,8);
+    if (!arr.length) { $("rResults").style.display="block"; $("rResults").innerHTML='<div class="empty" style="padding:16px">見つかりません。</div>'; return; }
+    $("rResults").innerHTML = arr.map(function (c){ return '<div class="list-item" data-pick="'+c.id+'"><div class="avatar">'+esc(initials(c.name))+'</div><div class="li-main"><p class="li-name">'+esc(c.name)+'</p><p class="li-sub">'+esc(c.piano)+' ・ '+esc(c.area)+'</p></div></div>'; }).join("");
+    $("rResults").style.display="block";
+    $("rResults").querySelectorAll("[data-pick]").forEach(function (el){ el.onclick=function(){ pickRecordCustomer(el.getAttribute("data-pick")); }; });
+  }
+  $("r-search").addEventListener("input", function () { rSearchResults(this.value); });
+  function pickRecordCustomer(id) {
+    var c = find(id); if (!c) return;
+    recordSelectedId = id;
+    $("rQuickWrap").style.display="none"; $("r-pick-field").style.display="none"; $("rResults").style.display="none"; $("r-search").value="";
+    $("rPicked").style.display="flex";
+    $("rPicked").innerHTML = '<div class="avatar">'+esc(initials(c.name))+'</div><div class="li-main"><p class="li-name" style="margin:0">'+esc(c.name)+'</p><p class="li-sub">'+esc(c.piano)+' ・ '+esc(c.area)+'</p></div><button class="btn ghost" id="rChangeInline" style="flex:0 0 auto">変更</button>';
+    $("rChangeInline").onclick = clearRecordPick;
+    $("r-form-body").style.display="block";
+    $("r-date").value = iso(today()); $("r-fee").value = c.fee || ""; $("r-next").value = iso(addMonths(today(), c.interval));
+    clearPhoto();
+  }
+  function clearRecordPick() {
+    recordSelectedId = null; $("rPicked").style.display="none"; $("r-form-body").style.display="none";
+    $("r-pick-field").style.display="block"; $("r-search").value=""; clearPhoto(); renderRecordQuick();
+  }
+  function clearPhoto() { pendingPhoto=null; var t=$("r-photo-thumb"); t.style.display="none"; t.src=""; $("r-photo").value=""; }
+  $("rChange").onclick = clearRecordPick;
+  $("r-photo").addEventListener("change", function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function (e) { var img = new Image();
+      img.onload = function () {
+        var max=800, w=img.width, h=img.height;
+        if (w>max||h>max) { if (w>h){ h=Math.round(h*max/w); w=max; } else { w=Math.round(w*max/h); h=max; } }
+        var cv=document.createElement("canvas"); cv.width=w; cv.height=h; cv.getContext("2d").drawImage(img,0,0,w,h);
+        pendingPhoto = cv.toDataURL("image/jpeg", 0.6); var t=$("r-photo-thumb"); t.src=pendingPhoto; t.style.display="block";
+      }; img.src = e.target.result; };
+    reader.readAsDataURL(f);
+  });
+  function gotoRecord(id) { show("record"); if (id) pickRecordCustomer(id); else clearRecordPick(); }
+  $("saveRecord").onclick = function () {
+    var c = find(recordSelectedId); if (!c) { toast("お客様を選択してください。"); return; }
+    var date = $("r-date").value || iso(today()), via = reminded(c);
+    if ($("r-fee").value.trim()) c.fee = parseInt($("r-fee").value,10)||c.fee;
+    c.history.push({ date:date, work:$("r-work").value, fee:$("r-fee").value, memo:$("r-memo").value.trim(), photo:pendingPhoto, via:via });
+    c.last = date; c.appt = ""; c.remindedCycle=null; c.skippedCycle=null;
+    save();
+    var next = fmtJ(addMonths(fromIso(date), c.interval)), savedId = c.id;
+    toast("記録しました。次回のご案内は "+next+" 頃にお知らせします。");
+    clearRecordPick(); refreshAll(); renderDetail(savedId);
+  };
+
+  /* ---------- nav ---------- */
+  function show(name) {
+    document.querySelectorAll(".view").forEach(function (v){ v.classList.remove("active"); });
+    $("view-"+name).classList.add("active");
+    var tabMatch = (name==="home"||name==="calendar"||name==="customers"||name==="record"||name==="revenue");
+    document.querySelectorAll(".tab").forEach(function (t){ var target = tabMatch?name:"customers"; t.classList.toggle("active", t.getAttribute("data-nav")===target); });
+    $("fab").style.display = (name==="customers" && custView==="list") ? "inline-flex" : "none";
+    $("scroll").scrollTop = 0;
+    if (name === "calendar") renderSchedule();
+    if (name === "revenue") renderRevenue();
+    if (name === "record") { if (!recordSelectedId) { renderRecordQuick(); } }
+  }
+  function bindNav(el) { el.onclick = function () { var n = el.getAttribute("data-nav"); if (n==="record") gotoRecord(); else show(n); }; }
+  document.querySelectorAll(".tab[data-nav], .view [data-nav]").forEach(bindNav);
+  $("fab").onclick = function () { show("add"); };
+
+  $("search").addEventListener("input", function () { renderCustomers(this.value); });
+  $("themeBtn").onclick = function () {
+    var root = document.documentElement, cur = root.getAttribute("data-theme");
+    if (!cur) cur = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    root.setAttribute("data-theme", cur==="dark" ? "light" : "dark");
+  };
+
+  renderHome(); renderCustomers(); renderAgenda(); renderRevenue(); renderRecordQuick(); show("home");
+})();
+</script>
