@@ -1,0 +1,510 @@
+<title>調律ノート 技術仕様（2026-08-10）</title>
+<style>
+  :root {
+    --ground:#F4F2EC; --surface:#FFFFFF; --surface-2:#EDEAE1;
+    --ink:#1E1C17; --ink-2:#5E594F; --ink-3:#948E80;
+    --line:#E7E2D6; --line-strong:#D6CFBF;
+    --accent:#0E8F83; --accent-ink:#0A6A60; --accent-soft:#DBEFEB;
+    --brass:#B0873A; --brass-ink:#8A6820; --brass-soft:#F0E7D2;
+    --alert:#C6503A; --alert-ink:#A23A26; --alert-soft:#F6E2DB;
+    --code-bg:#1E1C17; --code-ink:#EDE7D8;
+    --font-sans:-apple-system,BlinkMacSystemFont,system-ui,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP","Segoe UI",Roboto,sans-serif;
+    --font-serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP","Times New Roman",serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --measure:41rem;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --ground:#12110D; --surface:#1B1A15; --surface-2:#25231C;
+    --ink:#F2EFE6; --ink-2:#B0A999; --ink-3:#7C7565;
+    --line:#2E2B22; --line-strong:#3C3830;
+    --accent:#2CC2B0; --accent-ink:#63D8C7; --accent-soft:#0F302D;
+    --brass:#D9B063; --brass-ink:#E8C88A; --brass-soft:#2E2612;
+    --alert:#EC8067; --alert-ink:#F3A48F; --alert-soft:#37231C;
+    --code-bg:#0B0A07; --code-ink:#DCD6C6;
+  }}
+  :root[data-theme="dark"]{
+    --ground:#12110D; --surface:#1B1A15; --surface-2:#25231C;
+    --ink:#F2EFE6; --ink-2:#B0A999; --ink-3:#7C7565;
+    --line:#2E2B22; --line-strong:#3C3830;
+    --accent:#2CC2B0; --accent-ink:#63D8C7; --accent-soft:#0F302D;
+    --brass:#D9B063; --brass-ink:#E8C88A; --brass-soft:#2E2612;
+    --alert:#EC8067; --alert-ink:#F3A48F; --alert-soft:#37231C;
+    --code-bg:#0B0A07; --code-ink:#DCD6C6;
+  }
+  :root[data-theme="light"]{
+    --ground:#F4F2EC; --surface:#FFFFFF; --surface-2:#EDEAE1;
+    --ink:#1E1C17; --ink-2:#5E594F; --ink-3:#948E80;
+    --line:#E7E2D6; --line-strong:#D6CFBF;
+    --accent:#0E8F83; --accent-ink:#0A6A60; --accent-soft:#DBEFEB;
+    --brass:#B0873A; --brass-ink:#8A6820; --brass-soft:#F0E7D2;
+    --alert:#C6503A; --alert-ink:#A23A26; --alert-soft:#F6E2DB;
+    --code-bg:#1E1C17; --code-ink:#EDE7D8;
+  }
+
+  .page{background:var(--ground);color:var(--ink);font-family:var(--font-sans);font-size:16px;line-height:1.85;
+    padding:clamp(20px,5vw,64px) clamp(16px,5vw,40px) 96px;display:flex;flex-direction:column;align-items:center;-webkit-font-smoothing:antialiased;}
+  .wrap{width:100%;max-width:64rem;display:flex;flex-direction:column;gap:52px;}
+
+  .masthead{display:flex;flex-direction:column;gap:14px;}
+  .eyebrow{font-size:12px;letter-spacing:.16em;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;}
+  .eyebrow b{color:var(--accent-ink);font-weight:600;letter-spacing:.1em;}
+  h1{font-family:var(--font-serif);font-size:clamp(28px,5vw,42px);line-height:1.3;font-weight:600;text-wrap:balance;margin:0;}
+  .standfirst{max-width:var(--measure);color:var(--ink-2);font-size:16.5px;}
+  .rule{height:1px;background:var(--line-strong);border:0;margin:0;}
+
+  section{display:flex;flex-direction:column;gap:18px;}
+  h2{font-family:var(--font-serif);font-size:clamp(21px,3vw,27px);line-height:1.4;font-weight:600;margin:0;
+    padding-bottom:10px;border-bottom:2px solid var(--ink);display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;}
+  h2 .num{font-size:14px;color:var(--accent-ink);font-family:var(--font-sans);font-weight:700;letter-spacing:.1em;}
+  h3{font-size:17px;font-weight:700;margin:14px 0 0;}
+  h3:first-child{margin-top:0;}
+  h4{font-size:13.5px;font-weight:700;margin:0;color:var(--accent-ink);letter-spacing:.06em;}
+  p{margin:0;max-width:var(--measure);}
+  a{color:var(--accent-ink);text-underline-offset:2px;}
+  a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+  code{font-family:var(--mono);font-size:.87em;background:var(--surface-2);padding:.12em .4em;border-radius:3px;}
+  em{font-style:normal;background:var(--accent-soft);padding:0 .25em;border-radius:2px;}
+
+  ul.plain{margin:0;padding-left:1.15em;max-width:var(--measure);display:flex;flex-direction:column;gap:9px;}
+  ul.plain.wide{max-width:none;}
+  ul.plain li::marker{color:var(--brass);}
+
+  .scroller{overflow-x:auto;border:1px solid var(--line);border-radius:3px;background:var(--surface);}
+  table{border-collapse:collapse;width:100%;min-width:560px;font-size:14.5px;}
+  caption{text-align:left;padding:14px 16px 0;font-size:13px;color:var(--ink-3);}
+  th,td{text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7;}
+  thead th{font-size:12px;letter-spacing:.1em;color:var(--ink-3);font-weight:600;border-bottom:1px solid var(--line-strong);white-space:nowrap;}
+  tbody tr:last-child td{border-bottom:0;}
+  td.k{font-weight:600;}
+  td.n{color:var(--ink-2);}
+  td.c{text-align:center;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .pick{background:var(--accent-soft);}
+  .pick td{font-weight:700;}
+
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:5px;padding:16px 18px;font-family:var(--mono);
+    font-size:12.5px;line-height:1.8;overflow-x:auto;margin:0;}
+  pre .c{color:#8C8570;}
+  pre .k{color:#7FD1C4;}
+  pre .s{color:#D9B063;}
+  pre .t{color:#EC8067;}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--tone,var(--line-strong));
+    border-radius:3px;padding:16px 18px;display:flex;flex-direction:column;gap:9px;}
+  .card.warn{--tone:var(--alert);} .card.note{--tone:var(--brass);} .card.ok{--tone:var(--accent);}
+  .card p{font-size:14.5px;line-height:1.75;color:var(--ink-2);max-width:none;}
+  .card .tag{align-self:flex-start;font-size:11px;letter-spacing:.12em;font-weight:700;padding:3px 8px;border-radius:2px;}
+  .warn .tag{background:var(--alert-soft);color:var(--alert-ink);}
+  .note .tag{background:var(--brass-soft);color:var(--brass-ink);}
+  .ok .tag{background:var(--accent-soft);color:var(--accent-ink);}
+
+  .grid2{display:grid;gap:14px;grid-template-columns:1fr;}
+  @media(min-width:760px){.grid2{grid-template-columns:1fr 1fr;}}
+
+  .arch{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:18px;overflow-x:auto;}
+  .arch pre{background:none;color:var(--ink-2);font-size:12px;padding:0;line-height:1.65;}
+  .arch pre b{color:var(--accent-ink);}
+  .arch pre i{color:var(--brass);font-style:normal;}
+
+  .sched{display:flex;flex-direction:column;}
+  .sched .row{display:grid;grid-template-columns:88px 1fr;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);align-items:baseline;}
+  .sched .row:last-child{border-bottom:0;}
+  .sched .d{font-size:13px;font-weight:700;color:var(--accent-ink);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .sched .b{font-size:14.5px;line-height:1.7;}
+  .sched .b small{display:block;font-size:13px;color:var(--ink-2);margin-top:2px;}
+  .sched .row.crit{background:var(--alert-soft);margin:0 -12px;padding:12px;border-radius:3px;border-bottom:0;}
+  .sched .row.crit .d{color:var(--alert-ink);}
+
+  blockquote{margin:0;padding:15px 19px;background:var(--surface-2);border-left:3px solid var(--brass);border-radius:2px;
+    font-family:var(--font-serif);font-size:16.5px;line-height:1.8;max-width:var(--measure);}
+  blockquote cite{display:block;margin-top:8px;font-family:var(--font-sans);font-size:12.5px;font-style:normal;color:var(--ink-3);}
+
+  .limits{background:var(--surface-2);border:1px solid var(--line);border-radius:3px;padding:20px 22px;display:flex;flex-direction:column;gap:12px;}
+  .limits h2{font-size:18px;border-bottom:0;padding-bottom:0;}
+  .limits p,.limits ul{font-size:14px;color:var(--ink-2);}
+  .sources{font-size:12.5px;color:var(--ink-3);line-height:2;}
+  .sources a{color:var(--ink-2);}
+</style>
+
+<div class="page">
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow"><b>調律ノート</b><span>技術仕様</span><span>2026-08-10</span></div>
+    <h1>ひとつのコードから、iPhone と Android と Web へ</h1>
+    <p class="standfirst">Capacitor で web 版をそのまま両ストアへ包む構成。データベース設計、認証、写真、オフライン、課金、国際化まで。あわせて、同時リリースの現実的な日程を示す。<strong>結論から言うと、Android は「すぐ」は出せない。</strong>律速は Google Play 側にあり、回避策がある。</p>
+    <hr class="rule">
+  </header>
+
+  <section>
+    <h2><span class="num">先に</span>いちばん重要な3つ</h2>
+
+    <div class="card warn">
+      <span class="tag">日程を決める要因</span>
+      <p><strong>Google Play の個人開発者アカウントには、製品版を出す前に「12人のテスターが14日間連続でクローズドテストする」義務があります。</strong>2023年11月13日以降に作った個人アカウントが対象です。テスターは招待だけでは数えられず、<em>実際にインストールした状態が14日continuous</em>で必要。1人でも途中で抜けるとカウントがやり直しになります。<br><br>
+      これに製品版アクセスの審査（最大7日）とアプリ本体の審査（新規アカウントは実績7〜14日）が続き、<strong>アプリ完成後さらに35〜45日</strong>かかります。Apple は90%が24時間以内なので、日程は完全に Android に握られます。</p>
+    </div>
+
+    <div class="card ok">
+      <span class="tag">回避策</span>
+      <p><strong>組織（法人）アカウントで登録すれば、この要件は丸ごと免除されます。</strong>12人×14日も、製品版アクセスの審査7日も不要で、いきなり製品版を出せます。法人確認に D-U-N-S 番号の取得（約14日）が要りますが、<em>14日 &lt; 21日＋運用の手間</em>なので、法人格を使えるなら圧倒的に有利です。3〜4週間の短縮になります。</p>
+    </div>
+
+    <div class="card warn">
+      <span class="tag">いま手配が要る</span>
+      <p><strong>iOS のビルドには macOS が必須です。</strong>Xcode が macOS でしか動かないため回避できません。現在のご使用環境は Windows 11 なので、<strong>Mac 実機か、クラウドビルド（Ionic Appflow / GitHub Actions の macOS ランナー）の手配が最優先タスク</strong>になります。しかも Capacitor 8 は Xcode 26 を要求するため、Mac の OS バージョンも確認が必要です。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">1</span>全体構成</h2>
+    <div class="arch">
+<pre>                    <b>ひとつの Web コードベース</b>
+                 TypeScript + Svelte + Vite
+                            │
+                       vite build
+                            │
+        ┌───────────────────┼───────────────────┐
+        ▼                   ▼                   ▼
+  <b>Capacitor iOS</b>       <b>Capacitor Android</b>        <b>PWA</b>
+   → App Store         → Google Play         → Vercel
+   (Xcode / Mac 必須)   (Android Studio)      (ブラウザ・お客様用ページ)
+        │                   │                   │
+        └───────────────────┼───────────────────┘
+                            ▼
+                      <b>Supabase</b>
+        Postgres ／ Auth ／ Storage ／ Edge Functions ／ Cron
+                            │
+              ┌─────────────┴─────────────┐
+              ▼                           ▼
+        <i>RevenueCat</i>                  <i>Resend / Twilio</i>
+     アプリ内課金の一元管理           メール・SMS の送信</pre>
+    </div>
+    <p><strong>要点は、Web のコードが3つの出口すべてを兼ねることです。</strong>調律師が使うアプリ本体は iOS・Android のストアアプリとして、お客様が開く予約ページは認証不要の Web ページとして、同じコードから出せます。お客様に年1回のためにアプリを入れてもらうのは無理なので、この二面性は必須です。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">2</span>なぜ Capacitor か</h2>
+    <div class="scroller">
+      <table>
+        <thead><tr><th>選択肢</th><th>ワンソース</th><th>いまのモックを活かせるか</th><th>Web版も出せるか</th><th>判断</th></tr></thead>
+        <tbody>
+          <tr class="pick"><td class="k">Capacitor</td><td class="c">○</td><td class="c">○ ほぼそのまま</td><td class="c">○</td><td class="n"><strong>これを採用。</strong>Web の資産をそのまま両ストアへ。ネイティブ機能はプラグインで足す</td></tr>
+          <tr><td class="k">Flutter</td><td class="c">○</td><td class="c">× 全面書き直し</td><td class="c">△</td><td class="n">動きは最も滑らかだが、HTML/CSS の資産を捨てることになる</td></tr>
+          <tr><td class="k">React Native</td><td class="c">○</td><td class="c">× 全面書き直し</td><td class="c">×</td><td class="n">Web が出せない。お客様用ページを別に作る必要が生じる</td></tr>
+          <tr><td class="k">PWA だけ</td><td class="c">○</td><td class="c">○</td><td class="c">○</td><td class="n">ストアに載らず検索流入がゼロ。iOS のプッシュは「ホーム画面に追加」した人にしか届かない</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>PWA だけで済ませる案は、課金アプリでは現実的ではありません。</strong>理由は3つ。iOS のプッシュ通知がホーム画面追加済みの人に限られて実効リーチが数%に落ちること、ストアの検索という無料の集客路を失うこと、Apple/Google 決済の信頼感が使えず定期課金の成約率が落ちることです。<br>
+    ただし <em>「まず PWA で検証 → 手応えが出たら Capacitor でストアへ」</em>という2段構えは、コードを流用できるので合理的です。</p>
+
+    <div class="card note">
+      <span class="tag">審査で気をつける点</span>
+      <p>Apple のガイドライン 4.2 は「Web サイトを包んだだけ」のアプリをはじきます。カメラ・プッシュ通知・オフライン動作といったネイティブ機能を実装し、審査メモで明示してください。Capacitor アプリのリジェクト理由として最も多いところです。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">3</span>技術スタック</h2>
+    <div class="scroller">
+      <table>
+        <thead><tr><th>層</th><th>採用</th><th>理由</th></tr></thead>
+        <tbody>
+          <tr><td class="k">言語</td><td class="k">TypeScript</td><td class="n">お客様の個人情報を扱う。型でミスを防ぐ価値が大きい</td></tr>
+          <tr><td class="k">UI</td><td class="k">Svelte 5 + Vite</td><td class="n">生成物が小さく起動が速い。学習量も少なく、1人で保守できる</td></tr>
+          <tr><td class="k">ネイティブ化</td><td class="k">Capacitor 8</td><td class="n">現行の推奨版（2025年12月リリース）。iOS 15+ / Android 7+ (API 24)</td></tr>
+          <tr><td class="k">データベース</td><td class="k">Supabase (Postgres)</td><td class="n">行レベルセキュリティで「他人のデータが絶対に見えない」を DB 側で担保できる</td></tr>
+          <tr><td class="k">認証</td><td class="k">Supabase Auth（Magic Link / OTP）</td><td class="n">パスワードを持たない＝漏洩事故の種類そのものを無くす</td></tr>
+          <tr><td class="k">写真の保管</td><td class="k">Supabase Storage</td><td class="n">署名付きURLで期限を切って配信。お客様への共有リンクもこれで作る</td></tr>
+          <tr><td class="k">ローカル保存</td><td class="k">IndexedDB (Dexie)</td><td class="n">訪問先で電波が弱くても、当日の予定と前回記録は読める</td></tr>
+          <tr><td class="k">課金</td><td class="k">RevenueCat</td><td class="n">Apple と Google のレシート検証・解約検知を1つのAPIで。サーバー実装を持たずに済む</td></tr>
+          <tr><td class="k">プッシュ通知</td><td class="k">Capacitor Push（FCM / APNs）</td><td class="n">調律時期の判定はサーバー側の定時処理で行い、結果だけ送る</td></tr>
+          <tr><td class="k">メール・SMS</td><td class="k">Resend / Twilio</td><td class="n">お客様へのご案内。LINE は公式アカウント経由（別途申請）</td></tr>
+          <tr><td class="k">Web 配信</td><td class="k">Vercel</td><td class="n">お客様用の予約ページと、PWA 版</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>Supabase を選ぶ理由をもう一段。</strong>行レベルセキュリティ（RLS）を使うと、<em>「自分のデータ以外は、たとえアプリ側にバグがあっても取得できない」</em>ことをデータベースが保証します。お客様300人ぶんの氏名・住所を預かる以上、アプリのコードだけを信頼する設計にすべきではありません。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">4</span>データベース設計</h2>
+    <p>モックのデータ構造をそのまま持ち込みます。<strong>住所は国際的な形</strong>、<strong>記録には種別</strong>を持たせた、いまの構造が前提です。</p>
+<pre><span class="c">-- ── 利用者（調律師）。auth.users と 1:1 ──────────────────</span>
+<span class="k">create table</span> tuners (
+  id                uuid <span class="k">primary key references</span> auth.users(id),
+  biz_name          text,               <span class="c">-- 屋号</span>
+  tuner_name        text,
+  qualification     text,               <span class="c">-- 資格・所属（訪問者カードに使う）</span>
+  photo_url         text,
+  car               text,               <span class="c">-- 車のナンバー</span>
+  tax_id            text,               <span class="c">-- インボイス番号 / VAT / Tax ID</span>
+  tax_rate          int     <span class="k">default</span> 10,
+  bank_info         text,
+  <span class="t">locale</span>            text    <span class="k">default</span> <span class="s">'ja-JP'</span>,   <span class="c">-- 住所の並び・通貨・商習慣を決める</span>
+  visitor_card      boolean <span class="k">default</span> true,
+  default_duration  int     <span class="k">default</span> 120,      <span class="c">-- 1台あたりの作業時間（分）</span>
+  plan              text    <span class="k">default</span> <span class="s">'free'</span>,    <span class="c">-- free / pro</span>
+  created_at        timestamptz <span class="k">default</span> now()
+);
+
+<span class="c">-- ── お客様 ────────────────────────────────────────────</span>
+<span class="k">create table</span> customers (
+  id            uuid <span class="k">primary key default</span> gen_random_uuid(),
+  tuner_id      uuid <span class="k">not null references</span> tuners(id) <span class="k">on delete cascade</span>,
+  name          text <span class="k">not null</span>,
+  kind          text,          <span class="c">-- 一般家庭 / 音楽教室 / 学校・ホール / スタジオ</span>
+  phone text, email text, line_id text, sns text,
+  <span class="c">-- 住所は国際共通の形で持ち、表示のときだけロケールで組み替える</span>
+  <span class="t">addr_country</span>  text <span class="k">default</span> <span class="s">'JP'</span>,
+  <span class="t">addr_postal</span>   text,
+  <span class="t">addr_region</span>   text,   <span class="c">-- 都道府県 / State / County</span>
+  <span class="t">addr_city</span>     text,
+  <span class="t">addr_line1</span>    text,   <span class="c">-- 番地 / Street address</span>
+  <span class="t">addr_line2</span>    text,   <span class="c">-- 建物名 / Apt</span>
+  lat numeric, lng numeric,    <span class="c">-- ジオコーディング結果（訪問順の提案に使う）</span>
+  parking       text,
+  access_note   text,          <span class="c">-- 搬入経路・室内メモ</span>
+  memo          text,
+  <span class="t">photo_consent</span> boolean,       <span class="c">-- 写真の保存に同意いただいたか（null = 未確認）</span>
+  handover_from uuid <span class="k">references</span> tuners(id),  <span class="c">-- 引き継ぎ元</span>
+  handover_at   date,
+  created_at timestamptz <span class="k">default</span> now(),
+  updated_at timestamptz <span class="k">default</span> now(),
+  deleted_at timestamptz        <span class="c">-- 論理削除。お客様の削除要求に応じたら物理削除</span>
+);
+
+<span class="c">-- ── ピアノ。1軒に何台でも ─────────────────────────────</span>
+<span class="k">create table</span> pianos (
+  id             uuid <span class="k">primary key default</span> gen_random_uuid(),
+  customer_id    uuid <span class="k">not null references</span> customers(id) <span class="k">on delete cascade</span>,
+  room           text <span class="k">not null</span>,   <span class="c">-- 設置場所の呼び名（音楽室・体育館…）</span>
+  maker text, model text, piano_type text,
+  serial         text,             <span class="c">-- 製造番号。同型番の個体識別に必要</span>
+  made_year      int,
+  env            text,
+  fee            int,
+  interval_months int <span class="k">default</span> 12,
+  last_tuned_on  date,             <span class="c">-- 定期調律だけが更新する</span>
+  reminded_cycle      date,        <span class="c">-- ご案内ずみの周期</span>
+  skipped_cycle       date,        <span class="c">-- 調律師が見送った</span>
+  cust_skipped_cycle  date,        <span class="c">-- お客様が見送りを選んだ</span>
+  created_at timestamptz <span class="k">default</span> now(),
+  deleted_at timestamptz
+);
+
+<span class="c">-- ── 訪問の予定。時間 null = 「日付だけ確定」の層 ─────────</span>
+<span class="k">create table</span> visits (
+  id           uuid <span class="k">primary key default</span> gen_random_uuid(),
+  customer_id  uuid <span class="k">not null references</span> customers(id) <span class="k">on delete cascade</span>,
+  visit_date   date <span class="k">not null</span>,
+  <span class="t">visit_time</span>   time,             <span class="c">-- null なら「時間はこれから決める」</span>
+  <span class="t">kind</span>         text <span class="k">default</span> <span class="s">'tuning'</span>,
+  note         text,
+  intake       jsonb,            <span class="c">-- 事前問診 { items:[], note, at }</span>
+  prep_sent_on date,             <span class="c">-- 訪問前のご案内を送った日</span>
+  created_at timestamptz <span class="k">default</span> now()
+);
+<span class="k">create table</span> visit_pianos (
+  visit_id uuid <span class="k">references</span> visits(id) <span class="k">on delete cascade</span>,
+  piano_id uuid <span class="k">references</span> pianos(id) <span class="k">on delete cascade</span>,
+  <span class="k">primary key</span> (visit_id, piano_id)
+);
+
+<span class="c">-- ── 作業の記録。定期調律も単発も、ここに積む ─────────────</span>
+<span class="k">create table</span> records (
+  id          uuid <span class="k">primary key default</span> gen_random_uuid(),
+  customer_id uuid <span class="k">not null references</span> customers(id) <span class="k">on delete cascade</span>,
+  piano_id    uuid <span class="k">references</span> pianos(id),  <span class="c">-- 運搬など、台に紐づかない場合は null</span>
+  visit_id    uuid <span class="k">references</span> visits(id),
+  work_date   date <span class="k">not null</span>,
+  <span class="t">kind</span>        text <span class="k">not null default</span> <span class="s">'tuning'</span>,
+                <span class="c">-- tuning｜repair｜regulate｜check｜move｜other</span>
+                <span class="c">-- last_tuned_on を更新するのは 'tuning' のときだけ</span>
+  work        text,
+  fee         int <span class="k">not null default</span> 0,
+  pitch       text,             <span class="c">-- '440'…'443'</span>
+  humidity    int,
+  cond        jsonb,            <span class="c">-- { strings, action, keys, humid } 各 ok|watch|act</span>
+  memo        text,
+  photo_before_url text,
+  photo_after_url  text,
+  via_reminder boolean <span class="k">default</span> false,  <span class="c">-- ご案内から生まれた仕事か</span>
+  approved_at  timestamptz,     <span class="c">-- 追加作業をお客様が承諾した日時</span>
+  pay_method   text,            <span class="c">-- 現金 / PayPay / カード / 請求書</span>
+  bill_state   text <span class="k">default</span> <span class="s">'paid'</span>,  <span class="c">-- paid｜unbilled｜billed</span>
+  billed_at date, paid_at date,
+  created_at timestamptz <span class="k">default</span> now(),
+  updated_at timestamptz <span class="k">default</span> now()
+);
+<span class="k">create table</span> record_works (   <span class="c">-- 追加作業（整調・弦交換…）</span>
+  id uuid <span class="k">primary key default</span> gen_random_uuid(),
+  record_id uuid <span class="k">references</span> records(id) <span class="k">on delete cascade</span>,
+  code text, name text, price int
+);
+
+<span class="c">-- ── 索引 ──────────────────────────────────────────────</span>
+<span class="k">create index on</span> customers (tuner_id) <span class="k">where</span> deleted_at <span class="k">is null</span>;
+<span class="k">create index on</span> pianos (customer_id);
+<span class="k">create index on</span> visits (customer_id, visit_date);
+<span class="k">create index on</span> records (piano_id, work_date <span class="k">desc</span>);
+<span class="k">create index on</span> records (customer_id, work_date <span class="k">desc</span>);
+
+<span class="c">-- ── 行レベルセキュリティ。他人のデータは DB が返さない ────</span>
+<span class="k">alter table</span> customers <span class="k">enable row level security</span>;
+<span class="k">create policy</span> own_customers <span class="k">on</span> customers
+  <span class="k">using</span> (tuner_id = auth.uid());
+<span class="c">-- pianos / visits / records も、親を辿って同じ条件を張る</span></pre>
+
+    <div class="card note">
+      <span class="tag">設計上のいちばんの勘所</span>
+      <p><code>records.kind</code> と <code>pianos.last_tuned_on</code> の関係です。<strong>周期を進めてよいのは <code>kind = 'tuning'</code> のときだけ。</strong>修理で伺った記録が周期を書き換えてしまうと、まだ調律していないピアノが1年先まで一覧から消えます。ここはデータベースのトリガーで守るのが安全です。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">5</span>個別の設計</h2>
+
+    <h3>認証 ── パスワードを持たない</h3>
+    <p>メールに届くリンク（Magic Link）か6桁コードで入ります。パスワードを保存しないので、<em>パスワード漏洩という事故そのものが起きません</em>。ストア決済を使うのでカード情報も持ちません。守るべきものを減らすのが、1人で運営するときの最大の防御です。</p>
+
+    <h3>写真 ── 撮ったら小さくして、期限を切る</h3>
+    <ul class="plain">
+      <li>撮影後、端末側で<strong>長辺1280px・WebP</strong>に縮めてから送る。通信量と保管費の両方が下がります</li>
+      <li>Supabase Storage の非公開バケットに保存し、お客様への共有は<strong>有効期限つきの署名URL</strong>で渡す</li>
+      <li><code>photo_consent</code> が false のお客様は、端末内にだけ置いてクラウドへ上げない</li>
+      <li>保存期間（例：3年）を過ぎたものは定時処理で自動削除。持ち続けるほどリスクだけが増えます</li>
+    </ul>
+
+    <h3>オフライン ── 読めれば足りる</h3>
+    <p>前回の判断どおり、深追いしません。<strong>当日の訪問先・お客様情報・前回の記録を IndexedDB に置き、写真とメモは端末に貯めて後から送る</strong>。ここで打ち止めにします。業界最大手の同種サービスでも閲覧キャッシュ止まりであり、双方向同期は実装の重さに見合いません。</p>
+
+    <h3>プッシュ通知 ── 判定はサーバー、端末は受けるだけ</h3>
+<pre><span class="c">-- Supabase の定時処理（毎朝6時）</span>
+<span class="k">select</span> p.id, c.name, p.last_tuned_on
+<span class="k">from</span> pianos p <span class="k">join</span> customers c <span class="k">on</span> c.id = p.customer_id
+<span class="k">where</span> c.deleted_at <span class="k">is null</span>
+  <span class="k">and</span> (p.last_tuned_on + (p.interval_months || <span class="s">' months'</span>)::interval) &lt;= now()
+  <span class="k">and</span> p.reminded_cycle <span class="k">is distinct from</span> <span class="c">/* 今回の周期 */</span> ...
+<span class="c">-- 該当する調律師に「◯件のご案内時期です」を1通だけ送る</span></pre>
+    <p>1台ごとに通知を送ると、うるさくて切られます。<strong>1日1通、まとめて</strong>が原則です。Android 13 以降は通知権限を明示的に求める必要があるので、初回起動ではなく「最初のご案内が出たとき」に求めます。</p>
+
+    <h3>お客様用ページ ── 認証なしの公開ルート</h3>
+    <p>お客様に年1回のためにアプリを入れてもらうのは不可能です。ご案内メッセージのリンクから開く <code>/b/{token}</code> は、<strong>ログイン不要の Web ページ</strong>にします。トークンは推測できない長さで、有効期限を持たせます。ここで日付を選ぶと第2層の予定が生まれ、「今回は見送る」を押せば <code>cust_skipped_cycle</code> が立ちます。</p>
+
+    <h3>課金 ── RevenueCat に任せる</h3>
+    <div class="scroller">
+      <table>
+        <thead><tr><th>　</th><th>Apple</th><th>Google</th></tr></thead>
+        <tbody>
+          <tr><td class="k">サブスク手数料（小規模）</td><td class="c">15%</td><td class="c">15%</td></tr>
+          <tr><td class="k">条件</td><td class="n">Small Business Program に<strong>自分で申請</strong>（前年の受取額 100万ドル未満）</td><td class="n">自動適用。サブスクは売上規模によらず一律15%</td></tr>
+          <tr><td class="k">申請を忘れると</td><td class="n"><strong>1年目 30%</strong></td><td class="n">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card warn">
+      <span class="tag">取りこぼしやすい</span>
+      <p><strong>Apple Developer に登録したら、その足で Small Business Program に申請してください。</strong>申請制なので、忘れると1年目は30%取られます。Google は自動適用なので何もしなくて構いません。</p>
+    </div>
+    <p><strong>日本の外部決済について。</strong>2025年12月にスマホソフトウェア競争促進法が全面施行され、アプリ内から外部決済へ誘導できるようになりました。ただし報道ベースの料率は、外部決済の組み込みで Apple 約21%・Google 約26%、リンク設置で15〜20%＋決済代行3%。<em>ストア内課金の15%より高くつきます。</em>0%になるのは「リンクを一切置かず文章で案内するだけ」という成約率が壊滅する方式のみ。<strong>個人開発の規模では、素直にストア内課金を使うのが最適解です。</strong></p>
+
+    <h3>国際化 ── 何を外に出すか</h3>
+    <ul class="plain">
+      <li><strong>すでに終わっているもの</strong>：住所の構造、通貨表示（<code>Intl.NumberFormat</code>）、基準ピッチの初期値、未調律期間の割増のオン/オフ、税の呼び方</li>
+      <li><strong>これからやるもの</strong>：画面の文言の外出し。<code>t('home.title')</code> 方式で JSON に切り出し、まず日本語と英語。量は多いものの機械的な作業です</li>
+      <li>日付は <code>Intl.DateTimeFormat</code> へ。「2026年8月10日」は日本語固有の表記です</li>
+      <li>敬称（「◯◯ 様」）と姓名の順序はロケール側で組み立てる。氏名は1フィールドのままにします</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="num">6</span>Android と iOS で、それぞれ気をつけること</h2>
+    <div class="grid2">
+      <div class="card note">
+        <span class="tag">Android</span>
+        <p><strong>戻るボタン。</strong>Android には物理的な戻る操作があります。シートが開いているときは閉じるだけにして、アプリごと終了しないよう <code>@capacitor/app</code> の <code>backButton</code> を必ず握ってください。ここを忘れると「入力中に戻ったら全部消えた」という最悪の体験になります。</p>
+      </div>
+      <div class="card note">
+        <span class="tag">Android</span>
+        <p><strong>WebView のバージョン。</strong>いまのモックは <code>color-mix()</code> を22箇所使っており Chrome 111 以降が必要です。端末の System WebView が古いと色が落ちます。<strong>PostCSS で自動的にフォールバック色を生成</strong>すれば解決します。コードの書き換えは不要です。</p>
+      </div>
+      <div class="card note">
+        <span class="tag">Android</span>
+        <p><strong>通知権限。</strong>Android 13 以降は <code>POST_NOTIFICATIONS</code> を実行時に求める必要があります。初回起動でいきなり出すと拒否されやすいので、最初のご案内が出るタイミングまで待ちます。</p>
+      </div>
+      <div class="card note">
+        <span class="tag">Android</span>
+        <p><strong>画面幅 360px。</strong>各年代で最も多い機種は AQUOS です。実機で1度は目視してください。静的な監査では固定幅もタップ領域の不足も見つかりませんでしたが、実際の折り返しは実機でしか分かりません。</p>
+      </div>
+      <div class="card note">
+        <span class="tag">iOS</span>
+        <p><strong>Xcode 26 が必須です。</strong>2026年4月28日以降、App Store Connect への提出は iOS 26 SDK でのビルドが必要になりました。Capacitor 8 の要件と一致しています。古い macOS では Xcode 26 が入らないため、<strong>Mac の OS バージョンから確認</strong>してください。</p>
+      </div>
+      <div class="card note">
+        <span class="tag">iOS</span>
+        <p><strong>スワイプで戻る操作とセーフエリア。</strong>Web の挙動と違うため CSS の調整が必ず要ります。<code>env(safe-area-inset-*)</code> は対応ずみですが、キーボードが出たときの入力欄の押し上げは実機で確認が必要です。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">7</span>同時リリースの日程</h2>
+    <p>2026-08-10 を起点に、<strong>Google Play を個人アカウントで新規開設する場合</strong>（最も遅いケース）の想定です。</p>
+    <div class="sched">
+      <div class="row"><span class="d">8/10〜8/12</span><span class="b">両ストアの開発者登録<small>Google Play $25（買い切り）／ Apple Developer $99（年額）。個人なら本人確認は1〜2営業日</small></span></div>
+      <div class="row"><span class="d">8/12まで</span><span class="b">Apple の Small Business Program に申請<small>忘れると1年目30%。登録した直後に必ず</small></span></div>
+      <div class="row crit"><span class="d">8/12まで</span><span class="b"><strong>Mac の確保、または クラウドビルドの契約</strong><small>Windows 端末だけでは iOS ビルドが不可能。Xcode 26 / Android Studio 2025.2.1 / Node 22 を導入</small></span></div>
+      <div class="row crit"><span class="d">いますぐ</span><span class="b"><strong>テスターを15〜18人集めはじめる</strong><small>要件は12人だが、1人抜けると14日のカウントがやり直しになる。余裕を持って確保する</small></span></div>
+      <div class="row"><span class="d">8/12〜8/28</span><span class="b">Capacitor 8 で実装<small>カメラ・プッシュ・課金（RevenueCat）。ここは規模しだいで伸縮する</small></span></div>
+      <div class="row crit"><span class="d">8/28</span><span class="b"><strong>最小ビルドでクローズドテストを開始する</strong><small>アプリの完成を待つ必要はない。要件は「12人が14日オプトイン」なので、その間に中身を作り込める</small></span></div>
+      <div class="row"><span class="d">9/1〜9/15</span><span class="b">クローズドテスト 14日間連続<small>短縮できない。週に一度はテスターの在籍を確認する</small></span></div>
+      <div class="row"><span class="d">9/15</span><span class="b">製品版アクセスを申請<small>審査は最大7日</small></span></div>
+      <div class="row"><span class="d">〜9/22</span><span class="b">承認後、Play へ製品版を提出<small>新規アカウントの初回審査は7〜14日を覚悟する</small></span></div>
+      <div class="row"><span class="d">〜9/24</span><span class="b">App Store へ提出（「手動でリリース」に設定）<small>承認は1〜3日。承認されても公開せず待機させる</small></span></div>
+      <div class="row"><span class="d">9/29〜10/6</span><span class="b">Play の審査が通る<small>ここでリリース日が決まる。最も読みにくい工程</small></span></div>
+      <div class="row"><span class="d">通過の翌日</span><span class="b"><strong>App Store を手動リリース → 同日に Play も公開</strong><small>これが「同時リリース」を成立させる唯一の方法</small></span></div>
+    </div>
+    <p><strong>着地は 2026年10月上旬</strong>（最速で9月末、遅れ込みで10月中旬）。</p>
+
+    <h3>短縮する手立て（効果の大きい順）</h3>
+    <ul class="plain">
+      <li><strong>Google Play を法人アカウントで登録する。</strong>12人×14日と製品版アクセス審査7日が丸ごと消え、<em>3〜4週間短縮</em>。9月上旬が視野に入ります。D-U-N-S 取得の14日と天秤にかけても有利です</li>
+      <li><strong>アプリの完成を待たず、最小ビルドで14日のカウントを先に走らせる。</strong>要件は「12人が14日オプトインしていること」なので、その間に中身を作れます</li>
+      <li><strong>今日からテスターを集めはじめる。</strong>遅延の原因として最も多いのがここです</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>今週やること</h2>
+    <div class="sched">
+      <div class="row"><span class="d">1</span><span class="b">Google Play を<strong>個人で出すか法人で出すか</strong>を決める<small>ここだけで日程が3〜4週間変わります。いちばん先に決めるべき分岐</small></span></div>
+      <div class="row"><span class="d">2</span><span class="b">Mac の手配<small>実機を買うか、クラウドビルドにするか。Windows だけでは iOS を出せません</small></span></div>
+      <div class="row"><span class="d">3</span><span class="b">テスターの声かけを始める<small>15〜18人。アプリが無くても先に集められます</small></span></div>
+      <div class="row"><span class="d">4</span><span class="b">両ストアの開発者登録と、Apple の Small Business Program 申請<small>登録は早いほどよい。SBP は忘れやすい</small></span></div>
+    </div>
+  </section>
+
+  <aside class="limits">
+    <h2>裏付けの状況（正直な申告）</h2>
+    <p>以下は<strong>公式で確認できたもの</strong>です。Google Play の12人×14日要件と組織アカウントの免除、登録料 $25、Apple の年会費 $99、両ストアのサブスク手数料15%と Apple の SBP が申請制であること、Capacitor 8 の要求環境（Node 22 / Xcode 26 / iOS 15+ / Android API 24）。</p>
+    <p>以下は<strong>二次情報にとどまり、未確認</strong>です。判断の前に原文をあたってください。</p>
+    <ul class="plain wide">
+      <li>Apple Developer の日本円価格（US$99 は確実）</li>
+      <li>Google Play のテスター要件が20人から12人に緩和された時期（現行値が12人であることは公式で確認）</li>
+      <li><strong>日本の外部決済の具体的な料率</strong>（Apple 約21% / Google 約26% / リンク設置 15〜20% / 告知のみ 0%）。すべて報道ベースで、両社の日本向け条項の原文は未確認</li>
+      <li>Apple の審査実績（「90%が24時間以内」か「48時間以内」か、指標が変動している可能性）</li>
+      <li>RevenueCat の無料枠の現在の上限</li>
+    </ul>
+    <p>また、<strong>モックの実機表示は未検証</strong>です。静的な監査では固定幅もタップ領域の不足も見つかりませんでしたが、360px 実機での実際の折り返しは目視でしか確かめられません。</p>
+  </aside>
+
+  <section>
+    <h2>主な出典</h2>
+    <p class="sources">
+      <a href="https://support.google.com/googleplay/android-developer/answer/14151465?hl=en">Google Play 新規個人アカウントのテスト要件（公式）</a>｜<a href="https://support.google.com/googleplay/android-developer/answer/112622?hl=en">Google Play サービス手数料（公式）</a>｜<a href="https://support.google.com/googleplay/android-developer/answer/6112435?hl=en">Play Console 登録（公式）</a>｜<a href="https://developer.apple.com/app-store/subscriptions/">Apple 自動更新サブスクリプション（公式）</a>｜<a href="https://developer.apple.com/app-store/review/">Apple App Review（公式）</a>｜<a href="https://capacitorjs.com/docs/main/reference/support-policy">Capacitor サポートポリシー（公式）</a>｜<a href="https://capacitorjs.com/docs/getting-started/environment-setup">Capacitor 開発環境（公式）</a>｜<a href="https://capawesome.io/blog/xcode-26-requirement-for-capacitor-apps/">Xcode 26 要件</a>｜<a href="https://github.com/RevenueCat/purchases-capacitor">RevenueCat Capacitor プラグイン</a>｜<a href="https://adapty.io/blog/app-store-small-business-program/">App Store Small Business Program 解説</a>｜<a href="https://xtech.nikkei.com/atcl/nxt/column/18/00001/11363/">スマホ新法と外部決済手数料（日経xTECH）</a>｜<a href="https://www.businesslawyers.jp/articles/1422">スマホソフトウェア競争促進法の概要</a>｜<a href="https://www.magicbell.com/blog/pwa-ios-limitations-safari-support-complete-guide">iOS の PWA 制約</a>
+    </p>
+  </section>
+
+</div>
+</div>

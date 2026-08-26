@@ -1,5 +1,5 @@
 /* 調律ノート Service Worker — オフラインでも開けるように本体をキャッシュ */
-var CACHE = "choritsu-note-v1";
+var CACHE = "choritsu-note-v2";
 var ASSETS = [
   "./",
   "./index.html",
