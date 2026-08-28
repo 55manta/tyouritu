@@ -1,13 +1,17 @@
-$root = "C:\Users\bestp\Projects\choritsu-note"
+﻿$root = "C:\Users\bestp\Projects\choritsu-note"
 $listener = New-Object System.Net.HttpListener
 $listener.Prefixes.Add("http://localhost:8934/")
 $listener.Start()
 Write-Host "Serving $root on http://localhost:8934/"
 
+# 仕様書HTMLは <meta charset> を持たない（Artifact側のheadに任せているため）。
+# ローカル配信では Content-Type に charset を明示しないと日本語が文字化けする。
 $mime = @{
-  ".html" = "text/html"; ".js" = "application/javascript"; ".css" = "text/css"
-  ".json" = "application/json"; ".webmanifest" = "application/manifest+json"
-  ".png" = "image/png"; ".svg" = "image/svg+xml"
+  ".html" = "text/html; charset=utf-8"; ".js" = "application/javascript; charset=utf-8"
+  ".css" = "text/css; charset=utf-8"
+  ".json" = "application/json; charset=utf-8"; ".webmanifest" = "application/manifest+json; charset=utf-8"
+  ".md" = "text/plain; charset=utf-8"
+  ".png" = "image/png"; ".svg" = "image/svg+xml; charset=utf-8"
 }
 
 while ($listener.IsListening) {

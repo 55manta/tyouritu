@@ -1,0 +1,439 @@
+<title>調律ノート 実装アーキテクチャ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&family=Noto+Serif+JP:wght@500;600&display=swap">
+<style>
+  :root {
+    --ground:#F4F2EC; --surface:#FFFFFF; --surface-2:#EDEAE1;
+    --ink:#1E1C17; --ink-2:#5E594F; --ink-3:#948E80;
+    --line:#E7E2D6; --line-strong:#D6CFBF;
+    --accent:#0E8F83; --accent-ink:#0A6A60; --accent-soft:#DBEFEB;
+    --brass:#B0873A; --brass-ink:#8A6820; --brass-soft:#F0E7D2;
+    --alert:#C6503A; --alert-ink:#A23A26; --alert-soft:#F6E2DB;
+    --code-bg:#1E1C17; --code-ink:#EDE7D8;
+    --font-sans:-apple-system,BlinkMacSystemFont,system-ui,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP","Segoe UI",Roboto,sans-serif;
+    --font-serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP","Times New Roman",serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --measure:41rem;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#12110D; --surface:#1B1A15; --surface-2:#25231C;
+      --ink:#F2EFE6; --ink-2:#B0A999; --ink-3:#7C7565;
+      --line:#2E2B22; --line-strong:#3C3830;
+      --accent:#2CC2B0; --accent-ink:#63D8C7; --accent-soft:#0F302D;
+      --brass:#D9B063; --brass-ink:#E8C88A; --brass-soft:#2E2612;
+      --alert:#EC8067; --alert-ink:#F3A48F; --alert-soft:#37231C;
+      --code-bg:#0B0A07; --code-ink:#DCD6C6;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#12110D; --surface:#1B1A15; --surface-2:#25231C;
+    --ink:#F2EFE6; --ink-2:#B0A999; --ink-3:#7C7565;
+    --line:#2E2B22; --line-strong:#3C3830;
+    --accent:#2CC2B0; --accent-ink:#63D8C7; --accent-soft:#0F302D;
+    --brass:#D9B063; --brass-ink:#E8C88A; --brass-soft:#2E2612;
+    --alert:#EC8067; --alert-ink:#F3A48F; --alert-soft:#37231C;
+    --code-bg:#0B0A07; --code-ink:#DCD6C6;
+  }
+
+  /* ビューア側の地色が透けないよう、body にも必ず地を塗る */
+  body{background:var(--ground);}
+  .page{background:var(--ground);color:var(--ink);font-family:var(--font-sans);font-size:16px;line-height:1.85;
+    padding:clamp(20px,5vw,64px) clamp(16px,5vw,40px) 96px;display:flex;flex-direction:column;align-items:center;-webkit-font-smoothing:antialiased;}
+  .wrap{width:100%;max-width:64rem;display:flex;flex-direction:column;gap:52px;}
+
+  .masthead{display:flex;flex-direction:column;gap:14px;}
+  .eyebrow{font-size:12px;letter-spacing:.16em;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;}
+  .eyebrow b{color:var(--accent-ink);font-weight:600;letter-spacing:.1em;}
+  h1{font-family:var(--font-serif);font-size:clamp(28px,5vw,42px);line-height:1.3;font-weight:600;text-wrap:balance;margin:0;}
+  .standfirst{max-width:var(--measure);color:var(--ink-2);font-size:16.5px;}
+  .rule{height:1px;background:var(--line-strong);border:0;margin:0;}
+
+  section{display:flex;flex-direction:column;gap:18px;}
+  h2{font-family:var(--font-serif);font-size:clamp(21px,3vw,27px);line-height:1.4;font-weight:600;margin:0;
+    padding-bottom:10px;border-bottom:2px solid var(--ink);display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;text-wrap:balance;}
+  h2 .num{font-size:14px;color:var(--accent-ink);font-family:var(--font-sans);font-weight:700;letter-spacing:.1em;}
+  h3{font-size:17px;font-weight:700;margin:14px 0 0;}
+  h3:first-child{margin-top:0;}
+  h4{font-size:13.5px;font-weight:700;margin:0;color:var(--accent-ink);letter-spacing:.06em;}
+  p{margin:0;max-width:var(--measure);}
+  a{color:var(--accent-ink);text-underline-offset:2px;}
+  a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+  code{font-family:var(--mono);font-size:.87em;background:var(--surface-2);padding:.12em .4em;border-radius:3px;}
+  em{font-style:normal;background:var(--accent-soft);padding:0 .25em;border-radius:2px;}
+  strong{font-weight:700;}
+
+  ul.plain{margin:0;padding-left:1.15em;max-width:var(--measure);display:flex;flex-direction:column;gap:9px;}
+  ul.plain.wide{max-width:none;}
+  ul.plain li::marker{color:var(--brass);}
+
+  .scroller{overflow-x:auto;border:1px solid var(--line);border-radius:3px;background:var(--surface);}
+  /* color を明示する。doctype の無い状態（quirks mode）では table が
+     祖先の色を継承せず黒に落ちるため、ダークテーマで読めなくなる */
+  table{border-collapse:collapse;width:100%;min-width:560px;font-size:14.5px;color:var(--ink);}
+  caption{text-align:left;padding:14px 16px 0;font-size:13px;color:var(--ink-3);}
+  th,td{text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7;}
+  thead th{font-size:12px;letter-spacing:.1em;color:var(--ink-3);font-weight:600;border-bottom:1px solid var(--line-strong);white-space:nowrap;}
+  tbody tr:last-child td{border-bottom:0;}
+  td.k{font-weight:600;}
+  td.n{color:var(--ink-2);}
+  td.c{text-align:center;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .pick{background:var(--accent-soft);}
+  .pick td{font-weight:700;}
+
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:5px;padding:16px 18px;font-family:var(--mono);
+    font-size:12.5px;line-height:1.8;overflow-x:auto;margin:0;}
+  pre .c{color:#8C8570;}
+  pre .k{color:#7FD1C4;}
+  pre .s{color:#D9B063;}
+  pre .t{color:#EC8067;}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--tone,var(--line-strong));
+    border-radius:3px;padding:16px 18px;display:flex;flex-direction:column;gap:9px;}
+  .card.warn{--tone:var(--alert);} .card.note{--tone:var(--brass);} .card.ok{--tone:var(--accent);}
+  .card p{font-size:14.5px;line-height:1.75;color:var(--ink-2);max-width:none;}
+  .card .tag{align-self:flex-start;font-size:11px;letter-spacing:.12em;font-weight:700;padding:3px 8px;border-radius:2px;}
+  .warn .tag{background:var(--alert-soft);color:var(--alert-ink);}
+  .note .tag{background:var(--brass-soft);color:var(--brass-ink);}
+  .ok .tag{background:var(--accent-soft);color:var(--accent-ink);}
+
+  .grid2{display:grid;gap:14px;grid-template-columns:1fr;}
+  @media(min-width:760px){.grid2{grid-template-columns:1fr 1fr;}}
+
+  /* 方針転換：旧 → 新。この文書の主題が「決定の差し替え」なので専用の型を持たせる */
+  .revs{display:flex;flex-direction:column;gap:10px;}
+  .rev{display:grid;grid-template-columns:1fr;gap:6px;background:var(--surface);border:1px solid var(--line);
+    border-radius:3px;padding:14px 16px;}
+  @media(min-width:720px){.rev{grid-template-columns:1fr 34px 1fr;align-items:center;gap:14px;}}
+  .rev .was,.rev .now{display:flex;flex-direction:column;gap:3px;}
+  .rev .lbl{font-size:11px;letter-spacing:.12em;font-weight:700;color:var(--ink-3);}
+  .rev .was .v{font-size:15px;color:var(--ink-3);text-decoration:line-through;text-decoration-color:var(--alert);
+    text-decoration-thickness:1px;}
+  .rev .now .v{font-size:15px;font-weight:700;color:var(--accent-ink);}
+  .rev .why{font-size:13px;color:var(--ink-2);line-height:1.65;}
+  .rev .arw{display:grid;place-items:center;color:var(--brass);font-size:17px;}
+  @media(max-width:719px){.rev .arw{justify-self:start;transform:rotate(90deg);}}
+
+  .arch{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:18px;overflow-x:auto;}
+  .arch pre{background:none;color:var(--ink-2);font-size:12px;padding:0;line-height:1.65;}
+  .arch pre b{color:var(--accent-ink);}
+  .arch pre i{color:var(--brass);font-style:normal;}
+
+  .sched{display:flex;flex-direction:column;}
+  .sched .row{display:grid;grid-template-columns:96px 1fr;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);align-items:baseline;}
+  .sched .row:last-child{border-bottom:0;}
+  .sched .d{font-size:13px;font-weight:700;color:var(--accent-ink);font-variant-numeric:tabular-nums;}
+  .sched .b{font-size:14.5px;line-height:1.7;}
+  .sched .b small{display:block;font-size:13px;color:var(--ink-2);margin-top:2px;}
+  .sched .row.crit{background:var(--alert-soft);margin:0 -12px;padding:12px;border-radius:3px;border-bottom:0;}
+  .sched .row.crit .d{color:var(--alert-ink);}
+
+  .limits{background:var(--surface-2);border:1px solid var(--line);border-radius:3px;padding:20px 22px;display:flex;flex-direction:column;gap:12px;}
+  .limits h2{font-size:18px;border-bottom:0;padding-bottom:0;}
+  .limits p,.limits ul{font-size:14px;color:var(--ink-2);}
+  .sources{font-size:12.5px;color:var(--ink-3);line-height:2;}
+  .sources a{color:var(--ink-2);}
+</style>
+
+<div class="page">
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow"><b>調律ノート</b><span>実装アーキテクチャ 第3版</span><span>2026-08-27</span></div>
+    <h1>調律ノートを、二本目のアプリとして作る</h1>
+    <p class="standfirst">前回の技術仕様（2026-08-10）は Capacitor と Supabase を選び、「Mac の手配が最優先」と書いた。<strong>その前提は、いま調べ直すと成り立たない。</strong>割ペイはすでにこの Windows 機から iOS ビルドを出し、App Store で公開されている。調律ノートは白紙から始めるのではなく、<em>すでに回っている生産ラインに乗せる二本目</em>として設計し直す。</p>
+    <hr class="rule">
+  </header>
+
+  <section>
+    <h2><span class="num">先に</span>結論は3つ</h2>
+
+    <div class="card ok">
+      <span class="tag">前提が変わった</span>
+      <p><strong>Mac は要りません。</strong>割ペイ（<code>jp.izumikawa.warikan</code>）は Expo + EAS Build で構成され、App Store に公開ずみです。EAS はクラウドの macOS でビルドするので、Windows のまま iOS を出せます。前回仕様書が「いま手配が要る／最優先タスク」と赤で囲んだ項目は、<em>すでに解決ずみだった</em>ということです。</p>
+    </div>
+
+    <div class="card ok">
+      <span class="tag">採用する構成</span>
+      <p><strong>Expo（React Native）＋ Firebase ＋ RevenueCat。</strong>Capacitor と Supabase は採りません。理由は一つで、<strong>この4つ（EAS・RevenueCat・Firebase・両ストアのアカウント）を、すでに動かしているから</strong>です。二本目のアプリが新しい道具立てを持ち込む理由がありません。</p>
+    </div>
+
+    <div class="card warn">
+      <span class="tag">日程を握るもの</span>
+      <p><strong>Google Play の「12人×14日」は、アカウント単位ではなくアプリ単位です。</strong>割ペイでこの要件を通しても、調律ノートは免除されません。しかも割ペイ自身がまだ Play で公開に至っていない（ストアページが出ない＝クローズドテスト中）。<strong>調律ノートも、最小ビルドを最初にクローズドテストへ投入して14日のカウントを先に回す</strong>——ここだけは前回仕様書の判断がそのまま生きます。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">1</span>何を調べたか</h2>
+    <p>方針を変える以上、思い込みではなく実物を確認しました。以下は本日、実際のファイルとストアを見て取れた事実です。</p>
+    <div class="scroller">
+      <table>
+        <caption>割ペイ（既存アプリ）の実態 — <code>C:\Users\bestp\Projects\warikan-app</code> と両ストアで確認</caption>
+        <thead><tr><th>項目</th><th>実際の値</th><th>調律ノートへの意味</th></tr></thead>
+        <tbody>
+          <tr><td class="k">フレームワーク</td><td class="n">Expo SDK 57 / React Native 0.86 / React 19.2.3</td><td class="n">同じ構成をそのまま使える</td></tr>
+          <tr><td class="k">言語</td><td class="n">TypeScript 6</td><td class="n">同じ</td></tr>
+          <tr><td class="k">ビルド</td><td class="n">EAS Build（<code>eas.json</code> に preview / production）</td><td class="n"><strong>Windows から iOS が出せる</strong></td></tr>
+          <tr><td class="k">課金</td><td class="n">RevenueCat（<code>react-native-purchases</code> 10.4）</td><td class="n">実装経験・アカウントとも流用</td></tr>
+          <tr><td class="k">バックエンド</td><td class="n">Firebase（Firestore / Auth / Hosting）</td><td class="n">同じプロジェクト運用の型が使える</td></tr>
+          <tr><td class="k">認証</td><td class="n">Apple Sign In / Google Sign In 導入ずみ</td><td class="n">コードごと流用できる</td></tr>
+          <tr><td class="k">App Store</td><td class="n"><strong>公開中</strong>（デベロッパ manabu izumikawa、アプリ内課金あり）</td><td class="n">Apple 側の下地は完成している</td></tr>
+          <tr><td class="k">Google Play</td><td class="n"><strong>未公開</strong>（ストアページが出ない＝クローズドテスト中）</td><td class="n">Play の本番アクセスはまだ無い</td></tr>
+          <tr><td class="k">画面構成</td><td class="n"><code>src/{screens,components,context,hooks,lib,navigation,theme,types}</code></td><td class="n">この構成を踏襲する</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card note">
+      <span class="tag">効いてくる前提</span>
+      <p>割ペイには <code>plugins/</code>（config plugin 2本）と <code>patches/</code>（patch-package）があります。つまり<strong>Expo Go ではなく開発ビルド（development build）を回す運用がすでに身についている</strong>ということです。調律ノートでネイティブ SDK を入れることに、追加の学習コストがかかりません。これが次章の SDK 選択に効きます。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">2</span>前回仕様書から差し替える3点</h2>
+    <div class="revs">
+      <div class="rev">
+        <div class="was"><span class="lbl">前回（2026-08-10）</span><span class="v">Capacitor 8 で Web をラップ</span></div>
+        <div class="arw">→</div>
+        <div class="now"><span class="lbl">今回</span><span class="v">Expo（React Native）SDK 57</span>
+          <span class="why">Capacitor の利点は「4,150行の HTML モックをそのまま包める」こと。ただしモックは localStorage 前提の試作で、認証・同期・課金・通知を足す時点でデータ層は書き直しになる。実際に引き継げるのは設計と業務ロジックで、それは Expo にも同じように引き継げる。</span></div>
+      </div>
+      <div class="rev">
+        <div class="was"><span class="lbl">前回</span><span class="v">Supabase（Postgres + RLS）</span></div>
+        <div class="arw">→</div>
+        <div class="now"><span class="lbl">今回</span><span class="v">Firebase（Firestore + Auth + Storage）</span>
+          <span class="why">Supabase の RLS と SQL は確かに強い。ただし調律ノートのデータは「1人の調律師が持つ木」であって、他人と交差しない。しかも1人あたり顧客300・ピアノ500・記録は年数百件と小さい。この規模で、運用中のバックエンドをもう一つ増やす理由がない。</span></div>
+      </div>
+      <div class="rev">
+        <div class="was"><span class="lbl">前回（最優先タスク）</span><span class="v">Mac 実機かクラウドビルドの手配</span></div>
+        <div class="arw">→</div>
+        <div class="now"><span class="lbl">今回</span><span class="v">不要。EAS Build で足りる</span>
+          <span class="why">割ペイが現にこの Windows 機から App Store に出ている。Xcode 26 の要件も EAS のビルドイメージ側が満たす。前回仕様書でいちばん大きく扱われた制約が、そもそも存在しなかった。</span></div>
+      </div>
+    </div>
+
+    <h3>逆に、そのまま生きる設計判断</h3>
+    <p>技術スタックは変わっても、業務の理解から出てきた判断は変わりません。以下は前回までの検討をそのまま引き継ぎます。</p>
+    <ul class="plain">
+      <li><strong>記録の種別が周期を動かすかどうか。</strong><code>kind = 'tuning'</code> のときだけ次回時期を進める。修理で伺った記録が周期を書き換えると、まだ調律していないピアノが一覧から消える</li>
+      <li><strong>住所は国際共通の構造</strong>で持ち、表示のときだけロケールで組み替える</li>
+      <li><strong>お客様用ページは認証なしの Web。</strong>年1回のためにアプリを入れてもらうのは不可能</li>
+      <li><strong>オフラインは深追いしない。</strong>当日の訪問先と前回記録が読めて、書いたものが後から送られれば足りる</li>
+      <li><strong>パスワードを持たない。</strong>持たなければ漏れない</li>
+      <li><strong>写真は同意・縮小・期限。</strong>お客様のお宅の中を預かる以上、持ち続けるほどリスクだけが増える</li>
+      <li><strong>無料15軒／年額14,800円</strong>の線引きと、自動リマインドを無料側に置く判断</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="num">3</span>全体構成</h2>
+    <div class="arch">
+<pre>                  <b>ひとつの Expo コードベース</b>
+                TypeScript + React Native 0.86
+                            │
+                    EAS Build（Windows から）
+                            │
+             ┌──────────────┴──────────────┐
+             ▼                             ▼
+       <b>iOS / App Store</b>              <b>Android / Google Play</b>
+      （割ペイと同じ導線）            （12人×14日を先に回す）
+             │                             │
+             └──────────────┬──────────────┘
+                            ▼
+                      <b>Firebase</b>
+      Firestore ／ Auth ／ Storage ／ Functions ／ Scheduler
+                            │
+              ┌─────────────┼─────────────┐
+              ▼             ▼             ▼
+        <i>RevenueCat</i>   <i>FCM / APNs</i>   <b>Firebase Hosting</b>
+         課金の一元管理    プッシュ通知    <b>お客様用ページ（別実装）</b></pre>
+    </div>
+    <p><strong>調律師が使う本体は1ソースで iOS と Android の両方に出ます。</strong>お客様が開く予約ページだけは、意図してこのコードベースの外に置きます（第7章）。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">4</span>なぜ Expo か</h2>
+    <div class="scroller">
+      <table>
+        <thead><tr><th>選択肢</th><th>1ソース</th><th>モックの再利用</th><th>既存の道具立て</th><th>判断</th></tr></thead>
+        <tbody>
+          <tr class="pick"><td class="k">Expo / React Native</td><td class="c">○</td><td class="c">△ 画面は作り直し</td><td class="c">◎ ほぼ全部</td><td class="n"><strong>採用。</strong>EAS・RevenueCat・Firebase・両ストアの実績がそのまま乗る</td></tr>
+          <tr><td class="k">Capacitor</td><td class="c">○</td><td class="c">◎ ほぼそのまま</td><td class="c">× 全部新規</td><td class="n">モックは活きるが、ビルド・課金・バックエンドの導線を一から覚え直すことになる</td></tr>
+          <tr><td class="k">Flutter</td><td class="c">○</td><td class="c">×</td><td class="c">×</td><td class="n">動きは最も滑らかだが、資産も経験も捨てることになる</td></tr>
+          <tr><td class="k">PWA だけ</td><td class="c">○</td><td class="c">◎</td><td class="c">—</td><td class="n">ストアの検索流入と、ストア決済の信頼感を失う。年額課金と相性が悪い</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><strong>判断の分かれ目は「モックを活かす」対「経験を活かす」でした。</strong>前回は前者を採りましたが、それは「Mac が無いので Capacitor しか選べない」という制約とセットの判断です。制約が消えたいま、天秤は後者に傾きます。1人で保守するアプリで効くのは、書いたコードの量ではなく<em>迷わず動かせる導線を持っていること</em>だからです。</p>
+    <div class="card warn">
+      <span class="tag">正直に言うと</span>
+      <p>この判断で<strong>9画面ぶんの UI は React Native で作り直しになります</strong>。ここは Capacitor なら避けられた実作業です。ただし後述のとおり、業務ロジックとデザインは移植できるので、失うのは「DOM と CSS の層」に限られます。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">5</span>技術スタック</h2>
+    <div class="scroller">
+      <table>
+        <thead><tr><th>層</th><th>採用</th><th>割ペイとの関係</th></tr></thead>
+        <tbody>
+          <tr><td class="k">フレームワーク</td><td class="k">Expo SDK 57（RN 0.86 / React 19.2）</td><td class="n">同一。New Architecture は SDK 55 以降必須で切れない</td></tr>
+          <tr><td class="k">言語</td><td class="k">TypeScript</td><td class="n">同一</td></tr>
+          <tr><td class="k">画面遷移</td><td class="k">React Navigation（native-stack + bottom-tabs）</td><td class="n">同一。下部5タブの構成が一致する</td></tr>
+          <tr><td class="k">ビルド・提出</td><td class="k">EAS Build / EAS Submit</td><td class="n">同一。<code>eas.json</code> をひな型にできる</td></tr>
+          <tr><td class="k">Firebase SDK</td><td class="k">@react-native-firebase（ネイティブ）</td><td class="n"><strong>ここだけ異なる。</strong>理由は第6章</td></tr>
+          <tr><td class="k">認証</td><td class="k">Apple / Google Sign In ＋ メールリンク</td><td class="n">Apple・Google は実装ごと流用</td></tr>
+          <tr><td class="k">データベース</td><td class="k">Cloud Firestore</td><td class="n">同一サービス、より厳しいルール設計にする</td></tr>
+          <tr><td class="k">写真</td><td class="k">Firebase Storage ＋ expo-image-picker / -manipulator</td><td class="n">新規</td></tr>
+          <tr><td class="k">課金</td><td class="k">RevenueCat（react-native-purchases）</td><td class="n">同一。Sandbox の失効挙動も既知</td></tr>
+          <tr><td class="k">プッシュ通知</td><td class="k">@react-native-firebase/messaging（FCM / APNs）</td><td class="n">新規。判定はサーバー側、端末は受けるだけ</td></tr>
+          <tr><td class="k">定時処理</td><td class="k">Cloud Functions ＋ Cloud Scheduler</td><td class="n">新規。Blaze プランが要る</td></tr>
+          <tr><td class="k">お客様用ページ</td><td class="k">Firebase Hosting（静的）</td><td class="n">Hosting 設定の型は既存にある</td></tr>
+          <tr><td class="k">メール送信</td><td class="k">Resend</td><td class="n">waripay.net で運用中のものを流用できる</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card note">
+      <span class="tag">着手前に必ず</span>
+      <p>割ペイの <code>AGENTS.md</code> は「Expo は変わった。コードを書く前に <code>docs.expo.dev/versions/v57.0.0/</code> の版付きドキュメントを読め」と一行だけ書いてあります。<strong>調律ノートでも同じ規律を敷きます。</strong>SDK 57 は New Architecture 必須で、旧来のブログ記事の手順がそのままでは通らない領域があります。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">6</span>ひとつだけ割ペイと変える ── Firebase SDK</h2>
+    <p>割ペイは Firebase の <strong>JS SDK</strong>（<code>firebase</code> パッケージ）を React Native で使っています。調律ノートでは <strong>@react-native-firebase</strong>（ネイティブ SDK）を採ります。理由は一つで、<em>オフラインです</em>。</p>
+
+    <div class="card warn">
+      <span class="tag">確認した事実</span>
+      <p><strong>Firebase JS SDK の Firestore オフライン永続化は、React Native では動きません。</strong>永続キャッシュは IndexedDB に依存しており、React Native に IndexedDB が無いためです。<code>persistentLocalCache</code> を指定してもエラーを出してメモリキャッシュに落ちます。Firebase 公式も「オフライン永続化に対応するのは Android・iOS・Web」＝ネイティブ SDK か Web、と明記しています。<br><br>
+      割ペイの <code>src/firebase/config.ts</code> は <code>initializeFirestore(app, { ignoreUndefinedProperties: true })</code> のみで、キャッシュ指定がありません。つまり<strong>割ペイは現状オフライン永続化を持っていない</strong>ということです。割ペイは電波のある場所で使う前提なので問題になっていませんが、調律ノートは違います。</p>
+    </div>
+
+    <p>調律師はお客様のお宅の中——鉄筋の集合住宅、地下の音楽室、学校の講堂——で1台2〜3時間作業します。<strong>電波が弱い場所で「今日の訪問先が開けない」は、このアプリでは致命傷です。</strong>ネイティブ SDK に替えると、読み取りキャッシュも、オフライン中の書き込みキューも、再接続時の送信も、SDK が面倒を見ます。</p>
+
+    <div class="scroller">
+      <table>
+        <thead><tr><th>方式</th><th>オフライン読み</th><th>オフライン書き</th><th>追加の実装</th><th>判断</th></tr></thead>
+        <tbody>
+          <tr class="pick"><td class="k">@react-native-firebase</td><td class="c">○ 自動</td><td class="c">○ 自動</td><td class="c">ほぼ無し</td><td class="n"><strong>採用。</strong>config plugin と開発ビルドが要るが、どちらも割ペイで運用ずみ</td></tr>
+          <tr><td class="k">JS SDK ＋ 自前キャッシュ</td><td class="c">△ 手作り</td><td class="c">△ 手作り</td><td class="c">300〜400行</td><td class="n">割ペイと API が完全一致する利点はあるが、キュー・競合・再送を自前で持つことになる</td></tr>
+          <tr><td class="k">JS SDK のみ</td><td class="c">×</td><td class="c">×</td><td class="c">無し</td><td class="n">現場で開けない。要件を満たさない</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>代償は、Auth・Storage も含めて Firebase まわり一式をネイティブ SDK に揃える必要があること（JS SDK と混在させると認証状態が二重になります）。ただし <code>@react-native-firebase</code> のモジュラー API は JS SDK とほぼ同じ形なので、割ペイのコードを読み替える負担は小さく済みます。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">7</span>データ設計</h2>
+    <p>前回仕様書の Postgres スキーマを Firestore に写します。<strong>全データが「1人の調律師が所有する木」の下に入る</strong>——この形にすると、セキュリティルールが1行で書けて、しかも最も強くなります。</p>
+<pre><span class="c">// すべて調律師の uid の下。他人のデータと交差しない</span>
+/tuners/{uid}                     <span class="c">屋号・資格・車番・税番号・locale・plan</span>
+  /customers/{customerId}         <span class="c">氏名・種別・連絡先・住所(国際構造)・photoConsent</span>
+  /pianos/{pianoId}               <span class="c">customerId を持つ。設置場所・製造番号・料金・周期</span>
+  /visits/{visitId}               <span class="c">customerId・pianoIds[]・日付・時刻(null可)・kind・問診</span>
+  /records/{recordId}             <span class="c">customerId・pianoId?・visitId?・kind・料金・状態・写真</span>
+
+/bookings/{token}                 <span class="c">お客様用ページ。認証なしで読める唯一の場所</span>
+
+<span class="c">// ピアノに1つだけ非正規化した項目を持たせる。これが要</span>
+piano.<span class="t">nextDueOn</span>  = lastTunedOn + intervalMonths
+<span class="c">// 「時期を迎えたピアノ」は、これ1本のインデックス済みクエリで出る</span>
+where(<span class="s">'nextDueOn'</span>, <span class="s">'&lt;='</span>, today)</pre>
+
+    <div class="card note">
+      <span class="tag">設計上のいちばんの勘所</span>
+      <p>前回仕様書は「<code>kind='tuning'</code> のときだけ <code>last_tuned_on</code> を更新する。DB のトリガーで守るのが安全」と書きました。<strong>Firestore にトリガーはありません。</strong>代わりに、<code>src/lib/cycle.ts</code> に<em>記録を書く唯一の関数</em>を置き、そこだけが <code>lastTunedOn</code> と <code>nextDueOn</code> を触れるようにします。画面から直接 <code>setDoc</code> を呼ばない、という規律で守る形です。セキュリティルール側でも種別と更新項目の整合を検証し、二重にします。</p>
+    </div>
+
+    <h3>セキュリティルール</h3>
+<pre><span class="k">match</span> /tuners/{uid} {
+  <span class="k">allow read, write</span>: <span class="k">if</span> request.auth != <span class="k">null</span> &amp;&amp; request.auth.uid == uid;
+  <span class="k">match</span> /{col}/{doc} {
+    <span class="k">allow read, write</span>: <span class="k">if</span> request.auth != <span class="k">null</span> &amp;&amp; request.auth.uid == uid;
+  }
+}</pre>
+    <p>割ペイは「リンクを知っている人は誰でも読み書きできる」という設計です（招待リンクで参加する仕様なので、それが正しい）。<strong>調律ノートは正反対で、所有者以外は一切触れません。</strong>300人ぶんの氏名・住所・お宅の写真を預かるので、ここは厳しい側に振ります。</p>
+
+    <div class="card warn">
+      <span class="tag">運用で必ず踏む</span>
+      <p>ルールを書き換えたら <strong>Firebase Console で「実際にデプロイされているルール」を確認</strong>してください。ローカルの <code>firestore.rules</code> が正だと思い込むと、permission-denied の原因を延々コード側で探すことになります（割ペイで実際に起きた事故です）。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">8</span>お客様用ページ ── ここだけ1ソースから外す</h2>
+    <p>ご案内メッセージのリンクから開く <code>/b/{token}</code> は、<strong>アプリのコードベースに入れず、Firebase Hosting の静的ページとして別に作ります。</strong>「1ソースで」という方針からの、意図的な例外です。</p>
+    <ul class="plain">
+      <li><strong>画面が1枚しかない。</strong>日付を選ぶボタンと「今回は見送る」ボタンだけ。ここに React Native Web のバンドルを送り込むのは釣り合わない</li>
+      <li><strong>開くのは高齢のお客様で、年に1回。</strong>LINE から開いて数秒で表示されないと離脱する。軽さがそのまま成約率になる</li>
+      <li><strong>認証がない場所を、アプリ本体と混ぜたくない。</strong>公開面を小さく切り離しておくほうが、守るものが減る</li>
+    </ul>
+    <p>トークンは推測できない長さで、有効期限を持たせます。ここで日付を選ぶと <code>visits</code> に「日付確定・時間未定」の予定が生まれ、「今回は見送る」を押すと該当周期に見送りの印が立ちます。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">9</span>モックから引き継げるもの、作り直すもの</h2>
+    <p>4,150行の <code>choritsu-note.html</code> は捨てません。<strong>移植する層と、仕様書として使う層と、作り直す層に分けます。</strong></p>
+    <div class="grid2">
+      <div class="card ok">
+        <span class="tag">ほぼそのまま移植</span>
+        <p><strong>業務ロジック（<code>src/lib/</code> へ）。</strong>素の JavaScript なので TypeScript にほぼ直訳できます。<br>・ローカル日付の <code>iso()</code>（<code>toISOString</code> は UTC で1日ずれる）<br>・周期の計算と <code>countsToCycle(kind)</code><br>・未調律期間の割増（1年ごと+1,500円／上限15,000円／10年超は粗調律警告、日本ロケール限定）<br>・<code>money()</code> とロケール別の住所組み立て・敬称<br>・マスタ（作業種別・事前問診の選択肢・定型文10種・メーカー候補）</p>
+      </div>
+      <div class="card ok">
+        <span class="tag">仕様書として使う</span>
+        <p><strong>デザイントークンと画面フロー。</strong>色は割ペイと同じく <code>src/theme/colors.ts</code> の形に移します（象牙 <code>#F4F2EC</code>／ティール <code>#0E8F83</code>／真鍮 <code>#B0873A</code>／コーラル <code>#C6503A</code>）。9画面の遷移と、現場向けに削り込んだ入力の作法（チップ選択・大きな二択・定型文タップ・入力ゼロでも送信可）は、そのまま実装指示になります。</p>
+      </div>
+      <div class="card warn">
+        <span class="tag">作り直す</span>
+        <p><strong>DOM と CSS の層。</strong>812行のスタイルと、画面を組み立てている描画関数群。React Native には DOM が無いので、ここは <code>View</code> / <code>Text</code> / <code>StyleSheet</code> で組み直しになります。9画面ぶん。</p>
+      </div>
+      <div class="card warn">
+        <span class="tag">捨てる</span>
+        <p><strong>localStorage 前提のデータ層。</strong>3つのキー（<code>choritsu_note_s2</code>／memouse／set）に JSON を丸ごと入れる作りは、Firestore + オフラインキャッシュに置き換わります。ここは Capacitor を選んだとしても書き直しになっていた部分です。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">10</span>作る順番</h2>
+    <p>iOS は割ペイの導線がそのまま使えるので速く出せます。<strong>律速は Android です。</strong>だから「アプリを完成させてから出す」のではなく、<em>最小ビルドを最初に Play へ入れて14日のカウントを回しながら中身を作ります</em>。</p>
+    <div class="sched">
+      <div class="row crit"><span class="d">フェーズ0</span><span class="b"><strong>足場と、Play の14日カウント開始</strong><small>Expo SDK 57 で新規作成／Firebase プロジェクト新規／EAS 設定／App Store Connect と Play Console にアプリ登録／<strong>起動して1画面出るだけのビルドをクローズドテストへ投入</strong></small></span></div>
+      <div class="row"><span class="d">フェーズ1</span><span class="b">台帳が動く（S層）<small>お客様・ピアノ・記録・予定の登録と一覧、時期判定、記録フォーム。認証と Firestore。<strong>ここで TestFlight 配信できる</strong></small></span></div>
+      <div class="row"><span class="d">フェーズ2</span><span class="b">ご案内と、お客様用ページ<small>LINE / SMS / メールの送信導線、<code>/b/{token}</code> の予約ページ、見送りボタン。中核価値がここで完成する</small></span></div>
+      <div class="row"><span class="d">フェーズ3</span><span class="b">プッシュ通知<small>Cloud Functions + Scheduler で毎朝判定し、1日1通にまとめて送る。Android 13+ の通知権限は「最初のご案内が出たとき」に求める</small></span></div>
+      <div class="row"><span class="d">フェーズ4</span><span class="b">課金<small>RevenueCat で無料15軒／年額14,800円の線引き。Apple の Small Business Program 適用状況をここで確認</small></span></div>
+      <div class="row"><span class="d">フェーズ5</span><span class="b">A / B / C層の機能<small>前日確定アシスタント、割増計算、報告書、会計CSV、法人請求、繁閑平準化。モックに全部あるので順に移す</small></span></div>
+    </div>
+    <div class="card note">
+      <span class="tag">フェーズ0で決めること</span>
+      <p>Firebase プロジェクトは<strong>割ペイと分けて新規に作ります</strong>（<code>warikan-bu</code> に相乗りしない）。データも課金も無関係で、ルールの設計思想が正反対だからです。RevenueCat も新しいアプリとして登録します。アカウント（Apple / Google / RevenueCat）は既存のものをそのまま使います。</p>
+    </div>
+  </section>
+
+  <aside class="limits">
+    <h2>裏付けの状況（正直な申告）</h2>
+    <p>以下は<strong>今日、実物を見て確認したもの</strong>です。割ペイの package.json / app.json / eas.json / firebase 設定の中身、App Store に割ペイが公開されていること、Google Play にストアページが出ないこと、Expo SDK 57 が RN 0.86・React 19.2 で New Architecture 必須であること、react-native-firebase の現行版が 26.3.2 で Expo 47 以降を受けること、Firebase JS SDK の Firestore 永続化が React Native では IndexedDB 不在のため機能しないこと、Google の公式ヘルプがテスト要件を「あなたのアプリ」単位の文言で書いていること。</p>
+    <p>以下は<strong>未確認</strong>です。着手前に潰してください。</p>
+    <ul class="plain wide">
+      <li><strong>Play の本番アクセスが、一度得たらアカウント単位で以後のアプリにも及ぶのか。</strong>公式ヘルプは「アプリ」単位の書き方だが、複数アプリの場合を明示していない。<em>免除されない前提で日程を組む</em>のが安全</li>
+      <li><strong>Apple Small Business Program（手数料15%）を申請ずみか。</strong>割ペイで課金しているので通っている可能性が高いが、申請制なので要確認。未申請なら1年目30%</li>
+      <li><strong>react-native-firebase 26 と RN 0.86 / New Architecture の実地の相性。</strong>peer 依存は緩いが、それは動作保証ではない。フェーズ0の最小ビルドで最初に確かめる</li>
+      <li>Firebase の Blaze プラン（Cloud Functions / Scheduler に必要）の有無</li>
+      <li>Resend を調律ノートのドメインでも使うか、waripay.net と分けるか</li>
+    </ul>
+    <p>また、<strong>調律師本人による価値検証は行えていません</strong>。「年14,800円を払うか」は未確認のまま実装に入ることになります。この文書は技術的な作り方だけを扱っており、<em>作るべきかどうかには答えていません</em>。</p>
+  </aside>
+
+  <section>
+    <h2>主な出典</h2>
+    <p class="sources">
+      <a href="https://support.google.com/googleplay/android-developer/answer/14151465?hl=en">Google Play 新規個人アカウントのテスト要件（公式）</a>｜<a href="https://expo.dev/changelog/sdk-57">Expo SDK 57 チェンジログ（公式）</a>｜<a href="https://docs.expo.dev/guides/new-architecture/">React Native New Architecture（Expo 公式）</a>｜<a href="https://firebase.google.com/docs/firestore/manage-data/enable-offline">Firestore オフラインデータ（Firebase 公式）</a>｜<a href="https://github.com/firebase/firebase-js-sdk/issues/7947">FR: Firestore Persistence Support for Expo / React Native（firebase-js-sdk #7947）</a>｜<a href="https://rnfirebase.io/firestore/usage">React Native Firebase / Firestore</a>｜<a href="https://apps.apple.com/jp/app/id6793808825">割ペイ（App Store）</a>
+    </p>
+  </section>
+
+</div>
+</div>

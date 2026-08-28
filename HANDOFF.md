@@ -156,24 +156,34 @@
 
 ---
 
-## 9. 技術仕様（提案・未実装）
+## 9. 技術仕様
 
-### 構成
+> **2026-08-27に方針転換。詳細は `choritsu-note-arch.html`（実装アーキテクチャ 第3版）が最新の正。**
+> 以下の旧案（Capacitor + Supabase）は**採用しない**。`choritsu-note-tech.html` は経緯として残すが、技術選定については古い。
+
+### 採用する構成（2026-08-27決定）
 ```
-TypeScript + Svelte 5 + Vite
-        ↓ vite build
-Capacitor iOS / Capacitor Android / PWA（お客様用ページ）
+Expo SDK 57（React Native 0.86 / TypeScript）
+        ↓ EAS Build（Windowsから。Mac不要）
+iOS / App Store   ＋   Android / Google Play
         ↓
-Supabase（Postgres + RLS + Auth + Storage + Edge Functions）
+Firebase（Firestore + Auth + Storage + Functions + Scheduler）
         ↓
-RevenueCat（課金）／ Resend・Twilio（メール・SMS）
+RevenueCat（課金）／ FCM・APNs（通知）／ Firebase Hosting（お客様用ページ・別実装）
 ```
 
-### 選定理由
-- **Capacitor**（Flutter/React Nativeではなく）：既存のHTML/CSS/JSモックをほぼそのまま両ストアに包める。かつWeb版（お客様用の認証不要ページ）も同じコードから出せる
-- **Supabase**：行レベルセキュリティ（RLS）で「他人のデータは絶対に見えない」をDB側で保証
-- **RevenueCat**：Apple/Googleのレシート検証・解約検知を一元化
-- **認証はパスワードを持たない**（Magic Link / OTP）
+### なぜ変えたか（3点）
+1. **Macは不要だった。** 既存アプリ「割ペイ」はExpo + EAS Buildで構成され、このWindows機からApp Storeに公開済み。旧仕様書が「最優先タスク」としたMac手配は、前提そのものが誤りだった
+2. **Capacitor → Expo。** モックをそのまま包める利点より、既に回っている道具立て（EAS・RevenueCat・Firebase・両ストアのアカウント）を流用する利点が大きい。代償として9画面のUIはRNで作り直しになる
+3. **Supabase → Firebase。** データは「1人の調律師が持つ木」で他人と交差せず、規模も小さい。運用中のバックエンドを増やす理由がない
+
+### 割ペイと1点だけ変える：Firebase SDK
+**@react-native-firebase（ネイティブSDK）を使う。** 割ペイが使うFirebase JS SDKは、React NativeではFirestoreのオフライン永続化が効かない（IndexedDB不在のため。検証済み）。調律師は電波の弱い顧客宅で作業するので、オフラインで開けないのは致命傷。
+
+### 旧案（不採用、記録として）
+- ~~TypeScript + Svelte 5 + Vite → Capacitor iOS/Android + PWA~~
+- ~~Supabase（Postgres + RLS）~~
+- 認証はパスワードを持たない方針（Magic Link / OTP）は**継続**
 
 ### DBスキーマの要点（詳細は `choritsu-note-tech.html` §4）
 - テーブル：`tuners`（調律師）／`customers`／`pianos`／`visits`＋`visit_pianos`／`records`＋`record_works`
@@ -183,17 +193,18 @@ RevenueCat（課金）／ Resend・Twilio（メール・SMS）
 ### オフライン方針
 深追いしない。当日の訪問先・前回記録をIndexedDBに保持、写真とメモは端末に貯めて後から送信、で打ち止め。
 
-### ストア展開・リリース日程
-- **Google Playは個人（Personal）アカウント登録の方針を確定**（法人アカウントによる要件免除は選択しなかった）→「12人のテスターが14日間連続でインストール」というクローズドテスト要件が確定で発生
-- iOS/Android同時リリースの現実的な着地：**2026年10月上旬**（起点2026-08-10からの試算。詳細な日程表は`choritsu-note-tech.html` §7）
-- Small Business Program（Apple、サブスク手数料15%への軽減）は自己申請制。Developer登録の直後に申請必須
-- iOSビルドにはmacOSが必須（Xcode 26要件）。Windows環境のみでは不可 → Mac実機かクラウドビルド（Ionic Appflow / GitHub Actions macOSランナー）の手配が必要
+### ストア展開・リリース日程（2026-08-27更新）
+- **両ストアの開発者アカウントは既に保有**（割ペイで登録済み）。新規登録は不要
+- **iOSビルドにMacは不要**（EAS Buildがクラウドの macOS でビルドする）。旧記述「Mac必須・手配が最優先」は撤回
+- **Google Playの「12人×14日」はアプリ単位**（アカウント単位ではない）。割ペイで通しても調律ノートは免除されない。しかも割ペイ自身がまだPlay未公開（クローズドテスト中）
+- → **最小ビルドを最初にPlayのクローズドテストへ投入し、14日カウントを回しながら中身を作る**。これは旧仕様書の判断がそのまま生きる
+- Small Business Program（Apple、手数料15%）は自己申請制。割ペイで課金しているので通っている可能性が高いが**要確認**
 
-### 直近の最優先タスク（個人アカウント前提）
-1. テスター15〜18人の確保を今すぐ開始（12人が要件だが余裕を持たせる。1人抜けると14日カウントがリセット）
-2. Mac実機またはクラウドビルドの手配
-3. 両ストアの開発者登録（Google Play $25、Apple $99/年）＋Apple Small Business Program申請
-4. アプリ完成を待たず、最小ビルドでクローズドテストの14日カウントを先に開始する（唯一の時間短縮策）
+### 直近の最優先タスク
+1. **フェーズ0**：Expo SDK 57で新規作成、Firebaseプロジェクト新規作成、EAS設定、両ストアにアプリ登録
+2. **起動して1画面出るだけの最小ビルドをPlayクローズドテストへ投入**（14日カウントを最初に回す）
+3. テスター12人以上の確保（1人抜けるとカウントがリセット）
+4. react-native-firebase 26 と RN 0.86 / New Architecture の実地の相性を、この最小ビルドで最初に確認する
 
 ---
 
@@ -223,8 +234,9 @@ RevenueCat（課金）／ Resend・Twilio（メール・SMS）
 | ファイル | 内容 |
 |---|---|
 | `HANDOFF.md` | この引き継ぎ書 |
-| `choritsu-note.html` | **アプリ本体（最新モック、全18機能実装済み）**。改修はこれを編集 |
-| `choritsu-note-tech.html` | 技術仕様書（アーキテクチャ・DB設計・リリース日程） |
+| `choritsu-note.html` | **アプリ本体（最新モック、全18機能実装済み）**。実装時の仕様書として使う |
+| `choritsu-note-arch.html` | **実装アーキテクチャ 第3版（2026-08-27）＝技術選定の最新の正**。Expo+Firebase、作る順番 |
+| `choritsu-note-tech.html` | 技術仕様書（2026-08-10）。**技術選定は古い**（Capacitor+Supabase）。DB項目の定義と業務ルールは今も有効 |
 | `choritsu-note-spec2.html` | 単発案件・個人情報・事業承継・フリーミアム・国際化の検討資料 |
 | `choritsu-note-monetize.md` | 初期のマネタイズ調査・競合価格・顧客獲得チャネル（§6の値下げ以外は現在も有効） |
 | `検証準備.md` | 調律師への検証（デモの見せ方・価格の伝え方・インタビュー質問・記録シート） |
