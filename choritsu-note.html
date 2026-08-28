@@ -436,6 +436,32 @@
   .fee-line.sum { border-top: 1px solid var(--line-strong); margin-top: 4px; padding-top: 6px; font-size: 14px; }
   .fee-line.sum .lb { font-weight: 700; color: var(--ink); }
   .fee-line.sum .am { font-weight: 800; font-size: 16px; color: var(--accent-ink); }
+  /* プラン表示と、規約類 */
+  .plan-box { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--ink-3); border-radius: 11px; padding: 13px 15px; }
+  .plan-box.pro { border-left-color: var(--accent); }
+  .plan-box .pt { font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--ink-2); }
+  .plan-box.pro .pt { color: var(--accent-ink); }
+  .plan-box .pn { font-size: 19px; font-weight: 800; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .doc-links { display: flex; gap: 9px; }
+  .doc-links .btn { flex: 1; }
+  .doc-body { font-size: 13.5px; line-height: 1.8; color: var(--ink-2); max-height: 48vh; overflow-y: auto; }
+  .doc-body p { margin: 0 0 11px; }
+  .doc-body b { color: var(--ink); }
+  .doc-body .doc-note { color: var(--overdue); font-size: 12.5px; }
+  /* 写真の同意と、ピアノ削除の並び */
+  .consent-box { background: var(--surface); border: 1px solid var(--line); border-radius: 11px; padding: 12px 14px; }
+  .consent-box .cl { font-size: 13.5px; font-weight: 700; margin-bottom: 8px; }
+  .consent-box .hint { margin-top: 8px; }
+  /* このアプリは高齢の利用者を想定してタップ領域44px以上を守っている。新しいUIも合わせる。 */
+  .consent-box .cond-pick button { min-height: 44px; }
+  .pdel-row { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 6px; padding: 0 2px; }
+  .pdel-row .btn.link { font-size: 12.5px; min-height: 44px; }
+  .btn.link[data-delcust] { min-height: 44px; }
+  /* 保存に失敗している間ずっと出し続ける警告。消えないことが要点。 */
+  .save-alert { display: flex; gap: 9px; align-items: flex-start; padding: 11px 15px; background: var(--overdue);
+    color: #fff; font-size: 13px; line-height: 1.6; flex: 0 0 auto; }
+  .save-alert svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.2; flex: 0 0 auto; margin-top: 2px; }
+  .save-alert b { display: block; font-size: 13.5px; }
   .rough-warn { display: flex; gap: 7px; align-items: flex-start; font-size: 12px; line-height: 1.6; color: var(--overdue); background: var(--overdue-soft); border-radius: 9px; padding: 9px 11px; margin-top: 9px; }
   .rough-warn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; flex: 0 0 auto; margin-top: 2px; }
 
@@ -830,6 +856,10 @@
       </div>
     </div>
 
+    <div class="save-alert" id="saveAlert" style="display:none">
+      <svg viewBox="0 0 24 24"><path d="M12 4L2.5 20h19L12 4z"/><path d="M12 10v4M12 17.2v.1"/></svg>
+      <div><b>保存できていません</b>端末の空き容量が足りず、ここでの変更が残っていません。写真を減らすか、空き容量を確保してからもう一度お試しください。</div>
+    </div>
     <div class="scroll" id="scroll">
       <!-- HOME -->
       <section class="view active" id="view-home">
@@ -1168,6 +1198,16 @@
           <button class="btn primary" id="saveSettings" style="flex:2">保存する</button>
         </div>
 
+        <p class="fieldset-title">ご利用プラン</p>
+        <div class="plan-box" id="planBox"></div>
+
+        <p class="fieldset-title">お客様の情報について</p>
+        <p class="sub-note">お客様の氏名・ご住所・お宅の写真をお預かりしています。取り扱いの方針と、お問い合わせ先をご確認いただけます。</p>
+        <div class="doc-links">
+          <button class="btn ghost" id="docPrivacy">プライバシーポリシー</button>
+          <button class="btn ghost" id="docTerms">利用規約</button>
+        </div>
+
         <p class="fieldset-title">お試し用</p>
         <p class="sub-note">いま入っているのはサンプルのお客様です。消すと、はじめて使うときの画面から始められます。</p>
         <button class="btn ghost" id="clearAll" style="width:100%">サンプルを消して最初から試す</button>
@@ -1289,6 +1329,36 @@
   function yen(n) { return Number(n||0).toLocaleString(); }
   function uid(pre) { return (pre||"x") + Math.random().toString(36).slice(2,9); }
 
+  /* ---------- 写真 ----------
+     カメラの写真は無加工だと1枚4MB前後あり、そのまま貯めると端末の保存領域を食いつぶす。
+     報告書に使うだけなので、長辺1280pxまで縮めてから持つ。1枚あたり100〜200KB程度になる。 */
+  var PHOTO_MAX = 1280;
+  function shrinkPhoto(file, done, maxEdge) {
+    var max = maxEdge || PHOTO_MAX;
+    var rd = new FileReader();
+    rd.onload = function (e) {
+      var img = new Image();
+      img.onload = function () {
+        var w = img.naturalWidth, h = img.naturalHeight;
+        var scale = Math.min(1, max / Math.max(w, h));
+        var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
+        var cv = document.createElement("canvas"); cv.width = cw; cv.height = ch;
+        var ctx = cv.getContext("2d");
+        ctx.drawImage(img, 0, 0, cw, ch);
+        var out;
+        // WebP が使えれば小さい。古い端末向けに JPEG へ落とす。
+        try { out = cv.toDataURL("image/webp", 0.72); } catch (err) { out = null; }
+        if (!out || out.indexOf("data:image/webp") !== 0) out = cv.toDataURL("image/jpeg", 0.75);
+        done(out);
+      };
+      // 画像として読めないファイルは、そのまま渡さず諦める（壊れたデータを台帳に入れない）
+      img.onerror = function () { toast("この画像は読み込めませんでした。"); };
+      img.src = e.target.result;
+    };
+    rd.onerror = function () { toast("写真を読み込めませんでした。"); };
+    rd.readAsDataURL(file);
+  }
+
   /* ---------- サンプルデータ（新構造：顧客 1 : N 台） ---------- */
   function seed() {
     function P(o) {
@@ -1296,7 +1366,7 @@
       return {
         id: uid("p"), room: o.room, maker: o.maker, model: o.model, type: o.type || "アップライト",
         serial: o.serial || "", made: o.made || "", env: o.env, fee: o.fee, interval: o.interval || 12,
-        last: iso(last), remindedCycle: null, skippedCycle: null,
+        last: iso(last), initialLast: iso(last), nextDue: null, remindedCycle: null, skippedCycle: null,
         history: (o.hist || []).map(function (h) {
           var d = monthsAgo(h.ago); d.setDate(h.day || o.day || 12);
           return { date: iso(d), work: h.work, fee: h.fee, memo: h.memo || "", photo: null,
@@ -1452,10 +1522,30 @@
 
   var state = load();
   function load() { try { var raw = localStorage.getItem(KEY); if (raw) { var s = JSON.parse(raw); if (s && s.length && s[0].pianos) return s; } } catch (e) {} var s2 = seed(); save(s2); return s2; }
-  function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s || state)); } catch (e) {} }
+  /* 保存の失敗は、絶対に黙って捨てない。
+     顧客台帳を預かる道具で「保存できていないのに成功したように見える」のが最も危険。
+     失敗したら画面上部に警告を出し続け、成功するまで消さない。 */
+  var saveBroken = false;
+  function save(s) {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(s || state));
+      if (saveBroken) { saveBroken = false; renderSaveAlert(); }
+      return true;
+    } catch (e) {
+      saveBroken = true; renderSaveAlert();
+      toast("保存できませんでした。端末の空き容量が不足しています。");
+      return false;
+    }
+  }
+  function renderSaveAlert() {
+    var el = $("saveAlert"); if (!el) return;
+    el.style.display = saveBroken ? "flex" : "none";
+  }
 
   /* ---------- ピアノ単位の状態 ---------- */
-  function dueDateP(p) { return addMonths(fromIso(p.last), p.interval); }
+  /* 次回の目安。nextDue は「この周期にかぎった上書き」で、標準の周期（interval）とは別物。
+     一度きりの再訪日を入れても、以後の周期が変わってしまわないようにするため。 */
+  function dueDateP(p) { return p.nextDue ? fromIso(p.nextDue) : addMonths(fromIso(p.last), p.interval); }
   function cycleKey(p) { return iso(dueDateP(p)); }
   function diffM(p) { return monthIndex(dueDateP(p)) - monthIndex(today()); }
   function pstatus(p) { var d = diffM(p); if (d <= -12) return "dormant"; if (d < 0) return "overdue"; if (d === 0) return "due"; if (d === 1) return "next"; return "calm"; }
@@ -1845,7 +1935,25 @@
       + "▼ ご都合のよい日をお選びください\n" + bookingUrl(c) + "\n\n"
       + "今回は見送られる場合も、同じページの「今回は見送る」から\nワンタップでお知らせいただけます。お電話は不要です。";
   }
-  function bookingUrl(c) { return "https://choritsu-note.app/b/" + String(c.id).slice(1, 7); }
+  /* お客様用の予約ページのURL。
+     この先には氏名・住所・ピアノ・訪問予定が並ぶので、鍵は顧客IDと切り離す。
+     ・顧客IDを流用しない（転送されても失効させられるように）
+     ・Math.random ではなく暗号用の乱数を使う
+     ・長さを取る（静的ページには回数制限が効かないため） */
+  function newToken() {
+    var a = new Uint8Array(16);
+    if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(a);
+    else for (var i = 0; i < a.length; i++) a[i] = Math.floor(Math.random() * 256);
+    var s = ""; for (var j = 0; j < a.length; j++) s += ("0" + a[j].toString(16)).slice(-2);
+    return s;
+  }
+  function bookingToken(c) {
+    if (!c.bookToken) { c.bookToken = newToken(); save(); }
+    return c.bookToken;
+  }
+  /** 転送されてしまったときのために、鍵を作り直せるようにしておく */
+  function revokeBookingToken(c) { c.bookToken = newToken(); save(); }
+  function bookingUrl(c) { return "https://choritsu-note.app/b/" + bookingToken(c); }
 
   function openReminder(id) {
     var c = find(id); if (!c) return;
@@ -2140,11 +2248,17 @@
   function sortHistory(p) {
     p.history.sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
   }
-  /** 履歴を直したら、次回のご案内時期も追随させる */
+  /** 周期の基準日を決める、ただ1つの場所。
+      記録の追加・修正・取り消しのいずれでも必ずここを通す。
+      直接 p.last へ代入してはいけない（過去日の記録で基準日が壊れるため）。 */
   function recalcPianoLast(p) {
     sortHistory(p);
     var base = p.history.filter(function (h) { return countsToCycle(h); });
-    if (base.length) p.last = base[0].date;
+    // 調律の記録が1件も無くなったら、ピアノ登録時に入力された前回調律日へ戻す。
+    // ここが無いと、取り消した記録の日付が基準として residue のように残り続ける。
+    var next = base.length ? base[0].date : (p.initialLast || p.last);
+    if (next !== p.last) p.nextDue = null;   // 基準日が動いたら、この周期の上書きは無効
+    p.last = next;
   }
   /* =========================================================
      仕事の種別
@@ -2169,6 +2283,94 @@
   function kindName(k) { return kindOf(k).n; }
   /** 調律の周期をリセットする記録かどうか（単発の修理・点検は周期を動かさない） */
   function countsToCycle(h) { return kindOf(h.kind).cycle; }
+
+  /* お客様の削除。「私の情報を消してほしい」に応えるための導線。
+     写真もろとも消える、取り返しのつかない操作なので、名前を確認してから実行する。 */
+  function openDeleteCustomer(cid) {
+    var c = find(cid); if (!c) return;
+    var stat = customerStats(c);
+    var sheet = $("sheet");
+    sheet.innerHTML = '<h3>'+esc(c.name)+' 様を削除しますか</h3>'
+      + '<p class="to">'+c.pianos.length+'台 ・ これまでの記録 '+stat.n+'件</p>'
+      + '<div class="rough-warn">'+ICON.warn+'<div>お客様の情報・ピアノ・作業の履歴・写真が<b>すべて消え、元に戻せません</b>。'
+      +   '売上の集計からも外れます。</div></div>'
+      + '<div class="field" style="margin-top:12px"><label>確認のため、お名前を入力してください</label>'
+      +   '<input id="delName" placeholder="'+esc(c.name)+'" autocomplete="off"></div>'
+      + '<div class="form-actions"><button class="btn ghost" id="sheetCancel" style="flex:2">やめておく</button>'
+      + '<button class="btn" id="delCustOk" style="flex:1;background:var(--overdue);color:#fff">削除する</button></div>';
+    $("sheetCancel").onclick = closeSheet;
+    $("delCustOk").onclick = function () {
+      if ($("delName").value.trim() !== c.name) { toast("お名前が一致しません。"); return; }
+      var i = state.indexOf(c); if (i >= 0) state.splice(i, 1);
+      save(); closeSheet(); refreshAll(); show("customers");
+      toast(c.name + " 様を削除しました。");
+    };
+    $("scrim").classList.add("open");
+  }
+
+  /* ピアノ1台だけの削除。訪問予定からもこの台を外す（孤児の参照を残さない）。 */
+  function openDeletePiano(cid, pid) {
+    var c = find(cid); if (!c) return;
+    var p = findPiano(c, pid); if (!p) return;
+    var sheet = $("sheet");
+    sheet.innerHTML = '<h3>このピアノを削除しますか</h3>'
+      + '<p class="to">'+esc(c.name)+' 様 ・ '+esc(p.room)+'（'+esc(pianoName(p))+'）</p>'
+      + '<div class="rough-warn">'+ICON.warn+'<div>このピアノの<b>作業の履歴 '+p.history.length+'件と写真も一緒に消えます</b>。元に戻せません。</div></div>'
+      + '<div class="form-actions"><button class="btn ghost" id="sheetCancel" style="flex:2">やめておく</button>'
+      + '<button class="btn" id="delPianoOk" style="flex:1;background:var(--overdue);color:#fff">削除する</button></div>';
+    $("sheetCancel").onclick = closeSheet;
+    $("delPianoOk").onclick = function () {
+      c.pianos.splice(c.pianos.indexOf(p), 1);
+      // 予定からこの台を外し、対象が無くなった予定そのものも消す
+      c.visits = (c.visits || []).filter(function (v) {
+        v.pianoIds = (v.pianoIds || []).filter(function (id) { return id !== pid; });
+        return v.pianoIds.length > 0;
+      });
+      save(); closeSheet(); refreshAll(cid); renderDetail(cid);
+      toast(p.room + " のピアノを削除しました。");
+    };
+    $("scrim").classList.add("open");
+  }
+
+  /* 予約ページのURLを作り直す（＝古いURLを失効させる） */
+  function openRevoke(cid) {
+    var c = find(cid); if (!c) return;
+    var sheet = $("sheet");
+    sheet.innerHTML = '<h3>予約ページのURLを作り直しますか</h3>'
+      + '<p class="to">'+esc(c.name)+' 様</p>'
+      + '<div class="rough-warn">'+ICON.warn+'<div><b>いまのURLは開けなくなります。</b>'
+      +   'すでにお送りしたご案内のリンクも無効になるので、作り直したあとに改めてお送りください。</div></div>'
+      + '<p class="sub-note" style="margin-top:10px">お客様がリンクを転送してしまったときなどに使います。</p>'
+      + '<div class="form-actions"><button class="btn ghost" id="sheetCancel" style="flex:1">やめる</button>'
+      + '<button class="btn primary" id="revOk" style="flex:2">作り直す</button></div>';
+    $("sheetCancel").onclick = closeSheet;
+    $("revOk").onclick = function () {
+      revokeBookingToken(c); closeSheet(); renderDetail(cid);
+      toast("新しいURLになりました。以前のURLは開けません。");
+    };
+    $("scrim").classList.add("open");
+  }
+
+  /* 無料の上限に達したときの案内。
+     ここで見せるのは「あと何軒か」ではなく「この先も続けるための金額」。 */
+  function openPlanLimit() {
+    var sheet = $("sheet");
+    sheet.innerHTML = '<h3>無料でお使いいただけるのは ' + FREE_LIMIT + ' 軒までです</h3>'
+      + '<p class="to">いま ' + custCount() + ' 軒のお客様が入っています</p>'
+      + '<p class="sub-note" style="margin-bottom:14px">すでに登録されたお客様の台帳・履歴・ご案内は、このまま無料でお使いいただけます。'
+      + '新しいお客様を追加するときだけ、プロプランが必要です。</p>'
+      + '<div class="rough-warn">' + ICON.note + '<div>年額 14,800円（月あたり 1,233円）。'
+      + '<b>調律1件ぶんの年会費です。</b>忘れられて逃していた1件を年に一度拾えれば、それで元が取れます。</div></div>'
+      + '<div class="form-actions" style="margin-top:14px">'
+      + '<button class="btn ghost" id="sheetCancel" style="flex:1">あとで</button>'
+      + '<button class="btn primary" id="planOk" style="flex:2">プロプランにする</button></div>';
+    $("sheetCancel").onclick = closeSheet;
+    $("planOk").onclick = function () {
+      SET.plan = "pro"; saveSet(); closeSheet(); refreshAll();
+      toast("プロプランになりました。お客様を無制限に登録できます。");
+    };
+    $("scrim").classList.add("open");
+  }
 
   function openEditRecord(cid, pid, hidx) {
     var c = find(cid); if (!c) return;
@@ -2963,6 +3165,12 @@
     });
 
     h += '<button class="btn ghost" id="addPianoBtn" style="width:100%;margin-top:2px">'+ICON.piano+'このお客様にピアノを追加</button>';
+    if (c.pianos.length > 1) {
+      h += '<div class="pdel-row">' + c.pianos.map(function (p) {
+        return '<button class="btn link" data-delpiano="'+c.id+'|'+p.id+'" style="color:var(--ink-3)">'
+          + esc(p.room) + ' を削除</button>';
+      }).join("") + '</div>';
+    }
 
     h += '<div class="detail-actions">'
       + '<button class="btn primary" data-remind="'+c.id+'">'+ICON.send+'調律のご案内を送る</button>'
@@ -2970,6 +3178,24 @@
       + '<button class="btn ghost" data-spot="'+c.id+'">'+ICON.warn+'臨時のご依頼</button>'
       + '<button class="btn ghost" data-est="'+c.id+'" style="grid-column:1 / -1">'+ICON.quote+'見積もりを送る</button>'
       + '</div>';
+
+    /* お客様の情報の扱い。
+       「消してほしい」と言われたときの導線は、法令上どうしても要る。 */
+    h += '<p class="fieldset-title">お客様の情報の扱い</p>'
+      + '<div class="consent-box">'
+      +   '<div class="cl">お宅の中の写真を保存する</div>'
+      +   '<div class="cond-pick">'
+      +     [["yes","同意いただいた"],["no","辞退された"],["","未確認"]].map(function (o) {
+              return '<button type="button" data-consent="'+c.id+'|'+o[0]+'"'
+                + (((c.photoConsent||"") === o[0]) ? ' class="sel"' : '') + '>'+o[1]+'</button>';
+            }).join("")
+      +   '</div>'
+      +   '<p class="hint">「辞退された」にすると、このお客様の記録では写真を保存しません。</p>'
+      + '</div>'
+      + '<button class="btn ghost" data-revoke="'+c.id+'" style="width:100%;margin-top:8px">'
+      +   ICON.warn+'予約ページのURLを作り直す</button>'
+      + '<button class="btn link" data-delcust="'+c.id+'" style="width:100%;text-align:center;color:var(--overdue);margin-top:10px">'
+      +   'このお客様を削除する</button>';
 
     box.innerHTML = h;
 
@@ -2983,6 +3209,17 @@
     box.querySelectorAll("[data-custview]").forEach(function (b) { b.onclick = function () { openCustomerView(b.getAttribute("data-custview")); }; });
     box.querySelectorAll("[data-visit]").forEach(function (b) { b.onclick = function () { var p = b.getAttribute("data-visit").split("|"); openVisitSheet(p[0], p[1]); }; });
     box.querySelectorAll("[data-receipt]").forEach(function (b) { b.onclick = function () { var p = b.getAttribute("data-receipt").split("|"); openReceipt(p[0], p[1], +p[2]); }; });
+    box.querySelectorAll("[data-consent]").forEach(function (b) { b.onclick = function () {
+      var pr = b.getAttribute("data-consent").split("|"), cc = find(pr[0]); if (!cc) return;
+      cc.photoConsent = pr[1] || null; save(); renderDetail(pr[0]);
+      toast(pr[1] === "no" ? "このお客様の記録では写真を保存しません。"
+          : pr[1] === "yes" ? "写真の保存に同意いただいた記録を残しました。" : "未確認に戻しました。");
+    }; });
+    box.querySelectorAll("[data-revoke]").forEach(function (b) { b.onclick = function () { openRevoke(b.getAttribute("data-revoke")); }; });
+    box.querySelectorAll("[data-delpiano]").forEach(function (b) { b.onclick = function () {
+      var pr = b.getAttribute("data-delpiano").split("|"); openDeletePiano(pr[0], pr[1]);
+    }; });
+    box.querySelectorAll("[data-delcust]").forEach(function (b) { b.onclick = function () { openDeleteCustomer(b.getAttribute("data-delcust")); }; });
     box.querySelectorAll("[data-edit]").forEach(function (b) { b.onclick = function () { var p = b.getAttribute("data-edit").split("|"); openEditRecord(p[0], p[1], +p[2]); }; });
     box.querySelectorAll("[data-rec]").forEach(function (b) { b.onclick = function () { var p = b.getAttribute("data-rec").split("|"); startRecord(p[0], p[1]); }; });
     box.querySelectorAll("[data-hist]").forEach(function (b) {
@@ -3064,6 +3301,9 @@
      記録（顧客 → ピアノ → フォーム）
      ========================================================= */
   var recCust = null, recPiano = null, recPhotoBefore = null, recPhotoAfter = null;
+  /* 「次回のご案内予定日」の初期値。保存時にこれと突き合わせて、
+     調律師が実際に日付を変えたのかどうかを判定する。 */
+  var recNextDefault = "";
   var recCond = { strings:"ok", action:"ok", keys:"ok", humid:"ok" };
   var recCondSet = false;   // 触っていないのに「良好」と書かないための印
 
@@ -3227,7 +3467,9 @@
 
   function startRecord(cid, pid) {
     var c = find(cid); if (!c) return;
-    recCust = c; recPiano = null; recPhoto = null;
+    // recPhoto という変数は存在しない（作業前・作業後で2つに分かれている）。
+    // "use strict" 下では未宣言への代入が例外になり、記録画面が開けなくなっていた。
+    recCust = c; recPiano = null; recPhotoBefore = null; recPhotoAfter = null;
     show("record"); $("scroll").scrollTop = 0;
     $("rQuickWrap").style.display = "none";
     $("r-pick-field").style.display = "none";
@@ -3275,7 +3517,8 @@
     $("r-form-body").style.display = "block";
     $("r-date").value = iso(today());
     $("r-memo").value = "";
-    $("r-next").value = iso(addMonths(today(), p.interval));
+    recNextDefault = iso(addMonths(today(), p.interval));
+    $("r-next").value = recNextDefault;
     recKind = pendingKind || "tuning"; pendingKind = null;
     applyKind();
     recPhotoBefore = null; recPhotoAfter = null;
@@ -3407,8 +3650,16 @@
     photo: null, car: "横浜 300 あ 12-34",
     invno: "T1234567890123", tax: 10,
     bank: "横浜銀行 港北支店 普通 1234567\nツクシチヨウリツジムシヨ",
-    vcard: true, dur: 120, locale: "ja-JP"
+    vcard: true, dur: 120, locale: "ja-JP",
+    plan: "free"          // free | pro
   };
+  /* 無料で預かれるお客様の数。ここを超えると新規登録だけを止める。
+     すでに入っているお客様は、プランが切れても読めるままにする——
+     台帳を人質に取る作りにはしない。 */
+  var FREE_LIMIT = 15;
+  function isPro() { return SET.plan === "pro"; }
+  function custCount() { return state.length; }
+  function canAddCustomer() { return isPro() || custCount() < FREE_LIMIT; }
   var SET = loadSet();
   function loadSet() {
     try { var r = localStorage.getItem(SKEY); if (r) { var o = JSON.parse(r); for (var k in DEF_SET) if (o[k] === undefined) o[k] = DEF_SET[k]; return o; } } catch (e) {}
@@ -3442,6 +3693,7 @@
     $("s-bank").value = SET.bank; $("s-vcard").checked = !!SET.vcard; $("s-dur").value = SET.dur;
     var im = $("s-photo-thumb");
     if (SET.photo) { im.src = SET.photo; im.style.display = "block"; } else { im.style.display = "none"; }
+    renderPlanBox();
   }
 
   function visitorCardHTML(v) {
@@ -3969,13 +4221,14 @@
     var name = $("f-name").value.trim(), last = $("f-last").value;
     if (!name) { toast("お名前を入力してください。"); return; }
     if (!last) { toast("前回の調律日を入力してください。"); return; }
+    if (!canAddCustomer()) { openPlanLimit(); return; }
     var piano = {
       id: uid("p"), room: $("f-room").value.trim() || "リビング",
       maker: $("f-maker").value.trim(), model: $("f-model").value.trim(),
       type: $("f-type").value, serial: $("f-serial").value.trim(), made: $("f-made").value.trim(),
       env: $("f-env").value, fee: parseInt($("f-fee").value,10) || 13000,
       interval: parseInt($("f-interval").value,10) || 12,
-      last: last, remindedCycle: null, skippedCycle: null, history: []
+      last: last, initialLast: last, nextDue: null, remindedCycle: null, skippedCycle: null, history: []
     };
     state.push({
       id: uid("c"), name: name, kind: $("f-kind").value,
@@ -3985,7 +4238,8 @@
       parking: $("f-parking").value, access: $("f-access").value.trim(), memo: $("f-memo").value.trim(),
       pianos: [piano], visits: []
     });
-    save(); refreshAll(); show("customers");
+    if (!save()) { state.pop(); return; }   // 保存できなければ登録も取り消す
+    refreshAll(); show("customers");
     toast(name + " 様を登録しました。");
   };
 
@@ -3999,7 +4253,7 @@
       type: $("ap-type").value, serial: $("ap-serial").value.trim(), made: $("ap-made").value.trim(),
       env: $("ap-env").value, fee: parseInt($("ap-fee").value,10) || 13000,
       interval: parseInt($("ap-interval").value,10) || 12,
-      last: last, remindedCycle: null, skippedCycle: null, history: []
+      last: last, initialLast: last, nextDue: null, remindedCycle: null, skippedCycle: null, history: []
     });
     save(); refreshAll(addPianoFor); openDetail(addPianoFor);
     toast(room + " のピアノを追加しました。");
@@ -4022,16 +4276,16 @@
                   pay: pay, bill: pay === "請求書（後日振込）" ? "unbilled" : "paid" };
     if (recWorks.length && !recApproved) { toast("追加作業の承諾がまだです。お客様にお見せしてください。"); return; }
     recPiano.history.unshift(entry);
-    sortHistory(recPiano);
 
-    /* 周期を動かすのは定期調律だけ。修理で伺っても、調律の時期はそのまま。 */
+    /* 周期を動かすのは定期調律だけ。修理で伺っても、調律の時期はそのまま。
+       基準日は recalcPianoLast にだけ決めさせる（過去日の記録を足しても壊れない）。 */
+    recalcPianoLast(recPiano);
     if (countsToCycle(entry)) {
-      recPiano.last = date;
+      /* 次回のご案内日を「既定から変えた」ときだけ、この周期にかぎった上書きとして持つ。
+         標準の周期（interval）には触れない。触れると、一度きりの再訪のつもりが
+         以後ずっとその周期のピアノとして扱われてしまう。 */
       var nx = $("r-next").value;
-      if (nx) {
-        var months = Math.max(1, Math.round((fromIso(nx) - fromIso(date)) / (1000*60*60*24*30.44)));
-        recPiano.interval = months;
-      }
+      recPiano.nextDue = (nx && nx !== recNextDefault) ? nx : null;
       recPiano.remindedCycle = null; recPiano.skippedCycle = null; recPiano.custSkippedCycle = null;
     }
 
@@ -4043,9 +4297,12 @@
       v.pianoIds = ids;
       return ids.length > 0;
     });
-    save();
+    var ok = save();
     var nc = recCust, np = recPiano, nm = recCust.name, rm = recPiano.room;
     var wasCycle = countsToCycle(entry), kn = kindName(entry.kind);
+    // 保存できていないのに「記録しました」と言わない。
+    // 失敗時は画面上部の警告バーだけを残し、記録画面から動かさない。
+    if (!ok) return;
     resetRecord(); refreshAll();
     toast(nm + " 様（" + rm + "）の" + kn + "を記録しました。"
       + (wasCycle ? "次回は " + fmtJ(dueDateP(np)) + " ごろです。" : "調律の時期は変わりません。"));
@@ -4073,27 +4330,81 @@
     SET.dur = parseInt($("s-dur").value, 10) || 120;
     saveSet(); show("revenue"); toast("設定を保存しました。");
   };
+  function renderPlanBox() {
+    var box = $("planBox"); if (!box) return;
+    var n = custCount(), pro = isPro();
+    box.className = "plan-box" + (pro ? " pro" : "");
+    box.innerHTML = '<div class="pt">'+(pro ? "プロプラン" : "無料プラン")+'</div>'
+      + '<div class="pn">お客様 '+n+' 軒'+(pro ? "（無制限）" : " / "+FREE_LIMIT+" 軒")+'</div>'
+      + (pro
+          ? '<p class="hint">お客様を無制限に登録できます。年額 14,800円。</p>'
+            + '<button class="btn ghost" id="planDown" style="width:100%;margin-top:9px">無料プランに戻す（動作確認用）</button>'
+          : '<p class="hint">'+(n >= FREE_LIMIT
+              ? '上限に達しています。新しいお客様を登録するにはプロプランが必要です。'
+              : 'あと '+(FREE_LIMIT - n)+' 軒まで登録できます。')
+            + '既に登録されたお客様は、上限を超えてもそのままお使いいただけます。</p>'
+            + '<button class="btn primary" id="planUp" style="width:100%;margin-top:9px">プロプランにする（年額 14,800円）</button>');
+    if ($("planUp")) $("planUp").onclick = function () { SET.plan = "pro"; saveSet(); refreshAll(); renderPlanBox(); toast("プロプランになりました。"); };
+    if ($("planDown")) $("planDown").onclick = function () { SET.plan = "free"; saveSet(); refreshAll(); renderPlanBox(); toast("無料プランに戻しました。"); };
+  }
+  function openDoc(title, body) {
+    var sheet = $("sheet");
+    sheet.innerHTML = '<h3>'+esc(title)+'</h3><div class="doc-body">'+body+'</div>'
+      + '<div class="form-actions"><button class="btn primary" id="sheetCancel" style="flex:1">閉じる</button></div>';
+    $("sheetCancel").onclick = closeSheet;
+    $("scrim").classList.add("open");
+  }
+  $("docPrivacy").onclick = function () {
+    openDoc("プライバシーポリシー",
+      '<p><b>お預かりするもの</b><br>お客様のお名前・ご住所・お電話番号・メールアドレス、ピアノの情報、作業の履歴、'
+      + 'および同意をいただいた場合の作業写真。</p>'
+      + '<p><b>使いみち</b><br>調律のご案内、お見積り・ご請求、作業報告書の作成にのみ使います。'
+      + '第三者へ提供したり、広告に使ったりすることはありません。</p>'
+      + '<p><b>写真について</b><br>お客様ごとに保存の同意をうかがい、辞退された場合は保存しません。'
+      + '保存した写真は一定期間ののち自動的に削除します。</p>'
+      + '<p><b>削除のご要望</b><br>「情報を消してほしい」とのお申し出があれば、写真を含めてすべて削除します。'
+      + 'お客様の画面から実行できます。</p>'
+      + '<p><b>お問い合わせ</b><br>'+esc(SET.biz)+'　'+esc(SET.tuner)+'</p>'
+      + '<p class="doc-note">※ これは試作版の文面です。公開前に内容の確認が必要です。</p>');
+  };
+  $("docTerms").onclick = function () {
+    openDoc("利用規約",
+      '<p><b>このアプリについて</b><br>ピアノ調律師の方が、ご自身のお客様の台帳を管理し、'
+      + '調律時期のご案内を行うための道具です。</p>'
+      + '<p><b>お客様の情報の管理</b><br>登録された情報の正確さと、お客様への説明の責任は、'
+      + 'ご利用の調律師の方にあります。個人情報取扱事業者としての義務が生じる場合があります。</p>'
+      + '<p><b>料金</b><br>お客様 '+FREE_LIMIT+' 軒までは無料。それを超える場合は年額 14,800円。</p>'
+      + '<p><b>データの保管</b><br>試作版では、データはこの端末の中にのみ保存されます。'
+      + '端末の紛失・初期化により失われることがあります。</p>'
+      + '<p class="doc-note">※ これは試作版の文面です。公開前に内容の確認が必要です。</p>');
+  };
+
   $("clearAll").onclick = function () {
     state.length = 0; save(); refreshAll(); show("home");
     toast("サンプルを消しました。はじめての画面から試せます。");
   };
   $("s-photo").onchange = function () {
     var f = this.files && this.files[0]; if (!f) return;
-    var rd = new FileReader();
-    rd.onload = function (e) { SET.photo = e.target.result; saveSet(); var im = $("s-photo-thumb"); im.src = e.target.result; im.style.display = "block"; };
-    rd.readAsDataURL(f);
+    shrinkPhoto(f, function (url) {
+      SET.photo = url; saveSet();
+      var im = $("s-photo-thumb"); im.src = url; im.style.display = "block";
+    }, 480);
   };
   function bindPhoto(inputId, thumbId, setter) {
     $(inputId).onchange = function () {
       var f = this.files && this.files[0]; if (!f) return;
-      var rd = new FileReader();
-      rd.onload = function (e) {
-        setter(e.target.result);
-        var im = $(thumbId); im.src = e.target.result; im.style.display = "block";
+      // 写真の保存を辞退されたお客様では、そもそも取り込まない
+      if (recCust && recCust.photoConsent === "no") {
+        this.value = "";
+        toast("このお客様は写真の保存を辞退されています。");
+        return;
+      }
+      shrinkPhoto(f, function (url) {
+        setter(url);
+        var im = $(thumbId); im.src = url; im.style.display = "block";
         if (inputId === "r-photo-after") { $("photoBigTxt").textContent = "写真をとり直す"; $("photoBigLbl").classList.add("has"); }
         updateFill();
-      };
-      rd.readAsDataURL(f);
+      });
     };
   }
   bindPhoto("r-photo-before", "r-thumb-before", function (v) { recPhotoBefore = v; });
