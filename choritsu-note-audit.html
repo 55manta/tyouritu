@@ -1,0 +1,372 @@
+<title>調律ノート 設計監査</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&family=Noto+Serif+JP:wght@500;600&display=swap">
+<style>
+  :root {
+    --ground:#F4F2EC; --surface:#FFFFFF; --surface-2:#EDEAE1;
+    --ink:#1E1C17; --ink-2:#5E594F; --ink-3:#948E80;
+    --line:#E7E2D6; --line-strong:#D6CFBF;
+    --accent:#0E8F83; --accent-ink:#0A6A60; --accent-soft:#DBEFEB;
+    --brass:#B0873A; --brass-ink:#8A6820; --brass-soft:#F0E7D2;
+    --alert:#C6503A; --alert-ink:#A23A26; --alert-soft:#F6E2DB;
+    --code-bg:#1E1C17; --code-ink:#EDE7D8;
+    --font-sans:-apple-system,BlinkMacSystemFont,system-ui,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP","Segoe UI",Roboto,sans-serif;
+    --font-serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP","Times New Roman",serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --measure:41rem;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#12110D; --surface:#1B1A15; --surface-2:#25231C;
+      --ink:#F2EFE6; --ink-2:#B0A999; --ink-3:#7C7565;
+      --line:#2E2B22; --line-strong:#3C3830;
+      --accent:#2CC2B0; --accent-ink:#63D8C7; --accent-soft:#0F302D;
+      --brass:#D9B063; --brass-ink:#E8C88A; --brass-soft:#2E2612;
+      --alert:#EC8067; --alert-ink:#F3A48F; --alert-soft:#37231C;
+      --code-bg:#0B0A07; --code-ink:#DCD6C6;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#12110D; --surface:#1B1A15; --surface-2:#25231C;
+    --ink:#F2EFE6; --ink-2:#B0A999; --ink-3:#7C7565;
+    --line:#2E2B22; --line-strong:#3C3830;
+    --accent:#2CC2B0; --accent-ink:#63D8C7; --accent-soft:#0F302D;
+    --brass:#D9B063; --brass-ink:#E8C88A; --brass-soft:#2E2612;
+    --alert:#EC8067; --alert-ink:#F3A48F; --alert-soft:#37231C;
+    --code-bg:#0B0A07; --code-ink:#DCD6C6;
+  }
+
+  body{background:var(--ground);}
+  .page{background:var(--ground);color:var(--ink);font-family:var(--font-sans);font-size:16px;line-height:1.85;
+    padding:clamp(20px,5vw,64px) clamp(16px,5vw,40px) 96px;display:flex;flex-direction:column;align-items:center;-webkit-font-smoothing:antialiased;}
+  .wrap{width:100%;max-width:64rem;display:flex;flex-direction:column;gap:52px;}
+
+  .masthead{display:flex;flex-direction:column;gap:14px;}
+  .eyebrow{font-size:12px;letter-spacing:.16em;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;}
+  .eyebrow b{color:var(--accent-ink);font-weight:600;letter-spacing:.1em;}
+  h1{font-family:var(--font-serif);font-size:clamp(28px,5vw,42px);line-height:1.3;font-weight:600;text-wrap:balance;margin:0;}
+  .standfirst{max-width:var(--measure);color:var(--ink-2);font-size:16.5px;}
+  .rule{height:1px;background:var(--line-strong);border:0;margin:0;}
+
+  section{display:flex;flex-direction:column;gap:18px;}
+  h2{font-family:var(--font-serif);font-size:clamp(21px,3vw,27px);line-height:1.4;font-weight:600;margin:0;
+    padding-bottom:10px;border-bottom:2px solid var(--ink);display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;text-wrap:balance;}
+  h2 .num{font-size:14px;color:var(--accent-ink);font-family:var(--font-sans);font-weight:700;letter-spacing:.1em;}
+  h3{font-size:17px;font-weight:700;margin:14px 0 0;}
+  h3:first-child{margin-top:0;}
+  p{margin:0;max-width:var(--measure);}
+  a{color:var(--accent-ink);text-underline-offset:2px;}
+  a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}
+  code{font-family:var(--mono);font-size:.87em;background:var(--surface-2);padding:.12em .4em;border-radius:3px;}
+  em{font-style:normal;background:var(--accent-soft);padding:0 .25em;border-radius:2px;}
+  strong{font-weight:700;}
+
+  ul.plain{margin:0;padding-left:1.15em;max-width:var(--measure);display:flex;flex-direction:column;gap:9px;}
+  ul.plain.wide{max-width:none;}
+  ul.plain li::marker{color:var(--brass);}
+
+  .scroller{overflow-x:auto;border:1px solid var(--line);border-radius:3px;background:var(--surface);}
+  table{border-collapse:collapse;width:100%;min-width:560px;font-size:14.5px;color:var(--ink);}
+  th,td{text-align:left;padding:11px 16px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.7;}
+  /* series の慣例では --ink-3 だが、12px の見出しでは AA に届かないため一段濃くする */
+  thead th{font-size:12px;letter-spacing:.1em;color:var(--ink-2);font-weight:600;border-bottom:1px solid var(--line-strong);white-space:nowrap;}
+  tbody tr:last-child td{border-bottom:0;}
+  td.k{font-weight:600;}
+  td.n{color:var(--ink-2);}
+  td.c{text-align:center;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums;}
+
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:5px;padding:16px 18px;font-family:var(--mono);
+    font-size:12.5px;line-height:1.8;overflow-x:auto;margin:0;}
+  pre .c{color:#8C8570;} pre .k{color:#7FD1C4;} pre .s{color:#D9B063;} pre .t{color:#EC8067;}
+  pre .bad{color:#EC8067;font-weight:700;} pre .good{color:#7FD1C4;font-weight:700;}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--tone,var(--line-strong));
+    border-radius:3px;padding:16px 18px;display:flex;flex-direction:column;gap:9px;}
+  .card.warn{--tone:var(--alert);} .card.note{--tone:var(--brass);} .card.ok{--tone:var(--accent);}
+  .card p{font-size:14.5px;line-height:1.75;color:var(--ink-2);max-width:none;}
+  .card .tag{align-self:flex-start;font-size:11px;letter-spacing:.12em;font-weight:700;padding:3px 8px;border-radius:2px;}
+  .warn .tag{background:var(--alert-soft);color:var(--alert-ink);}
+  .note .tag{background:var(--brass-soft);color:var(--brass-ink);}
+  .ok .tag{background:var(--accent-soft);color:var(--accent-ink);}
+
+  /* 監査所見。深刻度を色と番号で表す */
+  .findings{display:flex;flex-direction:column;gap:16px;}
+  .fx{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--sev);border-radius:3px;
+    display:flex;flex-direction:column;}
+  .fx.crit{--sev:var(--alert);} .fx.fix{--sev:var(--brass);} .fx.gap{--sev:var(--ink-3);}
+  .fx > header{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;padding:14px 18px 0;}
+  .fx .no{font-family:var(--font-serif);font-size:21px;color:var(--sev);font-variant-numeric:tabular-nums;line-height:1;}
+  .fx .ttl{font-size:16.5px;font-weight:700;flex:1 1 16rem;line-height:1.5;}
+  .fx .sev{font-size:11px;letter-spacing:.1em;font-weight:700;padding:3px 9px;border-radius:2px;white-space:nowrap;}
+  .fx.crit .sev{background:var(--alert-soft);color:var(--alert-ink);}
+  .fx.fix .sev{background:var(--brass-soft);color:var(--brass-ink);}
+  .fx.gap .sev{background:var(--surface-2);color:var(--ink-2);}
+  .fx .where{font-family:var(--mono);font-size:12px;color:var(--ink-2);padding:4px 18px 0;}
+  .fx .body{padding:12px 18px 18px;display:flex;flex-direction:column;gap:12px;}
+  .fx .body p{font-size:14.5px;color:var(--ink-2);max-width:none;line-height:1.75;}
+  .fx dl{margin:0;display:grid;grid-template-columns:1fr;gap:10px;}
+  @media(min-width:700px){.fx dl{grid-template-columns:auto 1fr;gap:8px 16px;align-items:baseline;}}
+  .fx dt{font-size:11.5px;letter-spacing:.1em;font-weight:700;color:var(--ink-2);white-space:nowrap;}
+  .fx dd{margin:0;font-size:14.5px;line-height:1.75;color:var(--ink-2);}
+  .fx dd b{color:var(--ink);}
+
+  .verdict{background:var(--surface-2);border:1px solid var(--line-strong);border-radius:3px;padding:13px 16px;
+    font-size:14px;line-height:1.7;display:flex;gap:11px;align-items:flex-start;}
+  .verdict .vi{flex:0 0 auto;font-weight:700;color:var(--alert-ink);font-size:12px;letter-spacing:.08em;
+    background:var(--alert-soft);padding:2px 8px;border-radius:2px;margin-top:2px;}
+  .verdict.pass .vi{color:var(--accent-ink);background:var(--accent-soft);}
+
+  .grid2{display:grid;gap:14px;grid-template-columns:1fr;}
+  @media(min-width:760px){.grid2{grid-template-columns:1fr 1fr;}}
+
+  .limits{background:var(--surface-2);border:1px solid var(--line);border-radius:3px;padding:20px 22px;display:flex;flex-direction:column;gap:12px;}
+  .limits h2{font-size:18px;border-bottom:0;padding-bottom:0;}
+  .limits p,.limits ul{font-size:14px;color:var(--ink-2);}
+</style>
+
+<div class="page">
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow"><b>調律ノート</b><span>設計監査</span><span>2026-08-27</span></div>
+    <h1>実装に入る前に、9つ見つかりました</h1>
+    <p class="standfirst">4,150行のモックを通しで読み、疑わしい箇所はブラウザで実際に動かして確かめました。<strong>設計の骨格は健全です。</strong>ただし<em>データが黙って失われる欠陥が2つ</em>あり、これは移植の前に直すべきものです。加えて、仕様書では決まっているのに実装が無い箇所が3つあります。</p>
+    <hr class="rule">
+  </header>
+
+  <section>
+    <h2><span class="num">総括</span>先に、結論だけ</h2>
+    <div class="scroller">
+      <table>
+        <thead><tr><th>深刻度</th><th>件数</th><th>中身</th><th>いつ直すか</th></tr></thead>
+        <tbody>
+          <tr><td class="k" style="color:var(--alert-ink)">重大</td><td class="c">3</td><td class="n">写真でストレージが溢れ、以後すべての保存が黙って失敗する／保存失敗を握りつぶす／過去日の記録を足すと次回時期が壊れる</td><td class="n"><strong>移植前。設計判断が絡むため</strong></td></tr>
+          <tr><td class="k" style="color:var(--brass-ink)">要修正</td><td class="c">3</td><td class="n">周期の基準日が宙に浮く／次回訪問日が周期を恒久的に書き換える／削除機能が存在しない</td><td class="n">移植時に同時に</td></tr>
+          <tr><td class="k" style="color:var(--ink-2)">実装の穴</td><td class="c">3</td><td class="n">無料15軒の線引き・予約トークンの強度・写真の同意と削除導線。<strong>いずれも仕様書では決定ずみだが、コードに無い</strong></td><td class="n">それぞれのフェーズで</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card ok">
+      <span class="tag">健全だったところ</span>
+      <p>骨格は信頼できます。<strong>日付処理は正しい</strong>（<code>toISOString</code> のUTCずれを避けた自前の <code>iso()</code>、月末をまたぐ <code>addMonths</code> のクランプも正確に実装されている）。<strong>エスケープの使い分けも適切</strong>で、HTMLに埋める箇所は <code>esc()</code> を通し、LINE・SMSの本文は素通しという区別ができています。<strong>種別で周期を制御するという設計そのものも正しい</strong>——壊れているのは、その規律を1箇所で守れていないことだけです。孤児参照も <code>filter(Boolean)</code> で守られています。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">重大</span>データが黙って失われる</h2>
+    <div class="findings">
+
+      <article class="fx crit">
+        <header><span class="no">1</span><span class="ttl">写真を無加工で保存しており、7回の訪問でストレージが満杯になる</span><span class="sev">重大</span></header>
+        <div class="where">choritsu-note.html:4086–4100（bindPhoto）／ 4016–4017（entry）</div>
+        <div class="body">
+          <p>カメラで撮った写真を <code>readAsDataURL</code> でそのまま文字列にし、<strong>縮小せずに</strong> localStorage へ入れています。仕様書には「長辺1280px・WebPに縮めてから送る」と書かれていますが、<em>その処理はコードのどこにもありません</em>。スマホの写真1枚は無加工で約4MB、data URL にすると約5.3MBです。</p>
+          <p><strong>実際にブラウザで動かして確かめました。</strong>作業前・作業後の2枚を撮る運用で記録を積むと：</p>
+<pre><span class="c">// 訪問ごとに 作業前+作業後 の2枚を保存していったときの実測</span>
+訪問 1 → 保存OK   蓄積  8MB
+訪問 2 → 保存OK   蓄積 16MB
+訪問 3 → 保存OK   蓄積 24MB
+訪問 4 → 保存OK   蓄積 32MB
+訪問 5 → 保存OK   蓄積 40MB
+訪問 6 → 保存OK   蓄積 48MB
+<span class="bad">訪問 7 → QuotaExceededError  ← ここで台帳が壊れる</span>
+
+<span class="c">上限の実測値：45.94MB（このブラウザ）</span>
+<span class="c">無加工なら 11枚、長辺1280pxに縮めれば 392枚 入る</span></pre>
+          <div class="verdict"><span class="vi">効き方</span><div>これは「写真が保存できない」で済みません。<strong>状態全体を1つのJSONとして書いているため、写真1枚が溢れた瞬間に、台帳そのものの保存が止まります。</strong>お客様の登録も、記録も、以後いっさい永続化されません。しかも画面は正常に動き続けます。</div></div>
+          <p><strong>測ったのはデスクトップのChromeです。iOS Safari の localStorage はこれよりずっと小さく、写真1枚で溢れます。</strong>つまり実機では、この欠陥はもっと早く出ます。</p>
+          <dl>
+            <dt>直し方</dt><dd>移植先では写真を <b>Firebase Storage</b> に置き、DBにはURLだけ持たせます（アーキテクチャ仕様どおり）。撮影直後に <code>expo-image-manipulator</code> で長辺1280pxに縮めます。<b>この構造にすれば問題ごと消えます。</b></dd>
+            <dt>ただし</dt><dd>オフラインで撮った写真は端末に貯めて後で送るため、<b>送信待ちの写真の総量に上限を設ける</b>必要があります。ここは移植時に設計が要ります。</dd>
+          </dl>
+        </div>
+      </article>
+
+      <article class="fx crit">
+        <header><span class="no">2</span><span class="ttl">保存の失敗を握りつぶしている</span><span class="sev">重大</span></header>
+        <div class="where">choritsu-note.html:1455</div>
+        <div class="body">
+<pre><span class="k">function</span> save(s) {
+  <span class="k">try</span> { localStorage.setItem(KEY, JSON.stringify(s || state)); }
+  <span class="k">catch</span> (e) { <span class="bad">/* 何もしない */</span> }
+}</pre>
+          <p>所見1と根は同じですが、<strong>これは独立した欠陥です。</strong>写真を縮小しても、この <code>catch</code> が空である限り「保存に失敗したのに成功したと見える」構造は残ります。調律師は「記録しました。次回は2027年8月ごろです」というトーストを見て、記録できたと信じて次の現場へ向かいます。</p>
+          <div class="verdict"><span class="vi">効き方</span><div>顧客台帳を預かるアプリで、<strong>失敗を黙って捨てるのは最も危険な作りです。</strong>失注を防ぐための道具が、記録の消失に気づかせないまま動き続けます。</div></div>
+          <dl>
+            <dt>直し方</dt><dd>保存の失敗は<b>必ず画面に出す</b>。移植先では書き込みが非同期になるので、成功を待ってからトーストを出す（楽観的にトーストを先に出さない）。</dd>
+          </dl>
+        </div>
+      </article>
+
+      <article class="fx crit">
+        <header><span class="no">3</span><span class="ttl">忘れていた過去の調律を後から入力すると、次回のご案内時期が壊れる</span><span class="sev">重大</span></header>
+        <div class="where">choritsu-note.html:4028–4029（saveRecord）／ 2144–2148（recalcPianoLast）</div>
+        <div class="body">
+          <p>このアプリには、周期の基準日 <code>last</code> を決める処理が<strong>2つあり、片方が間違っています。</strong></p>
+<pre><span class="c">// 記録の「修正・取り消し」のとき — 正しい。履歴の中で最も新しい調律を採る</span>
+<span class="k">function</span> recalcPianoLast(p) {
+  sortHistory(p);
+  <span class="k">var</span> base = p.history.filter(countsToCycle);
+  <span class="k">if</span> (base.length) p.last = <span class="good">base[0].date</span>;
+}
+
+<span class="c">// 記録の「新規保存」のとき — 入力された日付を無条件に採ってしまう</span>
+<span class="k">if</span> (countsToCycle(entry)) {
+  recPiano.last = <span class="bad">date</span>;   <span class="c">← 過去の日付でも上書きされる</span>
+}</pre>
+          <p>実際に両方の経路を走らせて挙動を比べました。<strong>2026年8月1日に調律を終えたピアノについて、去年6月にやった記録の入力漏れに気づいて後から足す</strong>、という場面です。</p>
+          <div class="scroller">
+            <table>
+              <thead><tr><th>　</th><th>いまの実装</th><th>あるべき値</th></tr></thead>
+              <tbody>
+                <tr><td class="k">基準日 <code>last</code></td><td class="c" style="color:var(--alert-ink)">2025-06-15</td><td class="c" style="color:var(--accent-ink)">2026-08-01</td></tr>
+                <tr><td class="k">次回のご案内</td><td class="c" style="color:var(--alert-ink)">2026-06-15</td><td class="c" style="color:var(--accent-ink)">2027-08-01</td></tr>
+                <tr><td class="k">画面での見え方</td><td class="n" colspan="2"><strong>2週間前に調律したばかりのピアノが「時期を過ぎています」の一覧に並ぶ。</strong>そのまま案内を送れば、お客様に「先月やったばかりですよ」と言われる</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="verdict"><span class="vi">効き方</span><div>記録の入力漏れを後から埋めるのは、<strong>現場でごく普通に起きる操作です</strong>（作業直後は手がふさがっており、後でまとめて入れる運用は仕様書自身が想定しています）。しかも間違った結果が「時期を過ぎています」という<em>行動を促す表示</em>として出るため、誤った案内送信に直結します。</div></div>
+          <dl>
+            <dt>直し方</dt><dd>1行です。<code>recPiano.last = date</code> を <b><code>recalcPianoLast(recPiano)</code></b> に置き換え、基準日を決める場所を1箇所に統一します。</dd>
+            <dt>移植では</dt><dd>アーキテクチャ仕様で決めた「<b>記録を書く唯一の関数</b>（<code>src/lib/cycle.ts</code>）」が、まさにこの種の分岐を防ぐための規律です。<strong>この所見は、その規律が必要だという実例そのものです。</strong></dd>
+          </dl>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">要修正</span>移植のときに一緒に直すもの</h2>
+    <div class="findings">
+
+      <article class="fx fix">
+        <header><span class="no">4</span><span class="ttl">調律の記録を全部取り消すと、基準日が宙に浮く</span><span class="sev">要修正</span></header>
+        <div class="where">choritsu-note.html:2147</div>
+        <div class="body">
+          <p><code>if (base.length) p.last = base[0].date;</code> ——<strong>調律の記録が1件も残らなかったとき、<code>last</code> は更新されません。</strong>取り消したはずの記録の日付が、周期の基準として残り続けます。修理の記録だけが残ったピアノで実際に再現しました。</p>
+          <dl>
+            <dt>直し方</dt><dd>ピアノ登録時に入力させている「前回の調律日」を<b>別の項目として保持</b>し、調律記録が無いときはそこへ戻す。いまは同じ <code>last</code> を上書きしているため、戻る先がありません。</dd>
+          </dl>
+        </div>
+      </article>
+
+      <article class="fx fix">
+        <header><span class="no">5</span><span class="ttl">「次回の訪問日」を入れると、そのピアノの周期が恒久的に書き換わる</span><span class="sev">要修正</span></header>
+        <div class="where">choritsu-note.html:4030–4034</div>
+        <div class="body">
+<pre>months = Math.round((fromIso(nx) - fromIso(date)) / (1000*60*60*24*30.44));
+recPiano.interval = months;   <span class="bad">← 恒久的な周期として保存される</span></pre>
+          <p>「3ヶ月後に様子を見に来ます」という<em>一度きりの再訪</em>のつもりで日付を入れると、そのピアノは<strong>以後ずっと3ヶ月周期のピアノとして扱われます</strong>。年1回のはずのお客様に、年4回の案内が出るようになります。</p>
+          <dl>
+            <dt>直し方</dt><dd>次回訪問日と標準周期を<b>別の項目に分ける</b>。周期を変えるのなら、その意図を明示的に確認する。</dd>
+          </dl>
+        </div>
+      </article>
+
+      <article class="fx fix">
+        <header><span class="no">6</span><span class="ttl">お客様もピアノも、削除する手段が存在しない</span><span class="sev">要修正</span></header>
+        <div class="where">choritsu-note.html 全体（該当コード無し）</div>
+        <div class="body">
+          <p>削除に相当する機能をコード全体で探しましたが、<strong>1つもありません</strong>（サンプルデータの一括消去は別）。誤って登録したお客様を消せません。</p>
+          <div class="verdict"><span class="vi">法令</span><div>これは使い勝手の問題にとどまりません。仕様書は自ら「<strong>『私の情報を消してほしい』と言われたときの導線</strong>。お客様詳細から、写真を含めて完全に削除できるようにします」と書いています。<strong>個人情報取扱事業者としての義務に直結する部分が、丸ごと未実装です。</strong></div></div>
+          <dl>
+            <dt>直し方</dt><dd>論理削除（<code>deletedAt</code>）と、写真を含む物理削除の2段を用意する。アーキテクチャ仕様のデータ設計には <code>deletedAt</code> を入れてあるので、<b>画面と導線だけが不足</b>しています。</dd>
+          </dl>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">穴</span>決めてあるのに、実装が無いもの</h2>
+    <p>以下は「バグ」ではなく、<strong>仕様書では決定ずみなのにコードに存在しない</strong>ものです。モックを忠実に移植すると、決めたはずの設計が抜け落ちます。</p>
+    <div class="findings">
+
+      <article class="fx gap">
+        <header><span class="no">7</span><span class="ttl">無料15軒の線引きが、どこにも実装されていない</span><span class="sev">実装の穴</span></header>
+        <div class="body">
+          <p>プラン・上限・課金に関する処理をコード全体で探しましたが、該当なし。<strong>収益モデルの中核がまだ画面に存在しません。</strong></p>
+          <div class="verdict"><span class="vi">論点</span><div>移植時に決める必要があります：16軒目でどう振る舞うか（登録を止めるのか、読み取りだけ許すのか）、既存のお客様が15軒を超えている状態でプランが切れたらどうするか。<strong>とくに後者は、実際の調律師が300軒を持っている以上、必ず起きます。</strong></div></div>
+        </div>
+      </article>
+
+      <article class="fx gap">
+        <header><span class="no">8</span><span class="ttl">お客様用の予約URLが、推測できてしまう作りになっている</span><span class="sev">実装の穴</span></header>
+        <div class="where">choritsu-note.html:1848</div>
+        <div class="body">
+<pre><span class="k">function</span> bookingUrl(c) {
+  <span class="k">return</span> <span class="s">"https://choritsu-note.app/b/"</span> + String(c.id).slice(1, 7);
+}
+<span class="c">// c.id = "c" + Math.random().toString(36).slice(2,9)</span></pre>
+          <p>トークンが<strong>お客様IDそのもの</strong>で、しかも6文字、生成元は <code>Math.random()</code> です。アーキテクチャ仕様には「推測できない長さで、有効期限を持たせます」と書きましたが、モックはそのどちらも満たしていません。</p>
+          <ul class="plain">
+            <li><strong>失効できない。</strong>トークンがお客様IDと同一なので、LINEを転送されたら第三者が恒久的にそのお客様の予約ページを開けます</li>
+            <li><strong>総当たりの余地。</strong>6文字（約22億通り）を静的ページに置くと、回数制限が効きません</li>
+            <li><strong><code>Math.random()</code> は暗号用途向けではありません。</strong>複数のURLから内部状態を推定される可能性があります</li>
+          </ul>
+          <div class="verdict"><span class="vi">効き方</span><div>この先にあるのは<strong>お客様の氏名・住所・ピアノ・訪問予定</strong>です。モックとしては問題ありませんが、<em>そのまま移植してはいけない箇所</em>として印を付けておく必要があります。</div></div>
+          <dl>
+            <dt>直し方</dt><dd>サーバー側で生成する十分な長さの乱数（<code>crypto</code> 由来）とし、顧客IDから切り離す。有効期限と失効を持たせる。</dd>
+          </dl>
+        </div>
+      </article>
+
+      <article class="fx gap">
+        <header><span class="no">9</span><span class="ttl">写真の同意、プライバシーポリシー、問い合わせ窓口が無い</span><span class="sev">実装の穴</span></header>
+        <div class="body">
+          <p>仕様書が「方針は4つ」として挙げた個人情報まわりのうち、<strong>コードに存在するものはありません</strong>。<code>photoConsent</code> に相当するフラグもありません。お客様のお宅の中を撮った写真を、同意の記録なしに保存している状態です。</p>
+          <dl>
+            <dt>いつ</dt><dd>コードよりも<b>文書と手順</b>が主です。実際のお客様のデータを預かる前——<b>クローズドテストに実データを入れる前</b>——に用意する必要があります。</dd>
+          </dl>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">訂正</span>アーキテクチャ仕様のほうを1点直します</h2>
+    <div class="card note">
+      <span class="tag">前回の仕様書の修正</span>
+      <p>アーキテクチャ仕様（第3版）で、ピアノに <code>nextDueOn</code> を非正規化して持たせ、「時期を迎えたピアノ」をその1本のクエリで出す、と書きました。<strong>監査の過程で、これは行き過ぎだと分かりました。</strong></p>
+      <p>いまのモックは <code>dueDateP(p)</code> をその都度<em>計算</em>しています。計算値である以上、ズレようがありません。保存された項目に変えると、<strong>いま存在しない「ズレる」という故障モードを新たに持ち込むことになります</strong>——所見3・4は、まさに保存された <code>last</code> がズレる話でした。</p>
+      <p><strong>訂正後の方針。</strong>1人の調律師が持つピアノはせいぜい500台で、全部読んでも150KB程度です。<em>アプリの画面はモックと同じく計算で出します。</em><code>nextDueOn</code> を持たせるのは<strong>サーバーの毎朝の通知処理のためだけ</strong>——全調律師のピアノを横断で走査する必要があるのは、そこだけだからです。こうすると、万一ズレても<strong>影響は通知のタイミングに限られ、画面の表示は絶対に狂いません</strong>。夜間の照合で直せば足ります。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>やる順番</h2>
+    <div class="scroller">
+      <table>
+        <thead><tr><th>　</th><th>やること</th><th>どこで</th></tr></thead>
+        <tbody>
+          <tr><td class="c">1</td><td class="k">写真をStorageへ、DBにはURLだけ（所見1）</td><td class="n">移植の設計に織り込む。モック側は直さない</td></tr>
+          <tr><td class="c">2</td><td class="k">保存失敗を必ず画面に出す（所見2）</td><td class="n">移植の設計に織り込む</td></tr>
+          <tr><td class="c">3</td><td class="k"><strong>基準日を決める場所を1箇所に統一（所見3・4）</strong></td><td class="n"><strong>モックでいま直せる。1行＋α</strong></td></tr>
+          <tr><td class="c">4</td><td class="k">次回訪問日と標準周期を分ける（所見5）</td><td class="n">モックでいま直せる</td></tr>
+          <tr><td class="c">5</td><td class="k">削除の導線（所見6）</td><td class="n">移植時。データ設計は済んでいる</td></tr>
+          <tr><td class="c">6</td><td class="k">予約トークンの作り直し（所見8）</td><td class="n">フェーズ2。移植してはいけない印を付ける</td></tr>
+          <tr><td class="c">7</td><td class="k">無料15軒の線引き（所見7）</td><td class="n">フェーズ4（課金）</td></tr>
+          <tr><td class="c">8</td><td class="k">同意・規約・削除要求の手順（所見9）</td><td class="n">実データを入れる前</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card ok">
+      <span class="tag">結論</span>
+      <p><strong>アーキテクチャの方針を変える必要はありません。</strong>見つかった9件のうち6件は、Expo + Firebase への移植で構造ごと解消するか、移植時に自然に手が入る箇所です。<em>いまモックで直す価値があるのは所見3と4</em>——基準日を決める場所の統一だけです。これは移植先にそのまま持ち込む業務ロジックなので、間違ったまま写すと同じバグを引き継ぎます。</p>
+    </div>
+  </section>
+
+  <aside class="limits">
+    <h2>この監査の範囲</h2>
+    <p><strong>実際に動かして確認したもの</strong>：ストレージ上限の実測（45.94MB）、写真7訪問での破綻と <code>QuotaExceededError</code> の握りつぶし、過去日の記録による基準日の破壊、調律記録を全消ししたときの基準日の残留、次回訪問日による周期の書き換え。いずれもブラウザ上で再現しました。</p>
+    <p><strong>コードを読んで確認したもの</strong>：削除機能・プラン制限・写真同意が存在しないこと、予約URLの生成方法、エスケープの使い分け、日付処理の正しさ。</p>
+    <p><strong>やっていないこと</strong>：実機（iOS / Android の360px幅）での目視確認、18機能すべての画面操作による網羅テスト、ブラウザ間の差異の確認。<em>ストレージ上限はデスクトップChromeの値であり、iOS Safari では大幅に小さくなります</em>——つまり所見1は実機でより早く出ます。</p>
+    <p>また本監査は<strong>技術的な作りだけ</strong>を見ています。「年14,800円を払う調律師がいるか」という事業としての妥当性は、依然として未検証のままです。</p>
+  </aside>
+
+</div>
+</div>
