@@ -178,7 +178,7 @@
   .empty svg { width: 30px; height: 30px; stroke: var(--accent); fill: none; stroke-width: 1.5; display: block; margin: 0 auto 8px; opacity: .85; }
 
   .segmented { display: flex; background: var(--surface-2); border-radius: 12px; padding: 3px; margin-bottom: 14px; gap: 3px; }
-  .segmented button { flex: 1; border: none; background: none; padding: 10px 0; font-size: 13.5px; font-weight: 700; font-family: inherit; color: var(--ink-2); border-radius: 9px; cursor: pointer; }
+  .segmented button { flex: 1; border: none; background: none; min-height: 44px; padding: 0; font-size: 13.5px; font-weight: 700; font-family: inherit; color: var(--ink-2); border-radius: 9px; cursor: pointer; }
   .segmented button.sel { background: var(--surface); color: var(--accent-ink); box-shadow: var(--shadow); }
 
   .search { width: 100%; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 13px 14px; font-size: 16px; font-family: inherit; margin-bottom: 14px; }
@@ -235,7 +235,7 @@
   .tl-photo { margin-top: 8px; width: 96px; height: 96px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line-strong); display: block; }
   .tl-receipt { background: none; border: none; color: var(--accent-ink); font-family: inherit; font-size: 12.5px; font-weight: 700; text-decoration: underline; cursor: pointer; padding: 4px 0 0; }
   .via-tag { display: inline-block; font-size: 10px; font-weight: 700; color: var(--accent-ink); background: var(--accent-soft); border-radius: 999px; padding: 2px 7px; margin-left: 6px; vertical-align: 1px; }
-  .back-btn { background: none; border: none; color: var(--ink-2); font-family: inherit; font-size: 14.5px; cursor: pointer; padding: 6px 0; margin-bottom: 6px; display: inline-flex; align-items: center; gap: 4px; }
+  .back-btn { background: none; border: none; color: var(--ink-2); font-family: inherit; font-size: 14.5px; cursor: pointer; padding: 0 12px 0 0; min-height: 44px; margin-bottom: 2px; display: inline-flex; align-items: center; gap: 4px; }
   .detail-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 20px; }
   .detail-actions .primary { grid-column: 1 / -1; }
 
@@ -368,7 +368,7 @@
   .pspec .v { font-size: 13px; font-weight: 600; margin-top: 1px; font-variant-numeric: tabular-nums; }
   .pspec .v.muted { color: var(--ink-3); font-weight: 500; }
   .pcard-foot { display: flex; gap: 7px; }
-  .phist-toggle { background: none; border: none; color: var(--accent-ink); font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; padding: 8px 0 2px; text-decoration: underline; text-underline-offset: 2px; }
+  .phist-toggle { background: none; border: none; color: var(--accent-ink); font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; padding: 0 12px 0 0; min-height: 44px; display: inline-flex; align-items: center; text-decoration: underline; text-underline-offset: 2px; }
   .phist { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line-strong); }
 
   /* 住所ブロック（番地まで＋駐車場・搬入経路） */
@@ -395,7 +395,7 @@
 
   .appt-row.dateonly { border-left-style: dashed; border-left-color: var(--accent); background: color-mix(in srgb, var(--accent) 4%, var(--surface)); }
   .appt-row.pool { border-left: 3px dashed var(--dormant); }
-  .appt-time { flex: 0 0 auto; font-size: 13.5px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--accent-ink); min-width: 44px; text-align: right; }
+  .appt-time { flex: 0 0 auto; font-size: 13.5px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--accent-ink); min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: flex-end; text-align: right; }
   .appt-time.tbd { font-size: 11px; font-weight: 700; color: var(--brass); background: var(--brass-soft); border-radius: 999px; padding: 4px 8px; min-width: 0; letter-spacing: .02em; }
   .settime-btn { flex: 0 0 auto; border: none; background: var(--accent-soft); color: var(--accent-ink); border-radius: 11px; min-height: 40px; padding: 0 11px; font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer; white-space: nowrap; }
   .settime-btn:active { transform: scale(.96); }
@@ -1173,6 +1173,18 @@
           <p class="hint">訪問前のご案内と、前日の時間決めに使います。</p>
         </div>
 
+        <p class="fieldset-title">消費税</p>
+        <div class="field"><label>消費税の扱い</label>
+          <select id="s-taxmode">
+            <option value="none">免税事業者（消費税を表示しない）</option>
+            <option value="incl">課税事業者（内訳を表示する）</option>
+          </select>
+          <p class="hint">売上が1,000万円に届かない場合は免税事業者です。</p>
+        </div>
+        <div class="field" id="s-tax-field"><label>消費税率（％）</label>
+          <input id="s-tax" inputmode="decimal" placeholder="10">
+        </div>
+
         <div class="form-actions">
           <button class="btn ghost" data-nav="revenue" style="flex:1">やめる</button>
           <button class="btn primary" id="saveSettings" style="flex:2">保存する</button>
@@ -1500,7 +1512,19 @@
   }
 
   var state = load();
-  function load() { try { var raw = localStorage.getItem(KEY); if (raw) { var s = JSON.parse(raw); if (s && s.length && s[0].pianos) return s; } } catch (e) {} var s2 = seed(); save(s2); return s2; }
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw !== null) {
+        var s = JSON.parse(raw);
+        /* 空でも「利用者が消した結果」として尊重する。
+           ここで s.length を条件にすると、全部消したはずのサンプルが
+           次にアプリを開いたときに復活してしまう。 */
+        if (Array.isArray(s) && (!s.length || s[0].pianos)) return s;
+      }
+    } catch (e) {}
+    var s2 = seed(); save(s2); return s2;
+  }
   /* 保存の失敗は、絶対に黙って捨てない。
      顧客台帳を預かる道具で「保存できていないのに成功したように見える」のが最も危険。
      失敗したら画面上部に警告を出し続け、成功するまで消さない。 */
@@ -3716,7 +3740,8 @@
      ========================================================= */
   var SKEY = "choritsu_note_set_2";
   var DEF_SET = {
-    tax: 10,              // 売上の内訳表示にだけ使う
+    taxMode: "none",      // none = 免税事業者（消費税を出さない） / incl = 課税事業者
+    tax: 10,              // 課税事業者のときの税率（％）
     dur: 120,             // 1台あたりの作業時間（分）
     locale: "ja-JP",      // 画面からは切り替えない。住所などの構造は国際形のまま
     plan: "free"          // free | monthly | yearly
@@ -3739,7 +3764,12 @@
     return JSON.parse(JSON.stringify(DEF_SET));
   }
   function saveSet() { try { localStorage.setItem(SKEY, JSON.stringify(SET)); } catch (e) {} }
-  function taxOf(incl) { var r = (+SET.tax || 10) / 100; return Math.round(incl - incl / (1 + r)); }
+  /* 消費税。売上が1,000万円に届かない調律師は免税事業者で、
+     消費税を請求も申告もしない。その人に内訳を見せると誤解のもとになるので、
+     表示するかどうかから選べるようにする。 */
+  function taxable() { return SET.taxMode !== "none"; }
+  function taxRate() { var r = parseFloat(SET.tax); return isFinite(r) && r >= 0 ? r : 10; }
+  function taxOf(incl) { if (!taxable()) return 0; var r = taxRate() / 100; return Math.round(incl - incl / (1 + r)); }
 
   /** 住所の入力欄を、その国の並びと呼び方で組み立てる */
   function renderAddrFields() {
@@ -3758,7 +3788,13 @@
 
   function fillSettings() {
     $("s-dur").value = SET.dur;
+    $("s-taxmode").value = taxable() ? "incl" : "none";
+    $("s-tax").value = SET.tax;
+    syncTaxField();
     renderPlanBox();
+  }
+  function syncTaxField() {
+    $("s-tax-field").style.display = ($("s-taxmode").value === "incl") ? "" : "none";
   }
 
   /* =========================================================
@@ -4040,8 +4076,8 @@
     var addWorks = mine.reduce(function (s,r) { return s + ((r.h.works||[]).reduce(function (t,w) { return t + (w.p||0); }, 0)); }, 0);
 
     var h = '<div class="acc-grid">'
-      + '<div class="acc-cell"><div class="k">今月の売上（税込）</div><div class="v">'+moneyHTML(total)+'</div></div>'
-      + '<div class="acc-cell"><div class="k">うち消費税（'+(+SET.tax||10)+'％）</div><div class="v sub">'+moneyHTML(tax)+'</div></div>'
+      + '<div class="acc-cell"><div class="k">今月の売上'+(taxable()?'（税込）':'')+'</div><div class="v">'+moneyHTML(total)+'</div></div>'
+      + (taxable() ? '<div class="acc-cell"><div class="k">うち消費税（'+taxRate()+'％）</div><div class="v sub">'+moneyHTML(tax)+'</div></div>' : '')
       + '<div class="acc-cell full"><div class="k">お仕事の種類ごと</div><div class="pay-split">'
       +   (function () {
             var byK = {};
@@ -4093,9 +4129,11 @@
       +   yl.map(function (y) { return '<button data-ly="'+y+'"'+(+y===ledgerYear?' class="sel"':'')+'>'+y+'年</button>'; }).join("")
       + '</div>'
       + '<div class="acc-grid">'
-      +   '<div class="acc-cell"><div class="k">年間の売上（税込）</div><div class="v">'+moneyHTML(total)+'</div></div>'
-      +   '<div class="acc-cell"><div class="k">うち消費税（'+(+SET.tax||10)+'％）</div><div class="v sub">'+moneyHTML(tax)+'</div></div>'
-      +   '<div class="acc-cell"><div class="k">税抜の売上</div><div class="v sub">'+moneyHTML(total - tax)+'</div></div>'
+      +   '<div class="acc-cell"><div class="k">年間の売上'+(taxable()?'（税込）':'')+'</div><div class="v">'+moneyHTML(total)+'</div></div>'
+      +   (taxable()
+            ? '<div class="acc-cell"><div class="k">うち消費税（'+taxRate()+'％）</div><div class="v sub">'+moneyHTML(tax)+'</div></div>'
+              + '<div class="acc-cell"><div class="k">税抜の売上</div><div class="v sub">'+moneyHTML(total - tax)+'</div></div>'
+            : '')
       +   '<div class="acc-cell"><div class="k">件数</div><div class="v sub">'+rows.length+'<small>件</small></div></div>'
       + '</div>';
 
@@ -4324,8 +4362,12 @@
 
   /* 設定 */
   $("setBtn").onclick = function () { show("settings"); };
+  $("s-taxmode").onchange = syncTaxField;
   $("saveSettings").onclick = function () {
     SET.dur = parseInt($("s-dur").value, 10) || 120;
+    SET.taxMode = $("s-taxmode").value === "incl" ? "incl" : "none";
+    var r = parseFloat($("s-tax").value);
+    SET.tax = (isFinite(r) && r >= 0 && r <= 100) ? r : 10;
     saveSet(); show("revenue"); toast("設定を保存しました。");
   };
   function renderPlanBox() {
