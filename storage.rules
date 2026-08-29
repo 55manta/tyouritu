@@ -1,0 +1,35 @@
+rules_version = '2';
+
+/**
+ * 調律ノート — Cloud Storage セキュリティルール
+ *
+ * 置くのは作業の写真だけ。お宅の中が写るので、お客様の予約ページからは
+ * 一切読めないようにしている（写真を見せる必要が出たときは、その時に
+ * 期限つきの別経路を用意する。ここを開けて済ませない）。
+ *
+ * 写真をFirestoreに直接入れない理由：1ドキュメント1MiBの上限に当たるうえ、
+ * 台帳を1件読むたびに写真まで転送してしまうため。
+ */
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    match /photos/{uid}/{customerId}/{fileName} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == uid;
+      }
+
+      allow read, delete: if isOwner();
+
+      // 画像だけ。1枚5MBまで（アプリ側で長辺1280pxに縮めてから上げる）
+      allow write: if isOwner()
+        && request.resource.contentType.matches('image/.*')
+        && request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // ここに書いていない場所は、すべて閉じている
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

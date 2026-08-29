@@ -1,0 +1,103 @@
+rules_version = '2';
+
+/**
+ * 調律ノート — Firestore セキュリティルール
+ *
+ * この台帳には、お客様の氏名・住所・電話番号が入っている。
+ * 漏らしたときに損なわれるのは調律師とお客様の関係そのものなので、
+ * 「読めてしまうかもしれない」を許さない書き方にしている。
+ *
+ * 入口はふたつしかない。
+ *   1. 調律師本人のアプリ         … サインインした本人の tuners/{uid} 配下だけ
+ *   2. お客様の予約ページ /b/{token} … bookings/{token} の1件だけ
+ *
+ * お客様は台帳を読まない。お客様に見せてよい項目だけを写した
+ * bookings/{token} を別に置き、そこだけを開ける。台帳そのものは
+ * 一切開けない。写しに住所・電話・メモ・写真・売上は入れない。
+ *
+ * 既定は拒否。ここに書いていない経路は、すべて閉じている。
+ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── 共通 ────────────────────────────────────────────────
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    /** 変更されたフィールドの集合 */
+    function changed() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+    function isStr(v, maxLen) {
+      return v is string && v.size() <= maxLen;
+    }
+
+    // ── 調律師の台帳 ────────────────────────────────────────
+    // 本人以外は、存在すら分からない。
+    match /tuners/{uid} {
+      allow read, write: if isOwner(uid);
+
+      // 設定・お客様・そのほか、配下は丸ごと本人だけ
+      match /{document=**} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    // ── お客様の予約ページ ──────────────────────────────────
+    // ドキュメントIDが、そのまま鍵（128ビットの乱数）になっている。
+    // 一覧（list）は絶対に許さない。許すと総当たりで台帳が引けてしまう。
+    match /bookings/{token} {
+
+      function mine() {
+        return signedIn() && resource.data.tunerUid == request.auth.uid;
+      }
+      function willBeMine() {
+        return signedIn() && request.resource.data.tunerUid == request.auth.uid;
+      }
+      /** 調律師が鍵を作り直したら、古いページは開かない */
+      function live() {
+        return resource.data.revoked != true;
+      }
+
+      // お客様が書き換えてよいのは、お返事に関わる4つだけ。
+      // ほかの項目に1つでも触れていたら、その書き込みごと拒否する。
+      function onlyReplyFields() {
+        return changed().hasOnly(['reply', 'want', 'intake', 'repliedAt']);
+      }
+      function validReply() {
+        return request.resource.data.reply in ['yes', 'skip']
+          && isStr(request.resource.data.get('want', ''), 200)
+          && request.resource.data.repliedAt == request.time
+          && (
+            !('intake' in request.resource.data)
+            || (
+              request.resource.data.intake.keys().hasOnly(['items', 'note'])
+              && request.resource.data.intake.get('items', []) is list
+              && request.resource.data.intake.get('items', []).size() <= 12
+              && isStr(request.resource.data.intake.get('note', ''), 500)
+            )
+          );
+      }
+
+      // 鍵を知っている人だけが、その1件を読める。
+      // サインイン必須にしているのは匿名認証のこと。お客様には見えないが、
+      // これがあると App Check を効かせられ、悪用時にたどれる手がかりも残る。
+      //
+      // 調律師本人は revoked でも読める。鍵を作り直したあとも、
+      // 送った相手や返事の履歴をアプリ側で扱えなくなっては困るため。
+      allow get: if mine() || (signedIn() && live());
+      allow list: if false;
+
+      allow create: if willBeMine();
+      allow delete: if mine();
+
+      // 調律師本人＝全項目。お客様＝お返事の4項目だけ、しかも有効期間内。
+      allow update: if mine()
+        || (signedIn() && live() && onlyReplyFields() && validReply());
+    }
+  }
+}

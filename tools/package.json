@@ -1,0 +1,9 @@
+{
+  "name": "choritsu-note-tools",
+  "private": true,
+  "type": "module",
+  "description": "本番に配ったセキュリティルールを、実際に叩いて確かめるための道具",
+  "dependencies": {
+    "firebase": "^12.4.0"
+  }
+}

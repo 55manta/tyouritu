@@ -6,3 +6,6 @@ icon-src.jpeg
 
 # ローカル確認用サーバのログ
 server.log
+
+# ルール確認用の道具
+tools/node_modules/
