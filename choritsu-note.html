@@ -442,6 +442,16 @@
   .plan-box .pt { font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--ink-2); }
   .plan-box.pro .pt { color: var(--accent-ink); }
   .plan-box .pn { font-size: 19px; font-weight: 800; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .plan-pick { display: flex; gap: 9px; margin-top: 10px; }
+  .plan-opt { flex: 1; display: flex; flex-direction: column; gap: 2px; align-items: flex-start; text-align: left;
+    background: var(--surface); border: 1px solid var(--line-strong); border-radius: 12px; padding: 11px 12px;
+    font-family: inherit; cursor: pointer; min-height: 44px; color: var(--ink); }
+  .plan-opt.sel { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 26%, transparent); }
+  .plan-opt .pn { font-size: 12px; font-weight: 700; color: var(--ink-2); }
+  .plan-opt.sel .pn { color: var(--accent-ink); }
+  .plan-opt .pp { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .plan-opt .pp small { font-size: 11.5px; font-weight: 600; color: var(--ink-2); }
+  .plan-opt .pd { font-size: 11px; color: var(--ink-2); line-height: 1.5; }
   .doc-links { display: flex; gap: 9px; }
   .doc-links .btn { flex: 1; }
   .doc-body { font-size: 13.5px; line-height: 1.8; color: var(--ink-2); max-height: 48vh; overflow-y: auto; }
@@ -562,10 +572,33 @@
   .pay-row { display: flex; align-items: baseline; gap: 8px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
   .pay-row .pl { flex: 1; color: var(--ink-2); }
   .pay-row .pv { font-weight: 700; }
-  .csv-row { display: flex; gap: 7px; margin-top: 4px; }
-  .csv-row button { flex: 1; border: 1px solid var(--line-strong); background: var(--surface); color: var(--accent-ink); border-radius: 11px; min-height: 44px; font-size: 12.5px; font-weight: 700; font-family: inherit; cursor: pointer; }
-  .csv-row button:active { transform: scale(.97); }
-  .csv-prev { background: var(--ink); color: var(--ground); border-radius: 11px; padding: 11px 12px; font-size: 10.5px; line-height: 1.7; white-space: pre; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; margin-top: 9px; }
+  /* 並べ替え */
+  .sortbar { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 6px; -webkit-overflow-scrolling: touch; }
+  .sortbar button { flex: 0 0 auto; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2);
+    border-radius: 999px; padding: 0 13px; min-height: 44px; font-size: 12.5px; font-weight: 700; font-family: inherit; cursor: pointer; white-space: nowrap; }
+  .sortbar button.sel { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .sortbar button:active { transform: scale(.97); }
+  /* 売上帳 */
+  .unpaid-box { background: var(--overdue-soft); border: 1px solid color-mix(in srgb, var(--overdue) 28%, transparent); border-radius: 13px; padding: 12px 14px; margin-top: 12px; }
+  .ub-head { font-size: 13.5px; font-weight: 800; color: var(--overdue); margin-bottom: 6px; }
+  .ub-row { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; padding: 7px 0; border-top: 1px solid color-mix(in srgb, var(--overdue) 18%, transparent); font-size: 13px; cursor: pointer; min-height: 44px; }
+  .ub-row b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .lg-months { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; align-items: end; margin-top: 4px; }
+  .lg-m { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .lg-bar { width: 100%; height: 70px; background: var(--surface-2); border-radius: 4px; display: flex; align-items: flex-end; overflow: hidden; }
+  .lg-bar i { width: 100%; background: var(--accent); border-radius: 4px 4px 0 0; min-height: 2px; }
+  .lg-mn { font-size: 10.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .lg-mv { font-size: 9.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .lg-table { border: 1px solid var(--line); border-radius: 13px; overflow: hidden; background: var(--surface); margin-top: 4px; }
+  .lg-head, .lg-row { display: grid; grid-template-columns: 44px 1fr auto; gap: 9px; padding: 10px 13px; align-items: baseline; }
+  .lg-head { font-size: 11px; color: var(--ink-2); font-weight: 700; background: var(--surface-2); }
+  .lg-row { border-top: 1px solid var(--line); font-size: 13px; cursor: pointer; }
+  .lg-row .d { color: var(--ink-2); font-variant-numeric: tabular-nums; font-size: 12px; }
+  .lg-row .w { display: flex; flex-direction: column; gap: 1px; line-height: 1.5; }
+  .lg-row .w b { font-size: 13.5px; }
+  .lg-row .y { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .lg-row.total { background: var(--surface-2); font-weight: 800; }
+  .unpaid-tag { font-style: normal; font-size: 10.5px; font-weight: 700; color: var(--overdue); background: var(--overdue-soft); padding: 1px 6px; border-radius: 999px; align-self: flex-start; margin-top: 2px; }
 
   /* B2 追加作業のその場承認 */
   .addwork { border: 1px solid var(--line); border-radius: 13px; overflow: hidden; margin-bottom: 14px; }
@@ -724,7 +757,7 @@
   .ap-work .risk { font-size: 13px; }
   .acc-cell .k { font-size: 12px; }
   .pay-row { font-size: 13.5px; }
-  .csv-row button { font-size: 13.5px; }
+  .lg-row, .ub-row { font-size: 14px; }
   .idoc-line { font-size: 13.5px; }
   .idoc-foot { font-size: 12.5px; }
   .paystate { font-size: 12px; }
@@ -863,9 +896,7 @@
     <div class="scroll" id="scroll">
       <!-- HOME -->
       <section class="view active" id="view-home">
-        <p class="eyebrow" id="homeEyebrow">今日の見はり</p>
-        <h1 class="view-title" id="homeTitle">調律のご案内</h1>
-        <p class="view-sub" id="homeSub">前回の調律から時期が来たピアノを、自動でお知らせ。1軒に複数台ある場合は、まとめて1通でご案内できます。</p>
+        <h1 class="view-title" id="homeTitle">ご案内</h1>
         <div id="todayStrip"></div>
         <div id="dueStrip"></div>
         <div class="hero" id="homeHero">
@@ -885,9 +916,7 @@
 
       <!-- SCHEDULE (予定) -->
       <section class="view" id="view-calendar">
-        <p class="eyebrow">これからの予定</p>
         <h1 class="view-title">予定</h1>
-        <p class="view-sub">予定は<b>三段階</b>で進みます。<b>時期</b>（日付未定）→ <b>日付だけ確定</b>（時間はこれから）→ <b>日時が確定</b>。前日にエリアごとへまとめて時間を決められます。</p>
         <div class="segmented">
           <button data-sview="list" class="sel">リスト</button>
           <button data-sview="cal">カレンダー</button>
@@ -908,21 +937,20 @@
 
       <!-- CUSTOMERS -->
       <section class="view" id="view-customers">
-        <p class="eyebrow">お客様台帳</p>
         <h1 class="view-title">お客様</h1>
-        <p class="view-sub">ご住所・ピアノ・調律の履歴を、この一冊に。1軒に何台あっても登録できます。</p>
         <div class="segmented">
           <button data-cview="list" class="sel">一覧</button>
-          <button data-cview="map">地図</button>
+          <button data-cview="map">エリア</button>
         </div>
         <div id="custListWrap">
           <input class="search" id="search" placeholder="お名前・ご住所・ピアノ・製造番号で検索" />
+          <div class="sortbar" id="sortBar"></div>
           <div class="result-count" id="resultCount"></div>
           <div id="customerList"></div>
         </div>
         <div id="custMapWrap" style="display:none">
           <div class="map-panel" id="mapPanel"></div>
-          <p class="map-note">※ 市区ごとの台数をまとめた簡易マップです。ピンをタップすると、そのエリアのお客様を表示します。</p>
+          <p class="map-note">エリアを選ぶと、そのお客様が下に出ます。</p>
           <div id="mapListResult"></div>
         </div>
       </section>
@@ -934,9 +962,10 @@
       <section class="view" id="view-add">
         <button class="back-btn" data-nav="customers">‹ 戻る</button>
         <h1 class="view-title">お客様を追加</h1>
-        <p class="view-sub">まずは<b>4項目だけ</b>でOK。ピアノの詳細やご住所は、あとからいつでも追加できます。</p>
 
         <div class="field"><label>お名前 *</label><input id="f-name" placeholder="例：山田 花子"></div>
+        <div class="field"><label>ふりがな</label><input id="f-kana" placeholder="例：やまだ はなこ">
+          <p class="hint">あいうえお順で並べるときに使います。</p></div>
         <div class="field"><label>前回の調律日 *</label><input id="f-last" type="date"></div>
         <div class="field"><label>電話番号・SMS</label><input id="f-phone" placeholder="例：090-1234-5678"></div>
         <div class="field"><label>次回までの目安</label>
@@ -946,7 +975,6 @@
         <details class="more-fields">
           <summary>ご住所・訪問メモ</summary>
           <div class="inner">
-            <p class="sub-note">番地まで入れておくと、地図から直接ナビを開けます。駐車場の情報は、工具を積んだ車で伺うときに効きます。</p>
             <div id="addrFields"></div>
             <div class="field"><label>駐車場</label>
               <select id="f-parking"><option value="">（未設定）</option><option>敷地内に駐車可</option><option>近隣のコインパーキング</option><option>路上（短時間のみ）</option><option>駐車不可・要相談</option></select>
@@ -958,7 +986,7 @@
         <details class="more-fields">
           <summary>ピアノの情報</summary>
           <div class="inner">
-            <p class="sub-note">1台目だけここで登録します。2台目以降は、登録後の詳細画面から追加できます。</p>
+            <p class="sub-note">2台目以降は、登録後の詳細画面から追加できます。</p>
             <div class="field"><label>設置場所（呼び名）</label><input id="f-room" placeholder="例：リビング／音楽室／レッスン室A"></div>
             <div class="field"><label>メーカー</label><input id="f-maker" placeholder="例：YAMAHA"></div>
             <div class="field"><label>型番</label><input id="f-model" placeholder="例：U3"></div>
@@ -966,7 +994,6 @@
               <select id="f-type"><option>アップライト</option><option>グランド</option></select>
             </div>
             <div class="field"><label>製造番号</label><input id="f-serial" placeholder="例：5312884">
-              <p class="hint">同じ型番でも個体を識別できます。部品手配のときに必要になります。</p>
             </div>
             <div class="field"><label>製造年</label><input id="f-made" inputmode="numeric" placeholder="例：1998"></div>
             <div class="field"><label>設置環境</label>
@@ -1024,9 +1051,7 @@
 
       <!-- RECORD -->
       <section class="view" id="view-record">
-        <p class="eyebrow">現場で入力</p>
-        <h1 class="view-title">調律を記録</h1>
-        <p class="view-sub">候補から選ぶか、検索して選びます。複数台あるお客様は、どのピアノかを選びます。</p>
+        <h1 class="view-title">記録</h1>
         <div id="rQuickWrap">
           <p class="mini-label">今日、記録しそうなお客様</p>
           <div class="r-cand" id="rQuick"></div>
@@ -1065,7 +1090,6 @@
           <div class="field"><label>室内の湿度</label>
             <div class="chiprow" id="humidChips"></div>
             <input id="r-humid" inputmode="numeric" placeholder="例：58" style="display:none">
-            <p class="hint">お客様への説明は「高め」「ちょうどよい」で足ります。湿度計の数字を打ち込む必要はありません。</p>
           </div>
 
           <div class="field"><label>調律の料金（円）</label><input id="r-fee" inputmode="numeric" placeholder="例：13000">
@@ -1076,7 +1100,7 @@
             <div class="addwork" id="awList"></div>
             <div id="awState"></div>
             <button class="btn ghost" id="awApprove" style="width:100%">お客様に見せて承諾をもらう</button>
-            <p class="hint">その場で画面をお見せして承諾をいただく形にすると、「聞いていなかった」が起きません。お客様の不満で一番多いのが追加料金の不透明さです。</p>
+            <p class="hint">画面をお見せして、その場で承諾をいただきます。</p>
           </div>
 
           <div class="field"><label>お支払い</label>
@@ -1098,7 +1122,7 @@
                 <img class="photo-thumb" id="r-thumb-before" alt="作業前の写真" style="width:100%;height:auto;aspect-ratio:1;margin-top:9px">
               </div>
             </details>
-            <p class="hint">まずは1枚で十分です。お客様はピアノの中を見たことがありません。写真が1枚あるだけで「何をしてもらったか」が伝わります。</p>
+            <p class="hint">1枚から添えられます。</p>
           </div>
 
           <div class="field"><label>ピアノの状態</label>
@@ -1107,7 +1131,7 @@
               <button type="button" class="alt" data-cq="detail"><svg viewBox="0 0 24 24"><path d="M12 4L2.5 20h19L12 4z"/><path d="M12 10v4M12 17.2v.1"/></svg>気になる点があった</button>
             </div>
             <div id="condWrap" style="display:none;margin-top:12px"></div>
-            <p class="hint" id="condHint">どちらか押すだけで報告書に載ります。押さなければ「記録なし」として出ます。</p>
+            <p class="hint" id="condHint">押さなければ「記録なし」になります。</p>
           </div>
 
           <div class="field"><label>今回のメモ</label>
@@ -1115,7 +1139,7 @@
             <textarea id="r-memo" placeholder="タップで選ぶか、直接ご記入ください" style="margin-top:9px"></textarea>
           </div>
           <div class="field" id="r-next-field"><label>次回のご案内予定日</label><input id="r-next" type="date">
-            <p class="hint">周期から自動で入っていますが、日付は自由に変更できます。</p>
+            <p class="hint">変更すると、この回だけの予定になります。標準の周期は変わりません。</p>
           </div>
           <div class="form-actions">
             <button class="btn ghost" id="rChange" style="flex:1">選び直す</button>
@@ -1126,9 +1150,7 @@
 
       <!-- REVENUE -->
       <section class="view" id="view-revenue">
-        <p class="eyebrow">お金の見える化</p>
         <h1 class="view-title">売上</h1>
-        <p class="view-sub">日々の記録から自動で集計。確定申告の下ごしらえもここから。</p>
         <div class="rev-hero">
           <p class="k">今月の売上</p>
           <p class="v" id="revMonthTotal">0<small>円</small></p>
@@ -1152,16 +1174,18 @@
         <div id="invWrap"></div>
       </section>
 
+      <!-- LEDGER (売上帳) -->
+      <section class="view" id="view-ledger"></section>
+
       <!-- SETTINGS -->
       <section class="view" id="view-settings">
         <button class="back-btn" data-nav="revenue">‹ 戻る</button>
         <h1 class="view-title">設定</h1>
-        <p class="view-sub">請求書・報告書・訪問前のご案内に使う情報です。一度入れておけば、あとは自動で入ります。</p>
 
         <p class="fieldset-title">国と地域</p>
         <div class="field"><label>お住まいの国</label>
           <select id="s-locale"></select>
-          <p class="hint">ご住所の入力欄の並び・呼び方、通貨、基準ピッチの初期値、税の呼び方が切り替わります。未調律期間の割増料金は日本の商習慣なので、他の国では出ません。</p>
+          <p class="hint">住所欄の並び、通貨、基準ピッチの初期値、税の呼び方が切り替わります。</p>
         </div>
 
         <p class="fieldset-title">事業者の情報</p>
@@ -1178,7 +1202,7 @@
 
         <p class="fieldset-title">請求・税</p>
         <div class="field"><label id="s-invno-label">適格請求書発行事業者の登録番号</label><input id="s-invno" placeholder="例：T1234567890123">
-          <p class="hint">請求書・領収書に自動で入ります。国によって呼び方が変わります（VAT number、Tax ID など）。</p>
+          <p class="hint">請求書・領収書に自動で入ります。</p>
         </div>
         <div class="field"><label>消費税率（％）</label><input id="s-tax" inputmode="numeric" placeholder="10"></div>
         <div class="field"><label>振込先</label><textarea id="s-bank" placeholder="例：○○銀行 △△支店 普通 1234567 ツクシチヨウリツジムシヨ"></textarea></div>
@@ -1189,7 +1213,6 @@
             <input type="checkbox" id="s-vcard" style="width:19px;height:19px">
             <span>訪問者カード（お名前・お顔写真・資格）を添える</span>
           </label>
-          <p class="hint">初めてのお客様、女性のお一人暮らし、お子様のいるご家庭の不安に効きます。他の訪問サービスでは標準になりつつありますが、調律ではまだ珍しい取り組みです。</p>
         </div>
         <div class="field"><label>作業のめやす時間（1台あたり・分）</label><input id="s-dur" inputmode="numeric" placeholder="120"></div>
 
@@ -1202,7 +1225,6 @@
         <div class="plan-box" id="planBox"></div>
 
         <p class="fieldset-title">お客様の情報について</p>
-        <p class="sub-note">お客様の氏名・ご住所・お宅の写真をお預かりしています。取り扱いの方針と、お問い合わせ先をご確認いただけます。</p>
         <div class="doc-links">
           <button class="btn ghost" id="docPrivacy">プライバシーポリシー</button>
           <button class="btn ghost" id="docTerms">利用規約</button>
@@ -1376,7 +1398,7 @@
     }
     function C(o) {
       return {
-        id: uid("c"), name: o.name, kind: o.kind || "一般家庭",
+        id: uid("c"), name: o.name, kana: o.kana || "", kind: o.kind || "一般家庭",
         phone: o.phone || "", email: o.email || "", line: o.line || "", sns: o.sns || "",
         addr: { country: "JP", postal: o.zip || "", region: o.pref, city: o.city, line1: o.rest, line2: o.bldg || "" },
         parking: o.parking || "", access: o.access || "", memo: o.memo || "",
@@ -1391,7 +1413,7 @@
     // 1台・日時確定の予約あり
     ps = [P({room:"リビング",maker:"YAMAHA",model:"U3",type:"アップライト",serial:"5312884",made:"1998",env:"リビング（一般家庭）",fee:13000,ago:14,interval:12,
       hist:[{ago:14,work:"調律",fee:13000,memo:"問題なし"},{ago:26,work:"調律＋整調",fee:18000}]})];
-    c = C({name:"佐藤 美咲",kind:"一般家庭",phone:"090-2244-1188",email:"m.sato@example.com",line:"みさき",
+    c = C({name:"佐藤 美咲",kana:"さとう みさき",kind:"一般家庭",phone:"090-2244-1188",email:"m.sato@example.com",line:"みさき",
       zip:"224-0032",pref:"神奈川県",city:"横浜市都筑区",rest:"茅ケ崎中央12-5",bldg:"パークサイド 402",
       parking:"近隣のコインパーキング",access:"エレベーターあり。玄関前が狭いので工具は2回に分けて搬入。",
       memo:"娘さんが受験期。夜間の使用が多い。",pianos:ps});
@@ -1404,7 +1426,7 @@
       P({room:"レッスン室B",maker:"YAMAHA",model:"U1",type:"アップライト",serial:"4880213",made:"1992",env:"音楽教室",fee:13000,ago:13,interval:12,hist:[{ago:13,work:"調律",fee:13000}]}),
       P({room:"発表会ホール",maker:"YAMAHA",model:"C3",type:"グランド",serial:"6102447",made:"2011",env:"音楽教室",fee:18000,ago:6,interval:6,hist:[{ago:6,work:"調律",fee:18000,via:true}]})
     ];
-    c = C({name:"鈴木 音楽教室",kind:"音楽教室",phone:"045-777-3300",email:"info@suzuki-music.example.com",
+    c = C({name:"鈴木 音楽教室",kana:"すずき おんがくきょうしつ",kind:"音楽教室",phone:"045-777-3300",email:"info@suzuki-music.example.com",
       zip:"211-0005",pref:"神奈川県",city:"川崎市中原区",rest:"新丸子町820-3",bldg:"鈴木ビル 2F",
       parking:"敷地内に駐車可",access:"裏手の搬入口から。エレベーターなし・2階。",
       memo:"発表会前は早めに。3台まとめて依頼が基本。",pianos:ps});
@@ -1414,7 +1436,7 @@
     // 1台・防音室
     ps = [P({room:"防音室",maker:"YAMAHA",model:"C3",type:"グランド",serial:"5904112",made:"2004",env:"防音室",fee:18000,ago:15,interval:12,
       hist:[{ago:15,work:"調律＋整音",fee:22000,memo:"整音にこだわり。ハンマー整形も実施。"}]})];
-    list.push(C({name:"田中 誠一",kind:"一般家庭",phone:"090-5566-7788",line:"タナカ",
+    list.push(C({name:"田中 誠一",kana:"たなか せいいち",kind:"一般家庭",phone:"090-5566-7788",line:"タナカ",
       zip:"158-0083",pref:"東京都",city:"世田谷区",rest:"奥沢5-22-9",
       parking:"駐車不可・要相談",access:"地下の防音室。階段が急なので足元注意。",
       memo:"整音にこだわり。時間に余裕を持って。",pianos:ps}));
@@ -1422,7 +1444,7 @@
     // 1台・日付だけ確定（第2層）
     ps = [P({room:"リビング",maker:"KAWAI",model:"K-300",type:"アップライト",serial:"2790554",made:"2015",env:"リビング（一般家庭）",fee:13000,ago:12,interval:12,
       hist:[{ago:12,work:"調律",fee:13000}]})];
-    c = C({name:"高橋 さくら",kind:"一般家庭",phone:"080-1212-3434",email:"sakura.t@example.com",line:"さくらん",
+    c = C({name:"高橋 さくら",kana:"たかはし さくら",kind:"一般家庭",phone:"080-1212-3434",email:"sakura.t@example.com",line:"さくらん",
       zip:"225-0011",pref:"神奈川県",city:"横浜市青葉区",rest:"あざみ野1-14-2",
       parking:"敷地内に駐車可",access:"玄関からすぐリビング。",
       memo:"お子様が習い始め。",pianos:ps});
@@ -1432,7 +1454,7 @@
     // 1台・日付だけ確定（同日にもう1件つくる）
     ps = [P({room:"和室",maker:"YAMAHA",model:"U1",type:"アップライト",serial:"3345120",made:"1985",env:"和室",fee:13000,ago:11,interval:12,
       hist:[{ago:11,work:"調律＋修理",fee:24000,memo:"ハンマー2本交換"}]})];
-    c = C({name:"渡辺 家",kind:"一般家庭",phone:"045-333-2211",
+    c = C({name:"渡辺 家",kana:"わたなべ け",kind:"一般家庭",phone:"045-333-2211",
       zip:"222-0033",pref:"神奈川県",city:"横浜市港北区",rest:"新横浜3-7-18",
       parking:"近隣のコインパーキング",access:"和室は縁側から。畳を傷めないよう養生を持参。",
       memo:"10年ぶりに調律を再開。",pianos:ps});
@@ -1444,14 +1466,14 @@
       P({room:"第1スタジオ",maker:"STEINWAY",model:"B-211",type:"グランド",serial:"S-558210",made:"1979",env:"防音室",fee:20000,ago:5,interval:6,hist:[{ago:5,work:"調律",fee:20000,via:true},{ago:11,work:"調律",fee:20000}]}),
       P({room:"第2スタジオ",maker:"YAMAHA",model:"S400B",type:"グランド",serial:"5120993",made:"1996",env:"防音室",fee:19000,ago:5,interval:6,hist:[{ago:5,work:"調律",fee:19000,via:true}]})
     ];
-    list.push(C({name:"伊藤 ピアノ studio",kind:"スタジオ",phone:"03-6655-4433",email:"studio@ito-piano.example.com",line:"伊藤スタジオ",
+    list.push(C({name:"伊藤 ピアノ studio",kana:"いとう ぴあの すたじお",kind:"スタジオ",phone:"03-6655-4433",email:"studio@ito-piano.example.com",line:"伊藤スタジオ",
       zip:"153-0064",pref:"東京都",city:"目黒区",rest:"下目黒2-3-11",bldg:"目黒スタジオビル B1",
       parking:"敷地内に駐車可",access:"搬入用エレベーターあり。事前に管理室へ連絡。",
       memo:"半年ごと契約。録音が入る週は避ける。",pianos:ps}));
 
     // 1台
     ps = [P({room:"リビング",maker:"YAMAHA",model:"U3",type:"アップライト",serial:"4102778",made:"1989",env:"リビング（一般家庭）",fee:13000,ago:8,interval:12,hist:[{ago:8,work:"調律",fee:13000}]})];
-    list.push(C({name:"山本 洋子",kind:"一般家庭",phone:"090-8899-0011",
+    list.push(C({name:"山本 洋子",kana:"やまもと ようこ",kind:"一般家庭",phone:"090-8899-0011",
       zip:"213-0001",pref:"神奈川県",city:"川崎市高津区",rest:"溝口4-9-6",
       parking:"路上（短時間のみ）",access:"",memo:"コーラスの伴奏。",pianos:ps}));
 
@@ -1464,46 +1486,46 @@
         hist:[{ago:15,work:"調律＋修理",fee:31000,memo:"ダンパーフェルト交換。次回は整調を提案。",
                cond:{strings:"watch",action:"act",keys:"ok",humid:"watch"}}]})
     ];
-    list.push(C({name:"中村 学園",kind:"学校・ホール",phone:"045-222-9999",email:"soumu@nakamura-gakuen.example.com",
+    list.push(C({name:"中村 学園",kana:"なかむら がくえん",kind:"学校・ホール",phone:"045-222-9999",email:"soumu@nakamura-gakuen.example.com",
       zip:"220-0011",pref:"神奈川県",city:"横浜市西区",rest:"高島2-18-1",
       parking:"敷地内に駐車可",access:"守衛室で入館証を受け取る。土日は不可。",
       memo:"年度初めに一括発注。請求書払い（月末締め翌月末）。",pianos:ps}));
 
     // 1台
     ps = [P({room:"リビング",maker:"KAWAI",model:"ND-21",type:"アップライト",serial:"2011456",made:"2001",env:"リビング（一般家庭）",fee:13000,ago:20,interval:12,hist:[{ago:20,work:"調律",fee:13000}]})];
-    list.push(C({name:"小林 あゆみ",kind:"一般家庭",phone:"080-4545-6767",email:"ayumi.k@example.com",line:"あゆ",
+    list.push(C({name:"小林 あゆみ",kana:"こばやし あゆみ",kind:"一般家庭",phone:"080-4545-6767",email:"ayumi.k@example.com",line:"あゆ",
       zip:"144-0051",pref:"東京都",city:"大田区",rest:"西蒲田7-5-13",bldg:"蒲田コーポ 305",
       parking:"近隣のコインパーキング",access:"エレベーターなし・3階。",memo:"習慣づけ中。",pianos:ps}));
 
     // 休眠
     ps = [P({room:"リビング",maker:"YAMAHA",model:"U1",type:"アップライト",serial:"4455901",made:"1994",env:"リビング（一般家庭）",fee:13000,ago:30,interval:12,hist:[{ago:30,work:"調律",fee:13000}]})];
-    list.push(C({name:"森 由紀",kind:"一般家庭",phone:"090-3131-2020",line:"ゆき",
+    list.push(C({name:"森 由紀",kana:"もり ゆき",kind:"一般家庭",phone:"090-3131-2020",line:"ゆき",
       zip:"244-0003",pref:"神奈川県",city:"横浜市戸塚区",rest:"戸塚町145-6",
       parking:"敷地内に駐車可",access:"",memo:"進学後、足が遠のいている。",pianos:ps}));
 
     // 長期休眠
     ps = [P({room:"和室",maker:"YAMAHA",model:"U3",type:"アップライト",serial:"3712008",made:"1983",env:"和室",fee:13000,ago:148,interval:12,hist:[{ago:148,work:"調律",fee:13000}]})];
-    list.push(C({name:"岡田 家",kind:"一般家庭",phone:"044-555-6363",
+    list.push(C({name:"岡田 家",kana:"おかだ け",kind:"一般家庭",phone:"044-555-6363",
       zip:"215-0004",pref:"神奈川県",city:"川崎市麻生区",rest:"万福寺1-2-4",
       parking:"敷地内に駐車可",access:"",memo:"12年以上ご無沙汰。お子様が独立されてから触っていないとのこと。",pianos:ps}));
 
     // 教室・1台
     ps = [P({room:"スタジオ",maker:"YAMAHA",model:"G2",type:"グランド",serial:"2890331",made:"1975",env:"音楽教室",fee:15000,ago:1,interval:12,hist:[{ago:1,work:"調律",fee:15000,via:true},{ago:13,work:"調律",fee:15000}]})];
-    list.push(C({name:"近藤 バレエ教室",kind:"音楽教室",phone:"03-4444-8181",email:"kondo@ballet.example.com",
+    list.push(C({name:"近藤 バレエ教室",kana:"こんどう ばれえきょうしつ",kind:"音楽教室",phone:"03-4444-8181",email:"kondo@ballet.example.com",
       zip:"141-0022",pref:"東京都",city:"品川区",rest:"東五反田3-14-7",bldg:"五反田スタジオ 4F",
       parking:"駐車不可・要相談",access:"レッスンの合間（12〜13時）のみ作業可。",memo:"毎年5月ごろ。",pianos:ps}));
 
     // 今月調律済み
     ps = [P({room:"リビング",maker:"KAWAI",model:"BL-61",type:"アップライト",serial:"1750224",made:"1980",env:"リビング（一般家庭）",fee:13000,ago:0,day:4,interval:12,
       hist:[{ago:0,day:4,work:"調律",fee:13000,via:true},{ago:12,work:"調律",fee:13000}]})];
-    list.push(C({name:"石井 家",kind:"一般家庭",phone:"090-7777-2323",line:"いしい",
+    list.push(C({name:"石井 家",kana:"いしい け",kind:"一般家庭",phone:"090-7777-2323",line:"いしい",
       zip:"232-0067",pref:"神奈川県",city:"横浜市南区",rest:"弘明寺町265",
       parking:"近隣のコインパーキング",access:"",memo:"今月調律済み。",pianos:ps}));
 
     // 今月調律済み
     ps = [P({room:"和室",maker:"YAMAHA",model:"UX",type:"アップライト",serial:"3560119",made:"1981",env:"和室",fee:14000,ago:0,day:2,interval:12,
       hist:[{ago:0,day:2,work:"調律＋整調",fee:19000},{ago:12,work:"調律",fee:14000}]})];
-    list.push(C({name:"藤田 良子",kind:"一般家庭",phone:"080-9898-5454",
+    list.push(C({name:"藤田 良子",kana:"ふじた りょうこ",kind:"一般家庭",phone:"080-9898-5454",
       zip:"216-0033",pref:"神奈川県",city:"川崎市宮前区",rest:"宮崎2-11-8",
       parking:"敷地内に駐車可",access:"",memo:"",pianos:ps}));
 
@@ -1512,7 +1534,7 @@
       P({room:"大ホール",maker:"STEINWAY",model:"D-274",type:"グランド",serial:"S-601442",made:"1998",env:"学校・ホール",fee:30000,ago:2,interval:6,hist:[{ago:2,work:"調律",fee:30000},{ago:8,work:"調律＋整音",fee:38000}]}),
       P({room:"小ホール",maker:"YAMAHA",model:"C7",type:"グランド",serial:"6233015",made:"2013",env:"学校・ホール",fee:24000,ago:2,interval:6,hist:[{ago:2,work:"調律",fee:24000}]})
     ];
-    list.push(C({name:"青木 ホール",kind:"学校・ホール",phone:"045-666-1212",email:"hall@aoki.example.com",
+    list.push(C({name:"青木 ホール",kana:"あおき ほーる",kind:"学校・ホール",phone:"045-666-1212",email:"hall@aoki.example.com",
       zip:"231-0023",pref:"神奈川県",city:"横浜市中区",rest:"山下町2-3",
       parking:"敷地内に駐車可",access:"公演がない日のみ。搬入口は建物北側。",
       memo:"コンサート前は都度依頼。請求書払い。",pianos:ps}));
@@ -1702,7 +1724,7 @@
   function renderHome() {
     /* はじめて使うとき（お客様が1軒もない） */
     if (!state.length) { renderOnboard(); return; }
-    $("homeEyebrow").style.display = ""; $("homeTitle").style.display = ""; $("homeSub").style.display = "";
+    $("homeTitle").style.display = "";
     $("roiBanner").style.display = "";
 
     var nToday = renderToday();
@@ -1763,7 +1785,7 @@
   function renderOnboard() {
     $("todayStrip").innerHTML = ""; $("dueStrip").innerHTML = "";
     $("homeHero").style.display = "none"; $("roiBanner").style.display = "none";
-    $("homeEyebrow").style.display = "none"; $("homeTitle").style.display = "none"; $("homeSub").style.display = "none";
+    $("homeTitle").style.display = "none";
     $("reminderList").innerHTML = '<div class="onboard">'
       + '<div class="oi">'+ICON.note+'</div>'
       + '<h3>お客様を、少しずつ移していきます</h3>'
@@ -2009,7 +2031,7 @@
             }).join("") + '</div>'
           + '<div class="field"><label>どの曲の、どのあたりで気づきましたか（任意）</label>'
           +   '<textarea id="ikNote" placeholder="例：エリーゼのために の出だし、右手の高いミのあたり"></textarea>'
-          +   '<p class="hint">曲と場所が分かると、原因の見当がつきやすくなります。</p></div>'
+          +   '</div>'
           + '<button class="cv-slot" id="ikSend" style="justify-content:center;background:var(--accent);color:var(--on-accent);border-color:var(--accent)">'
           +   '<span class="dd" style="font-size:14px">この内容で送る</span></button>'
           + '<button class="cv-skip" id="ikSkip">特にないので飛ばす</button>';
@@ -2102,7 +2124,7 @@
       +     '<input type="checkbox" id="apptTbd" checked style="width:19px;height:19px">'
       +     '<span>時間は未定にしておく（前日に決める）</span></label>'
       +   '<input type="time" id="apptTime" value="10:00" disabled>'
-      +   '<p class="hint">日付だけ先に押さえておき、前日にエリアごとへまとめて時間をお知らせする進め方に対応しています。</p>'
+      +   '<p class="hint">日付だけ先に決めて、時間は後から入れられます。</p>'
       + '</div>'
       + (c.pianos.length > 1 ? '<div class="field"><label>この訪問で見るピアノ</label>'+picks+'</div>' : '')
       + '<div class="form-actions"><button class="btn ghost" id="sheetCancel">やめる</button><button class="btn primary" id="sheetOk">'+ICON.appt+'予定に入れる</button></div>';
@@ -2200,7 +2222,7 @@
       : '<div class="cond-grid">' + COND_ITEMS.map(function (it) {
           return '<div class="cond-item"><div class="cn">'+esc(it.label)+'</div><div class="cv" style="color:var(--ink-3)">記録なし</div></div>';
         }).join("") + '</div>'
-        + '<p class="hint" style="margin-top:8px">この回は状態を記録していません。次回から4項目を残しておくと、お客様への説明と次回の申し送りに使えます。</p>';
+        + '<p class="hint" style="margin-top:8px">この回は状態を記録していません。</p>';
 
     return '<div class="report">'
       + '<div class="rep-head"><div class="t">調律作業 報告書</div>'
@@ -2351,25 +2373,44 @@
     $("scrim").classList.add("open");
   }
 
-  /* 無料の上限に達したときの案内。
-     ここで見せるのは「あと何軒か」ではなく「この先も続けるための金額」。 */
+  /* 無料の上限に達したときの案内 */
   function openPlanLimit() {
     var sheet = $("sheet");
-    sheet.innerHTML = '<h3>無料でお使いいただけるのは ' + FREE_LIMIT + ' 軒までです</h3>'
-      + '<p class="to">いま ' + custCount() + ' 軒のお客様が入っています</p>'
-      + '<p class="sub-note" style="margin-bottom:14px">すでに登録されたお客様の台帳・履歴・ご案内は、このまま無料でお使いいただけます。'
-      + '新しいお客様を追加するときだけ、プロプランが必要です。</p>'
-      + '<div class="rough-warn">' + ICON.note + '<div>年額 14,800円（月あたり 1,233円）。'
-      + '<b>調律1件ぶんの年会費です。</b>忘れられて逃していた1件を年に一度拾えれば、それで元が取れます。</div></div>'
+    sheet.innerHTML = '<h3>無料は ' + FREE_LIMIT + ' 軒までです</h3>'
+      + '<p class="to">いま ' + custCount() + ' 軒</p>'
+      + '<p class="sub-note" style="margin-bottom:14px">登録ずみのお客様は、このままお使いいただけます。'
+      + '新しく追加するときだけ、有料プランが必要です。</p>'
+      + planPickerHTML()
       + '<div class="form-actions" style="margin-top:14px">'
       + '<button class="btn ghost" id="sheetCancel" style="flex:1">あとで</button>'
-      + '<button class="btn primary" id="planOk" style="flex:2">プロプランにする</button></div>';
+      + '<button class="btn primary" id="planOk" style="flex:2">このプランにする</button></div>';
+    bindPlanPicker();
     $("sheetCancel").onclick = closeSheet;
     $("planOk").onclick = function () {
-      SET.plan = "pro"; saveSet(); closeSheet(); refreshAll();
-      toast("プロプランになりました。お客様を無制限に登録できます。");
+      SET.plan = pickedPlan; saveSet(); closeSheet(); refreshAll();
+      toast(planName(pickedPlan) + "になりました。");
     };
     $("scrim").classList.add("open");
+  }
+
+  /* プランの選択（月額 / 年額） */
+  var pickedPlan = "yearly";
+  function planPickerHTML() {
+    return '<div class="plan-pick">' + ["yearly","monthly"].map(function (k) {
+      var p = PLANS[k];
+      return '<button type="button" class="plan-opt'+(pickedPlan===k?" sel":"")+'" data-plan="'+k+'">'
+        + '<span class="pn">'+esc(p.n)+'</span>'
+        + '<span class="pp">'+money(p.price)+'<small> / '+p.unit+'</small></span>'
+        + '<span class="pd">'+esc(p.note)+'</span></button>';
+    }).join("") + '</div>';
+  }
+  function bindPlanPicker() {
+    document.querySelectorAll("[data-plan]").forEach(function (b) {
+      b.onclick = function () {
+        pickedPlan = b.getAttribute("data-plan");
+        document.querySelectorAll("[data-plan]").forEach(function (x) { x.classList.toggle("sel", x === b); });
+      };
+    });
   }
 
   function openEditRecord(cid, pid, hidx) {
@@ -2507,7 +2548,7 @@
 
       sheet.innerHTML = '<h3>作業報告書を送る</h3><p class="to">'+esc(c.name)+' 様 ・ '+esc(p.room)+'</p>'
         + buildReport(c, p, h, prev)
-        + (later ? '<p class="hint" style="margin:2px 0 0">このままでも送れます。1つ足すだけでも、ぐっと伝わります。</p><div class="addlater">'+later+'</div>' : '')
+        + (later ? '<p class="hint" style="margin:2px 0 0">このままでも送れます。</p><div class="addlater">'+later+'</div>' : '')
         + '<div id="lateMemoRow"></div>'
         + '<p class="send-note">書面の作業報告書を出す調律師はほとんどいません。写真が1枚あるだけで「何をしてもらったか」が伝わり、次の調律につながります。離れて暮らすご家族にも転送できます。</p>'
         + '<button class="copy-link" id="copyMsg">本文をコピーする</button>'
@@ -2593,10 +2634,58 @@
     return hay.indexOf(q.toLowerCase()) >= 0;
   }
 
+  /* ---------- 並べ替え ----------
+     かなが入っていれば読みで並べる。漢字のままだと文字コード順になり、
+     あいうえお順にはならないため。 */
+  var SORTS = [
+    { k:"due",   n:"期限が近い順" },
+    { k:"kana",  n:"あいうえお順" },
+    { k:"recent",n:"最近伺った順" },
+    { k:"sales", n:"売上が多い順" }
+  ];
+  var custSort = "due";
+  function nextDueOf(c) {
+    if (!c.pianos.length) return new Date(8640000000000000);
+    return c.pianos.map(dueDateP).sort(function (a,b) { return a - b; })[0];
+  }
+  function lastVisitOf(c) {
+    var ds = [];
+    c.pianos.forEach(function (p) { (p.history||[]).forEach(function (h) { ds.push(h.date); }); });
+    return ds.sort().reverse()[0] || "";
+  }
+  function salesOf(c) {
+    var s = 0;
+    c.pianos.forEach(function (p) { (p.history||[]).forEach(function (h) { s += recTotal(h); }); });
+    return s;
+  }
+  function sortKey(c) { return (c.kana || "").trim() || c.name; }
+  function sortCustomers(arr) {
+    var a = arr.slice();
+    if (custSort === "kana") {
+      a.sort(function (x,y) { return sortKey(x).localeCompare(sortKey(y), "ja"); });
+    } else if (custSort === "recent") {
+      a.sort(function (x,y) { var lx = lastVisitOf(x), ly = lastVisitOf(y); return lx < ly ? 1 : lx > ly ? -1 : 0; });
+    } else if (custSort === "sales") {
+      a.sort(function (x,y) { return salesOf(y) - salesOf(x); });
+    } else {
+      a.sort(function (x,y) { return nextDueOf(x) - nextDueOf(y); });
+    }
+    return a;
+  }
+  function renderSortBar() {
+    var bar = $("sortBar"); if (!bar) return;
+    bar.innerHTML = SORTS.map(function (s) {
+      return '<button type="button" data-sort="'+s.k+'"'+(custSort===s.k?' class="sel"':'')+'>'+esc(s.n)+'</button>';
+    }).join("");
+    bar.querySelectorAll("[data-sort]").forEach(function (b) {
+      b.onclick = function () { custSort = b.getAttribute("data-sort"); renderCustomers($("search").value); };
+    });
+  }
+
   function renderCustomers(filter) {
     var q = (filter||"").trim();
-    var arr = state.filter(function (c) { return matches(c, q); });
-    arr.sort(function (a,b) { return dueDateP(a.pianos.slice().sort(function(x,y){return dueDateP(x)-dueDateP(y);})[0]) - dueDateP(b.pianos.slice().sort(function(x,y){return dueDateP(x)-dueDateP(y);})[0]); });
+    var arr = sortCustomers(state.filter(function (c) { return matches(c, q); }));
+    renderSortBar();
     var np = arr.reduce(function (s,c) { return s + c.pianos.length; }, 0);
     $("resultCount").textContent = q ? arr.length + "軒 / " + np + "台が見つかりました" : "全 " + arr.length + "軒 / " + np + "台";
     $("customerList").innerHTML = arr.length ? arr.map(function (c) { return custRow(c); }).join("")
@@ -2612,7 +2701,9 @@
     var city = a.city || "";
     if (city.indexOf("横浜市") === 0) return "横浜市";
     if (city.indexOf("川崎市") === 0) return "川崎市";
-    if ((a.pref||"").indexOf("東京") === 0) return "東京都";
+    // 住所を国際構造に変えたとき pref → region になったが、ここが追随していなかった。
+    // そのため東京のお客様が「その他」に落ちていた。
+    if ((a.region || "").indexOf("東京") === 0) return "東京都";
     return "その他";
   }
   var selArea = null;
@@ -2636,7 +2727,7 @@
   function renderMapList(groups) {
     var box = $("mapListResult");
     if (!selArea || !groups[selArea]) { box.innerHTML = '<p class="map-note">ピンをタップすると、そのエリアのお客様が表示されます。</p>'; return; }
-    var arr = groups[selArea].slice().sort(function (a,b) { return (a.addr.rest||"") < (b.addr.rest||"") ? -1 : 1; });
+    var arr = groups[selArea].slice().sort(function (a,b) { return (a.addr.line1||"") < (b.addr.line1||"") ? -1 : 1; });
     var np = arr.reduce(function (s,c) { return s + c.pianos.length; }, 0);
     box.innerHTML = '<p class="map-list-head">'+esc(selArea)+'（'+arr.length+'軒 / '+np+'台）</p>'
       + arr.map(function (c, i) { return custRow(c, i+1); }).join("");
@@ -3257,7 +3348,7 @@
             }).join("")
         + '</div><textarea id="spotNote" placeholder="伺ったお話を、そのまま書いておけます"></textarea></div>'
         + '<div class="field"><label>伺う日</label><input type="date" id="spotDate" value="'+iso(d)+'">'
-        +   '<p class="hint">時間は決めずに置いておけます。定期調律の「時期を迎える」一覧には出ません。周期とは別のお仕事だからです。</p></div>'
+        +   '<p class="hint">時間は決めずに置いておけます。調律の周期は動きません。</p></div>'
         + '<div class="form-actions"><button class="btn ghost" id="sheetCancel" style="flex:1">やめる</button>'
         + '<button class="btn primary" id="sheetOk" style="flex:2">'+ICON.appt+'予定に入れる</button></div>';
 
@@ -3651,13 +3742,18 @@
     invno: "T1234567890123", tax: 10,
     bank: "横浜銀行 港北支店 普通 1234567\nツクシチヨウリツジムシヨ",
     vcard: true, dur: 120, locale: "ja-JP",
-    plan: "free"          // free | pro
+    plan: "free"          // free | monthly | yearly
   };
+  var PLANS = {
+    monthly: { n: "月額プラン", price: 1200,  unit: "月", note: "毎月のお支払い" },
+    yearly:  { n: "年額プラン", price: 12000, unit: "年", note: "2ヶ月ぶんお得（月あたり 1,000円）" }
+  };
+  function planName(p) { return PLANS[p] ? PLANS[p].n : "無料プラン"; }
   /* 無料で預かれるお客様の数。ここを超えると新規登録だけを止める。
      すでに入っているお客様は、プランが切れても読めるままにする——
      台帳を人質に取る作りにはしない。 */
   var FREE_LIMIT = 15;
-  function isPro() { return SET.plan === "pro"; }
+  function isPro() { return SET.plan === "monthly" || SET.plan === "yearly"; }
   function custCount() { return state.length; }
   function canAddCustomer() { return isPro() || custCount() < FREE_LIMIT; }
   var SET = loadSet();
@@ -3844,7 +3940,7 @@
     if (rows) h2 += '<div class="diff-box" style="margin:11px 0 0"><div class="dt">前回からの変化</div>'+rows+'</div>';
     if (firsts.length) {
       h2 += '<div class="diff-box" style="margin:11px 0 0"><div class="dt">今回から記録しはじめた項目</div>'+firsts.join("")
-        + '<p class="hint" style="margin-top:6px">次回の調律で、この値と比べられるようになります。</p></div>';
+        + '</div>';
     }
     return h2;
   }
@@ -4037,63 +4133,86 @@
       + '</div></div>'
       + '<div class="acc-cell full"><div class="k">適格請求書発行事業者の登録番号</div><div class="v sub">'+esc(SET.invno || "未設定")+'</div></div>'
       + '</div>'
-      + '<p class="sec-note">訪問の記録が、そのまま売上の明細になります。月末に「溜めた記帳」をやり直す必要はありません。'
-      + 'お使いの会計ソフトの形式で書き出せます。</p>'
-      + '<div class="csv-row">'
-      +   '<button data-csv="freee">freee 形式</button>'
-      +   '<button data-csv="mf">マネーフォワード 形式</button>'
-      +   '<button data-csv="yayoi">弥生 形式</button>'
-      + '</div>'
-      + '<div class="csv-prev" id="csvPrev">書き出しボタンを押すと、ここに中身が出ます。</div>';
+      + '<button class="btn ghost" id="openLedger" style="width:100%;margin-top:10px">'+ICON.doc+'年間の売上帳を見る</button>';
     $("accWrap").innerHTML = h;
-    $("accWrap").querySelectorAll("[data-csv]").forEach(function (b) {
-      b.onclick = function () { doCsv(b.getAttribute("data-csv"), mine); };
-    });
+    $("openLedger").onclick = function () { ledgerYear = today().getFullYear(); openLedger(); };
   }
 
-  function buildCsv(kind, rows) {
-    var head, lines = [];
-    var rate = (+SET.tax || 10);
-    if (kind === "freee") {
-      head = "収支区分,管理番号,発生日,決済期日,取引先,勘定科目,税区分,金額,備考";
-      rows.forEach(function (r) {
-        var t = recTotal(r.h);
-        lines.push(["収入", "", r.h.date, r.h.date, r.c.name, "売上高", "課税売上"+rate+"%", t,
-          r.p.room + " " + r.h.work + (r.h.works && r.h.works.length ? "＋" + r.h.works.map(function(w){return w.n;}).join("・") : "")].join(","));
-      });
-    } else if (kind === "mf") {
-      head = "取引No,取引日,借方勘定科目,借方金額,貸方勘定科目,貸方金額,摘要,税区分";
-      rows.forEach(function (r, i) {
-        var t = recTotal(r.h);
-        lines.push([i+1, r.h.date.replace(/-/g,"/"), payAccount(r.h.pay), t, "売上高", t,
-          r.c.name + " " + r.p.room + " " + r.h.work, "課税売上"+rate+"%"].join(","));
-      });
-    } else {
-      head = "識別フラグ,伝票日付,借方勘定科目,借方金額,貸方勘定科目,貸方金額,摘要,税区分";
-      rows.forEach(function (r) {
-        var t = recTotal(r.h);
-        lines.push(["2000", r.h.date.replace(/-/g,"/"), payAccount(r.h.pay), t, "売上高", t,
-          r.c.name + " " + r.p.room, "課税売上"+rate+"%"].join(","));
-      });
+  /* =========================================================
+     売上帳（年間）
+     書き出して終わりにせず、申告に要る数字をこの中で完結させる。
+     ========================================================= */
+  var ledgerYear = 0;
+  function openLedger() {
+    var rows = allRecords()
+      .filter(function (r) { return fromIso(r.h.date).getFullYear() === ledgerYear; })
+      .sort(function (a,b) { return a.h.date < b.h.date ? -1 : a.h.date > b.h.date ? 1 : 0; });
+
+    var total = rows.reduce(function (s,r) { return s + recTotal(r.h); }, 0);
+    var tax = taxOf(total);
+    var unpaid = rows.filter(function (r) { return billState(r.h) !== "paid"; });
+    var unpaidYen = unpaid.reduce(function (s,r) { return s + recTotal(r.h); }, 0);
+
+    var byMonth = []; for (var m = 0; m < 12; m++) byMonth.push(0);
+    rows.forEach(function (r) { byMonth[fromIso(r.h.date).getMonth()] += recTotal(r.h); });
+    var peak = Math.max.apply(null, byMonth.concat([1]));
+
+    var years = {};
+    allRecords().forEach(function (r) { years[fromIso(r.h.date).getFullYear()] = 1; });
+    var yl = Object.keys(years).sort().reverse();
+
+    var h = '<button class="back-btn" data-nav="revenue">‹ 売上</button>'
+      + '<h1 class="view-title">売上帳</h1>'
+      + '<div class="segmented">'
+      +   yl.map(function (y) { return '<button data-ly="'+y+'"'+(+y===ledgerYear?' class="sel"':'')+'>'+y+'年</button>'; }).join("")
+      + '</div>'
+      + '<div class="acc-grid">'
+      +   '<div class="acc-cell"><div class="k">年間の売上（税込）</div><div class="v">'+moneyHTML(total)+'</div></div>'
+      +   '<div class="acc-cell"><div class="k">うち消費税（'+(+SET.tax||10)+'％）</div><div class="v sub">'+moneyHTML(tax)+'</div></div>'
+      +   '<div class="acc-cell"><div class="k">税抜の売上</div><div class="v sub">'+moneyHTML(total - tax)+'</div></div>'
+      +   '<div class="acc-cell"><div class="k">件数</div><div class="v sub">'+rows.length+'<small>件</small></div></div>'
+      + '</div>';
+
+    if (unpaid.length) {
+      h += '<div class="unpaid-box"><div class="ub-head">未入金 '+unpaid.length+'件 ・ '+money(unpaidYen)+'</div>'
+        + unpaid.map(function (r) {
+            return '<div class="ub-row" data-open="'+r.c.id+'"><span>'+esc(fmtJd(fromIso(r.h.date)))+'　'+esc(r.c.name)+' 様</span>'
+              + '<b>'+money(recTotal(r.h))+'</b></div>';
+          }).join("")
+        + '</div>';
     }
-    return head + "\n" + lines.join("\n") + "\n";
-  }
 
-  function doCsv(kind, rows) {
-    if (!rows.length) { toast("今月の記録がまだありません。"); return; }
-    var csv = buildCsv(kind, rows);
-    var names = { freee: "freee", mf: "moneyforward", yayoi: "yayoi" };
-    var d = today();
-    var fname = "choritsu_" + names[kind] + "_" + d.getFullYear() + String(d.getMonth()+1).padStart(2,"0") + ".csv";
-    var prev = csv.split("\n").slice(0, 5).join("\n") + (csv.split("\n").length > 6 ? "\n… 全" + rows.length + "件" : "");
-    $("csvPrev").textContent = prev;
-    try {
-      var blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
-      var a = document.createElement("a");
-      a.href = URL.createObjectURL(blob); a.download = fname;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      toast(fname + " を書き出しました。");
-    } catch (e) { toast("この環境では保存できません。内容は下に表示しています。"); }
+    h += '<p class="fieldset-title">月ごと</p><div class="lg-months">'
+      + byMonth.map(function (v, i) {
+          return '<div class="lg-m"><div class="lg-bar"><i style="height:'+Math.round(v/peak*100)+'%"></i></div>'
+            + '<div class="lg-mn">'+(i+1)+'</div><div class="lg-mv">'+(v ? Math.round(v/1000)+'千' : '—')+'</div></div>';
+        }).join("")
+      + '</div>';
+
+    h += '<p class="fieldset-title">明細</p>';
+    if (!rows.length) {
+      h += '<div class="empty">'+ledgerYear+'年の記録はありません。</div>';
+    } else {
+      h += '<div class="lg-table"><div class="lg-head"><span>日付</span><span>お客様・作業</span><span>金額</span></div>'
+        + rows.map(function (r) {
+            var st = billState(r.h);
+            return '<div class="lg-row" data-open="'+r.c.id+'">'
+              + '<span class="d">'+(fromIso(r.h.date).getMonth()+1)+'/'+fromIso(r.h.date).getDate()+'</span>'
+              + '<span class="w"><b>'+esc(r.c.name)+' 様</b>'+esc(r.h.work || kindName(r.h.kind))
+              +   (st !== "paid" ? '<em class="unpaid-tag">'+(st==="billed"?"請求済":"未請求")+'</em>' : '')+'</span>'
+              + '<span class="y">'+money(recTotal(r.h))+'</span></div>';
+          }).join("")
+        + '<div class="lg-row total"><span class="d"></span><span class="w"><b>合計</b></span><span class="y">'+money(total)+'</span></div>'
+        + '</div>';
+    }
+    h += '<p class="sub-note" style="margin-top:12px">登録番号：'+esc(SET.invno || "未設定")+'</p>';
+
+    var box = $("view-ledger");
+    box.innerHTML = h;
+    box.querySelectorAll("[data-nav]").forEach(function (b) { b.onclick = function () { show(b.getAttribute("data-nav")); }; });
+    box.querySelectorAll("[data-ly]").forEach(function (b) { b.onclick = function () { ledgerYear = +b.getAttribute("data-ly"); openLedger(); }; });
+    box.querySelectorAll("[data-open]").forEach(function (b) { b.onclick = function () { openDetail(b.getAttribute("data-open")); }; });
+    show("ledger"); $("scroll").scrollTop = 0;
   }
 
   /* =========================================================
@@ -4210,7 +4329,7 @@
   document.querySelectorAll("[data-nav]").forEach(function (b) { b.onclick = function () { show(b.getAttribute("data-nav")); }; });
   $("fab").onclick = function () {
     renderAddrFields(); clearAddrFields();
-    ["f-name","f-phone","f-access","f-room","f-maker","f-model","f-serial","f-made","f-fee","f-email","f-line","f-sns","f-memo"].forEach(function (k) { $(k).value = ""; });
+    ["f-name","f-kana","f-phone","f-access","f-room","f-maker","f-model","f-serial","f-made","f-fee","f-email","f-line","f-sns","f-memo"].forEach(function (k) { $(k).value = ""; });
     $("f-last").value = iso(monthsAgo(12));
     $("f-interval").value = "12"; $("f-parking").value = ""; $("f-type").value = "アップライト";
     $("f-env").value = "リビング（一般家庭）"; $("f-kind").value = "一般家庭";
@@ -4231,7 +4350,7 @@
       last: last, initialLast: last, nextDue: null, remindedCycle: null, skippedCycle: null, history: []
     };
     state.push({
-      id: uid("c"), name: name, kind: $("f-kind").value,
+      id: uid("c"), name: name, kana: $("f-kana").value.trim(), kind: $("f-kind").value,
       phone: $("f-phone").value.trim(), email: $("f-email").value.trim(),
       line: $("f-line").value.trim(), sns: $("f-sns").value.trim(),
       addr: readAddrFields(),
@@ -4334,17 +4453,18 @@
     var box = $("planBox"); if (!box) return;
     var n = custCount(), pro = isPro();
     box.className = "plan-box" + (pro ? " pro" : "");
-    box.innerHTML = '<div class="pt">'+(pro ? "プロプラン" : "無料プラン")+'</div>'
+    box.innerHTML = '<div class="pt">'+esc(planName(SET.plan))+'</div>'
       + '<div class="pn">お客様 '+n+' 軒'+(pro ? "（無制限）" : " / "+FREE_LIMIT+" 軒")+'</div>'
       + (pro
-          ? '<p class="hint">お客様を無制限に登録できます。年額 14,800円。</p>'
-            + '<button class="btn ghost" id="planDown" style="width:100%;margin-top:9px">無料プランに戻す（動作確認用）</button>'
+          ? '<p class="hint">'+money(PLANS[SET.plan].price)+' / '+PLANS[SET.plan].unit+'</p>'
+            + '<button class="btn ghost" id="planDown" style="width:100%;margin-top:9px">無料プランに戻す</button>'
           : '<p class="hint">'+(n >= FREE_LIMIT
-              ? '上限に達しています。新しいお客様を登録するにはプロプランが必要です。'
-              : 'あと '+(FREE_LIMIT - n)+' 軒まで登録できます。')
-            + '既に登録されたお客様は、上限を超えてもそのままお使いいただけます。</p>'
-            + '<button class="btn primary" id="planUp" style="width:100%;margin-top:9px">プロプランにする（年額 14,800円）</button>');
-    if ($("planUp")) $("planUp").onclick = function () { SET.plan = "pro"; saveSet(); refreshAll(); renderPlanBox(); toast("プロプランになりました。"); };
+              ? '上限に達しています。'
+              : 'あと '+(FREE_LIMIT - n)+' 軒まで登録できます。')+'</p>'
+            + planPickerHTML()
+            + '<button class="btn primary" id="planUp" style="width:100%;margin-top:9px">このプランにする</button>');
+    bindPlanPicker();
+    if ($("planUp")) $("planUp").onclick = function () { SET.plan = pickedPlan; saveSet(); refreshAll(); renderPlanBox(); toast(planName(pickedPlan) + "になりました。"); };
     if ($("planDown")) $("planDown").onclick = function () { SET.plan = "free"; saveSet(); refreshAll(); renderPlanBox(); toast("無料プランに戻しました。"); };
   }
   function openDoc(title, body) {
@@ -4373,7 +4493,7 @@
       + '調律時期のご案内を行うための道具です。</p>'
       + '<p><b>お客様の情報の管理</b><br>登録された情報の正確さと、お客様への説明の責任は、'
       + 'ご利用の調律師の方にあります。個人情報取扱事業者としての義務が生じる場合があります。</p>'
-      + '<p><b>料金</b><br>お客様 '+FREE_LIMIT+' 軒までは無料。それを超える場合は年額 14,800円。</p>'
+      + '<p><b>料金</b><br>お客様 '+FREE_LIMIT+' 軒までは無料。それを超える場合は月額 1,200円、または年額 12,000円。</p>'
       + '<p><b>データの保管</b><br>試作版では、データはこの端末の中にのみ保存されます。'
       + '端末の紛失・初期化により失われることがあります。</p>'
       + '<p class="doc-note">※ これは試作版の文面です。公開前に内容の確認が必要です。</p>');
