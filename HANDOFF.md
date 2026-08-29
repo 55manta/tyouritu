@@ -247,3 +247,50 @@ RevenueCat（課金）／ FCM・APNs（通知）／ Firebase Hosting（お客様
 | `serve.ps1` | ローカル確認用の簡易サーバー（`http://localhost:8934/`。ルートは`choritsu-note.html`、`/deploy/`配下はPWA版） |
 
 ※ 機能改修は `choritsu-note.html` を直す。PWA公開時は `deploy/index.html` に反映し直すか、`make_icon.py`のあるフォルダで再度PWA化する。
+
+---
+
+## 13. iOSビルドとTestFlight（2026-08-29 実施）
+
+**TestFlightへの提出まで完了。** 0.1.0 (build 5)。中身はフェーズ0の足場で、
+移植した業務ロジックの動作確認用の1画面。9画面の実装はこれから。
+
+| | |
+|---|---|
+| Bundle ID | `jp.izumikawa.choritsunote` |
+| App Store Connect | 調律ノート / Apple ID `6806505606` |
+| Apple Team | `KPXFL5CQN8` |
+| EASプロジェクト | `@manta55/choritsu-note` |
+| ASC APIキー | `5F4VNLGQ85`（Expo に登録済み） |
+| 配布証明書 | 有効期限 2027-08-29 |
+| プロビジョニング | `choritsu-note AppStore` |
+
+### Windowsだけで署名を通した手順
+
+Macは使っていない。EAS CLIはTTYを要求するため対話操作ができず、
+ExpoのWeb UIも証明書の「アップロード」専用で生成機能がない。そのため手作業で作った。
+
+1. `openssl genrsa` と `openssl req` で秘密鍵とCSRを生成
+2. Developer Portal にCSRを提出 → Apple Distribution 証明書を発行・ダウンロード
+3. `openssl pkcs12 -export -legacy` で `.p12` を作成
+4. Developer Portal でApp Store用プロビジョニングプロファイルを生成
+5. Expoの資格情報ウィザード（8ステップ）に `.p12` とプロファイルを登録
+
+### 詰まった点（次回のため）
+
+**`.p12` は必ず `-legacy` を付けて作る。** OpenSSL 3 の既定
+（PBES2 / PBKDF2 / AES-256-CBC）はビルド機のmacOSキーチェーンが取り込めず、
+`Distribution certificate ... hasn't been imported successfully` で失敗する。
+`-legacy` を付けると `pbeWithSHA1And40BitRC2-CBC` になり通る。
+
+**RN 0.86.0 はHermesの既知不具合があり 0.86.3 以降にする。**
+expo-doctor が検出する。割ペイも 0.86.0 なので同じ確認をした方がよい。
+
+**Appleのページで Google 翻訳が動いていると表示が化ける。**
+バンドルIDが `jp.izukawa` に見えるなど。値はDOMから直接読んで確認すること。
+
+### 次にやること
+
+1. 9画面の実装（フェーズ1）。試作 `choritsu-note.html` が仕様書になる
+2. Firebaseプロジェクトの作成と接続
+3. TestFlightの内部テスターに自分を追加して実機確認
