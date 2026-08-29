@@ -5,9 +5,13 @@
   :root {
     /* ピアノ：象牙(ivory)＋黒檀(ebony)＋真鍮(brass) に 市場標準のティールを1点差し */
     --ground: #F4F2EC; --surface: #FFFFFF; --surface-2: #EDEAE1;
-    --ink: #1E1C17; --ink-2: #5E594F; --ink-3: #948E80;
+    --ink: #1E1C17; --ink-2: #5E594F; --ink-3: #6E695F;
     --line: #E7E2D6; --line-strong: #D6CFBF;
-    --accent: #0E8F83; --accent-ink: #0A6A60; --accent-soft: #DBEFEB; --on-accent: #FFFFFF;
+    --accent: #0C7F74; --accent-ink: #0A6A60; --accent-soft: #DBEFEB; --on-accent: #FFFFFF;
+    /* 淡い地の上に置く「文字用」の濃い版。地の色（--*-soft）や点・枠には
+       もとの鮮やかな色をそのまま使い、文字だけこちらへ寄せる */
+    --overdue-ink: #A34230; --next-ink: #356394; --dormant-ink: #785C27;
+    --calm-ink: #5B655D; --brass-ink: #785C27;
     --brass: #B0873A; --brass-soft: #F0E7D2;
     --overdue: #C6503A; --overdue-soft: #F6E2DB;
     --due: #0E8F83; --due-soft: #DBEFEB;
@@ -21,7 +25,7 @@
   @media (prefers-color-scheme: dark) {
     :root {
       --ground: #12110D; --surface: #1B1A15; --surface-2: #25231C;
-      --ink: #F2EFE6; --ink-2: #B0A999; --ink-3: #7C7565;
+      --ink: #F2EFE6; --ink-2: #B0A999; --ink-3: #948B78;
       --line: #2E2B22; --line-strong: #3C3830;
       --accent: #2CC2B0; --accent-ink: #63D8C7; --accent-soft: #0F302D; --on-accent: #04231F;
       --brass: #D9B063; --brass-soft: #2E2612;
@@ -30,15 +34,21 @@
       --next: #82B0DC; --next-soft: #19273A;
       --dormant: #D9B063; --dormant-soft: #2E2612;
       --calm: #9DA99B; --calm-soft: #20241D;
+      --overdue-ink: #EC8067; --next-ink: #82B0DC; --dormant-ink: #D9B063;
+      --calm-ink: #9DA99B; --brass-ink: #D9B063;
       --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
       --shadow-lift: 0 6px 16px rgba(0,0,0,.45), 0 18px 40px rgba(0,0,0,.5);
     }
   }
   :root[data-theme="light"] {
     --ground: #F4F2EC; --surface: #FFFFFF; --surface-2: #EDEAE1;
-    --ink: #1E1C17; --ink-2: #5E594F; --ink-3: #948E80;
+    --ink: #1E1C17; --ink-2: #5E594F; --ink-3: #6E695F;
     --line: #E7E2D6; --line-strong: #D6CFBF;
-    --accent: #0E8F83; --accent-ink: #0A6A60; --accent-soft: #DBEFEB; --on-accent: #FFFFFF;
+    --accent: #0C7F74; --accent-ink: #0A6A60; --accent-soft: #DBEFEB; --on-accent: #FFFFFF;
+    /* 淡い地の上に置く「文字用」の濃い版。地の色（--*-soft）や点・枠には
+       もとの鮮やかな色をそのまま使い、文字だけこちらへ寄せる */
+    --overdue-ink: #A34230; --next-ink: #356394; --dormant-ink: #785C27;
+    --calm-ink: #5B655D; --brass-ink: #785C27;
     --brass: #B0873A; --brass-soft: #F0E7D2;
     --overdue: #C6503A; --overdue-soft: #F6E2DB;
     --due: #0E8F83; --due-soft: #DBEFEB;
@@ -50,7 +60,7 @@
   }
   :root[data-theme="dark"] {
     --ground: #12110D; --surface: #1B1A15; --surface-2: #25231C;
-    --ink: #F2EFE6; --ink-2: #B0A999; --ink-3: #7C7565;
+    --ink: #F2EFE6; --ink-2: #B0A999; --ink-3: #948B78;
     --line: #2E2B22; --line-strong: #3C3830;
     --accent: #2CC2B0; --accent-ink: #63D8C7; --accent-soft: #0F302D; --on-accent: #04231F;
     --brass: #D9B063; --brass-soft: #2E2612;
@@ -59,6 +69,8 @@
     --next: #82B0DC; --next-soft: #19273A;
     --dormant: #D9B063; --dormant-soft: #2E2612;
     --calm: #9DA99B; --calm-soft: #20241D;
+      --overdue-ink: #EC8067; --next-ink: #82B0DC; --dormant-ink: #D9B063;
+      --calm-ink: #9DA99B; --brass-ink: #D9B063;
     --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
     --shadow-lift: 0 6px 16px rgba(0,0,0,.45), 0 18px 40px rgba(0,0,0,.5);
   }
@@ -102,7 +114,7 @@
   .hero .big b { font-size: 48px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
   .hero .big span { font-size: 15px; color: var(--ink-2); font-weight: 600; }
   .hero .note { font-size: 13px; color: var(--ink-2); margin: 12px 0 0; line-height: 1.6; padding-top: 12px; border-top: 1px dashed var(--line-strong); position: relative; }
-  .hero .note b { color: var(--overdue); font-weight: 700; }
+  .hero .note b { color: var(--overdue-ink); font-weight: 700; }
   .hero .sub-stat { font-size: 12.5px; color: var(--ink-2); margin-top: 8px; position: relative; }
   .hero .sub-stat b { color: var(--accent-ink); font-variant-numeric: tabular-nums; }
 
@@ -110,7 +122,7 @@
   .roi svg { width: 22px; height: 22px; stroke: var(--accent-ink); fill: none; stroke-width: 1.9; flex: 0 0 auto; }
   .roi .txt { font-size: 13px; color: var(--ink-2); line-height: 1.5; }
   .roi .txt b { color: var(--accent-ink); font-size: 15px; font-variant-numeric: tabular-nums; }
-  .roi .chev { margin-left: auto; color: var(--ink-3); font-size: 18px; }
+  .roi .chev { margin-left: auto; color: var(--ink-2); font-size: 18px; }
 
   .sec-head { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }
   .sec-head h3 { font-size: 14.5px; font-weight: 700; margin: 0; letter-spacing: .02em; }
@@ -129,11 +141,11 @@
   .cmeta .piano { color: var(--ink); font-weight: 600; }
   .cmeta .fee { color: var(--accent-ink); font-weight: 600; }
   .pill { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; letter-spacing: .02em; }
-  .pill.overdue { background: var(--overdue-soft); color: var(--overdue); }
+  .pill.overdue { background: var(--overdue-soft); color: var(--overdue-ink); }
   .pill.due { background: var(--due-soft); color: var(--accent-ink); }
-  .pill.next { background: var(--next-soft); color: var(--next); }
-  .pill.dormant { background: var(--dormant-soft); color: var(--dormant); }
-  .pill.calm { background: var(--calm-soft); color: var(--calm); }
+  .pill.next { background: var(--next-soft); color: var(--next-ink); }
+  .pill.dormant { background: var(--dormant-soft); color: var(--dormant-ink); }
+  .pill.calm { background: var(--calm-soft); color: var(--calm-ink); }
   .pill.appt { background: var(--accent); color: var(--on-accent); }
 
   .card-actions { display: flex; gap: 7px; margin-top: 13px; }
@@ -145,7 +157,7 @@
   .btn.primary:hover { filter: brightness(1.06); }
   .btn.ghost { background: var(--surface-2); color: var(--ink-2); flex: 1; }
   .btn.icon-only { flex: 0 0 auto; width: 48px; padding: 0; background: var(--surface-2); color: var(--ink-2); }
-  .btn.done-state { background: var(--calm-soft); color: var(--calm); cursor: default; flex: 1; }
+  .btn.done-state { background: var(--calm-soft); color: var(--calm-ink); cursor: default; flex: 1; }
   .btn.done-state:active { transform: none; }
   .btn.link { background: none; color: var(--ink-3); text-decoration: underline; padding: 6px 4px; min-height: 0; flex: 0 0 auto; font-size: 12.5px; }
   .btn:disabled { opacity: .45; cursor: not-allowed; }
@@ -327,7 +339,7 @@
   .chan-pick svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.8; }
   .chan-pick.sel { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
   .chan-pick:disabled { opacity: .4; cursor: not-allowed; }
-  .chan-unreg { font-size: 11.5px; color: var(--overdue); text-align: center; margin: 0 0 14px; }
+  .chan-unreg { font-size: 11.5px; color: var(--overdue-ink); text-align: center; margin: 0 0 14px; }
   .send-note { font-size: 12px; color: var(--ink-3); line-height: 1.6; margin: 10px 0 4px; padding: 10px 12px; background: var(--surface-2); border-radius: 10px; }
   .demo-tag { font-size: 11px; color: var(--ink-3); text-align: center; margin-top: 10px; }
   .copy-link { display: block; text-align: center; font-size: 13px; color: var(--accent-ink); background: none; border: none; font-family: inherit; cursor: pointer; padding: 8px 0; width: 100%; text-decoration: underline; }
@@ -341,17 +353,17 @@
   /* ============ S層の追加コンポーネント ============ */
 
   /* 台数バッジ（顧客が複数台持つことを一目で） */
-  .npiano { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: var(--brass); background: var(--brass-soft); border-radius: 999px; padding: 2px 8px; margin-left: 6px; vertical-align: 1px; white-space: nowrap; }
+  .npiano { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: var(--brass-ink); background: var(--brass-soft); border-radius: 999px; padding: 2px 8px; margin-left: 6px; vertical-align: 1px; white-space: nowrap; }
   .npiano svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 2; }
 
   /* ピアノ行（ご案内カード内で、どの楽器が時期なのかを示す） */
   .plines { margin: 8px 0 0; display: flex; flex-direction: column; gap: 5px; }
   .pline { display: flex; align-items: baseline; gap: 7px; font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
-  .pline .lbl { flex: 0 0 auto; font-size: 10.5px; font-weight: 700; color: var(--brass); background: var(--brass-soft); border-radius: 4px; padding: 1px 6px; }
+  .pline .lbl { flex: 0 0 auto; font-size: 10.5px; font-weight: 700; color: var(--brass-ink); background: var(--brass-soft); border-radius: 4px; padding: 1px 6px; }
   .pline .nm { color: var(--ink); font-weight: 600; }
   .pline .st { margin-left: auto; flex: 0 0 auto; font-size: 11px; font-variant-numeric: tabular-nums; }
-  .pline .st.overdue { color: var(--overdue); } .pline .st.due { color: var(--accent-ink); }
-  .pline .st.next { color: var(--next); } .pline .st.dormant { color: var(--dormant); }
+  .pline .st.overdue { color: var(--overdue-ink); } .pline .st.due { color: var(--accent-ink); }
+  .pline .st.next { color: var(--next-ink); } .pline .st.dormant { color: var(--dormant-ink); }
 
   /* ピアノ台帳カード（顧客詳細） */
   .pcard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 15px; margin-bottom: 10px; box-shadow: var(--shadow); }
@@ -359,7 +371,7 @@
   .pcard.is-overdue { border-color: color-mix(in srgb, var(--overdue) 45%, var(--line)); }
   .pcard-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
   .pcard-head .who { min-width: 0; }
-  .pcard-head .room { font-size: 11px; font-weight: 700; color: var(--brass); letter-spacing: .04em; margin-bottom: 2px; }
+  .pcard-head .room { font-size: 11px; font-weight: 700; color: var(--brass-ink); letter-spacing: .04em; margin-bottom: 2px; }
   .pcard-head .model { font-size: 15.5px; font-weight: 700; letter-spacing: .01em; }
   .pcard-head .type { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
   .pspec { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 11px; overflow: hidden; margin-bottom: 10px; }
@@ -396,7 +408,7 @@
   .appt-row.dateonly { border-left-style: dashed; border-left-color: var(--accent); background: color-mix(in srgb, var(--accent) 4%, var(--surface)); }
   .appt-row.pool { border-left: 3px dashed var(--dormant); }
   .appt-time { flex: 0 0 auto; font-size: 13.5px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--accent-ink); min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: flex-end; text-align: right; }
-  .appt-time.tbd { font-size: 11px; font-weight: 700; color: var(--brass); background: var(--brass-soft); border-radius: 999px; padding: 4px 8px; min-width: 0; letter-spacing: .02em; }
+  .appt-time.tbd { font-size: 11px; font-weight: 700; color: var(--brass-ink); background: var(--brass-soft); border-radius: 999px; padding: 4px 8px; min-width: 0; letter-spacing: .02em; }
   .settime-btn { flex: 0 0 auto; border: none; background: var(--accent-soft); color: var(--accent-ink); border-radius: 11px; min-height: 40px; padding: 0 11px; font-size: 12px; font-weight: 700; font-family: inherit; cursor: pointer; white-space: nowrap; }
   .settime-btn:active { transform: scale(.96); }
 
@@ -415,7 +427,7 @@
   .pselect { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
   .pselect button { display: flex; align-items: center; gap: 11px; text-align: left; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 13px; padding: 12px 14px; font-family: inherit; cursor: pointer; color: var(--ink); }
   .pselect button.sel { border-color: var(--accent); background: var(--accent-soft); }
-  .pselect .rm { font-size: 10.5px; font-weight: 700; color: var(--brass); background: var(--brass-soft); border-radius: 4px; padding: 2px 7px; flex: 0 0 auto; }
+  .pselect .rm { font-size: 10.5px; font-weight: 700; color: var(--brass-ink); background: var(--brass-soft); border-radius: 4px; padding: 2px 7px; flex: 0 0 auto; }
   .pselect .md { font-size: 14.5px; font-weight: 700; flex: 1; min-width: 0; }
   .pselect .dt { font-size: 11.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; flex: 0 0 auto; }
 
@@ -432,7 +444,7 @@
   .fee-line .lb { flex: 1; }
   .fee-line .am { font-weight: 600; color: var(--ink); }
   .fee-line.add .lb { color: var(--brass-ink, var(--brass)); }
-  .fee-line.add .am { color: var(--brass); }
+  .fee-line.add .am { color: var(--brass-ink); }
   .fee-line.sum { border-top: 1px solid var(--line-strong); margin-top: 4px; padding-top: 6px; font-size: 14px; }
   .fee-line.sum .lb { font-weight: 700; color: var(--ink); }
   .fee-line.sum .am { font-weight: 800; font-size: 16px; color: var(--accent-ink); }
@@ -457,7 +469,7 @@
   .doc-body { font-size: 13.5px; line-height: 1.8; color: var(--ink-2); max-height: 48vh; overflow-y: auto; }
   .doc-body p { margin: 0 0 11px; }
   .doc-body b { color: var(--ink); }
-  .doc-body .doc-note { color: var(--overdue); font-size: 12.5px; }
+  .doc-body .doc-note { color: var(--overdue-ink); font-size: 12.5px; }
   /* 写真の同意と、ピアノ削除の並び */
   .consent-box { background: var(--surface); border: 1px solid var(--line); border-radius: 11px; padding: 12px 14px; }
   .consent-box .cl { font-size: 13.5px; font-weight: 700; margin-bottom: 8px; }
@@ -472,7 +484,7 @@
     color: #fff; font-size: 13px; line-height: 1.6; flex: 0 0 auto; }
   .save-alert svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.2; flex: 0 0 auto; margin-top: 2px; }
   .save-alert b { display: block; font-size: 13.5px; }
-  .rough-warn { display: flex; gap: 7px; align-items: flex-start; font-size: 12px; line-height: 1.6; color: var(--overdue); background: var(--overdue-soft); border-radius: 9px; padding: 9px 11px; margin-top: 9px; }
+  .rough-warn { display: flex; gap: 7px; align-items: flex-start; font-size: 12px; line-height: 1.6; color: var(--overdue-ink); background: var(--overdue-soft); border-radius: 9px; padding: 9px 11px; margin-top: 9px; }
   .rough-warn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; flex: 0 0 auto; margin-top: 2px; }
 
   /* A1 前日確定アシスタント */
@@ -510,7 +522,7 @@
   .cond-item { background: var(--surface-2); border-radius: 9px; padding: 8px 10px; }
   .cond-item .cn { font-size: 11px; color: var(--ink-3); }
   .cond-item .cv { font-size: 12.5px; font-weight: 700; margin-top: 1px; }
-  .cond-item .cv.ok { color: var(--calm); } .cond-item .cv.watch { color: var(--brass); } .cond-item .cv.act { color: var(--overdue); }
+  .cond-item .cv.ok { color: var(--calm-ink); } .cond-item .cv.watch { color: var(--brass-ink); } .cond-item .cv.act { color: var(--overdue-ink); }
   .cond-pick { display: flex; gap: 5px; }
   .cond-pick button { flex: 1; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 9px; padding: 9px 4px; font-size: 12px; font-weight: 700; font-family: inherit; color: var(--ink-2); cursor: pointer; }
   .cond-pick button.sel { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
@@ -570,7 +582,7 @@
   .shift-row { display: flex; align-items: center; gap: 11px; background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--brass); border-radius: 12px; padding: 11px 13px; margin-bottom: 8px; box-shadow: var(--shadow); }
   .shift-row .li-main { flex: 1; min-width: 0; cursor: pointer; }
   .shift-move { font-size: 11.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 4px; margin-top: 2px; }
-  .shift-move b { color: var(--overdue); font-weight: 700; }
+  .shift-move b { color: var(--overdue-ink); font-weight: 700; }
   .shift-move .to { color: var(--accent-ink); font-weight: 700; }
 
   /* ============ B層 ============ */
@@ -595,7 +607,7 @@
   .sortbar button:active { transform: scale(.97); }
   /* 売上帳 */
   .unpaid-box { background: var(--overdue-soft); border: 1px solid color-mix(in srgb, var(--overdue) 28%, transparent); border-radius: 13px; padding: 12px 14px; margin-top: 12px; }
-  .ub-head { font-size: 13.5px; font-weight: 800; color: var(--overdue); margin-bottom: 6px; }
+  .ub-head { font-size: 13.5px; font-weight: 800; color: var(--overdue-ink); margin-bottom: 6px; }
   .ub-row { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; padding: 7px 0; border-top: 1px solid color-mix(in srgb, var(--overdue) 18%, transparent); font-size: 13px; cursor: pointer; min-height: 44px; }
   .ub-row b { font-variant-numeric: tabular-nums; white-space: nowrap; }
   .lg-months { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; align-items: end; margin-top: 4px; }
@@ -613,7 +625,7 @@
   .lg-row .w b { font-size: 13.5px; }
   .lg-row .y { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .lg-row.total { background: var(--surface-2); font-weight: 800; }
-  .unpaid-tag { font-style: normal; font-size: 10.5px; font-weight: 700; color: var(--overdue); background: var(--overdue-soft); padding: 1px 6px; border-radius: 999px; align-self: flex-start; margin-top: 2px; }
+  .unpaid-tag { font-style: normal; font-size: 10.5px; font-weight: 700; color: var(--overdue-ink); background: var(--overdue-soft); padding: 1px 6px; border-radius: 999px; align-self: flex-start; margin-top: 2px; }
 
   /* B2 追加作業のその場承認 */
   .addwork { border: 1px solid var(--line); border-radius: 13px; overflow: hidden; margin-bottom: 14px; }
@@ -630,7 +642,7 @@
   .ap-work .n { font-size: 15px; font-weight: 800; display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
   .ap-work .n .y { font-variant-numeric: tabular-nums; color: var(--accent-ink); }
   .ap-work .why { font-size: 12.5px; color: var(--ink-2); line-height: 1.65; margin-top: 5px; }
-  .ap-work .risk { font-size: 12px; color: var(--overdue); line-height: 1.6; margin-top: 5px; display: flex; gap: 6px; }
+  .ap-work .risk { font-size: 12px; color: var(--overdue-ink); line-height: 1.6; margin-top: 5px; display: flex; gap: 6px; }
   .ap-work .risk svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; flex: 0 0 auto; margin-top: 2px; }
   .ap-total { background: var(--surface-2); padding: 12px 15px; display: flex; justify-content: space-between; align-items: baseline; }
   .ap-total .k { font-size: 13px; font-weight: 700; }
@@ -639,23 +651,23 @@
 
   /* B3 法人請求 */
   .inv-row { display: flex; align-items: center; gap: 11px; padding: 12px 13px; background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--next); border-radius: 12px; margin-bottom: 8px; box-shadow: var(--shadow); }
-  .inv-row.overdue-pay { border-left-color: var(--overdue); }
+  .inv-row.overdue-pay { border-left-color: var(--overdue-ink); }
   .inv-row .li-main { flex: 1; min-width: 0; cursor: pointer; }
   .inv-row .amt { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .paystate { font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
-  .paystate.unbilled { background: var(--brass-soft); color: var(--brass); }
-  .paystate.billed { background: var(--next-soft); color: var(--next); }
-  .paystate.paid { background: var(--calm-soft); color: var(--calm); }
-  .paystate.late { background: var(--overdue-soft); color: var(--overdue); }
+  .paystate.unbilled { background: var(--brass-soft); color: var(--brass-ink); }
+  .paystate.billed { background: var(--next-soft); color: var(--next-ink); }
+  .paystate.paid { background: var(--calm-soft); color: var(--calm-ink); }
+  .paystate.late { background: var(--overdue-soft); color: var(--overdue-ink); }
 
   /* B4/B5 前回との差分 */
   .diff-box { background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; margin-bottom: 14px; }
-  .diff-box .dt { font-size: 11.5px; font-weight: 700; color: var(--brass); letter-spacing: .04em; margin-bottom: 7px; }
+  .diff-box .dt { font-size: 11.5px; font-weight: 700; color: var(--brass-ink); letter-spacing: .04em; margin-bottom: 7px; }
   .diff-line { display: flex; align-items: baseline; gap: 8px; font-size: 12.5px; padding: 3px 0; }
   .diff-line .dk { flex: 0 0 96px; color: var(--ink-3); font-size: 11.5px; }
   .diff-line .dv { flex: 1; font-variant-numeric: tabular-nums; }
-  .diff-line .dv .worse { color: var(--overdue); font-weight: 700; }
-  .diff-line .dv .better { color: var(--calm); font-weight: 700; }
+  .diff-line .dv .worse { color: var(--overdue-ink); font-weight: 700; }
+  .diff-line .dv .better { color: var(--calm-ink); font-weight: 700; }
   .diff-line .dv .arw { color: var(--ink-3); margin: 0 4px; }
   .pitch-row { display: flex; gap: 8px; }
   .pitch-row .field { flex: 1; }
@@ -676,7 +688,7 @@
   .intake-note { display: flex; gap: 8px; align-items: flex-start; background: var(--brass-soft); border-radius: 11px; padding: 11px 13px; font-size: 12.5px; line-height: 1.65; margin-bottom: 10px; }
   .intake-note svg { width: 15px; height: 15px; stroke: var(--brass); fill: none; stroke-width: 1.9; flex: 0 0 auto; margin-top: 2px; }
   .intake-note b { display: block; margin-bottom: 2px; }
-  .intake-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700; color: var(--brass); background: var(--brass-soft); border-radius: 999px; padding: 2px 8px; margin-left: 6px; vertical-align: 1px; }
+  .intake-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700; color: var(--brass-ink); background: var(--brass-soft); border-radius: 999px; padding: 2px 8px; margin-left: 6px; vertical-align: 1px; }
 
   /* C4 道具チェックリスト */
 
@@ -778,7 +790,7 @@
   .th-visit { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line)); }
   .th-visit:first-of-type { border-top: 0; padding-top: 2px; }
   .th-time { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ink); min-width: 58px; }
-  .th-time.tbd { font-size: 12.5px; font-weight: 700; color: var(--brass); line-height: 1.35; }
+  .th-time.tbd { font-size: 12.5px; font-weight: 700; color: var(--brass-ink); line-height: 1.35; }
   .th-body { flex: 1; min-width: 0; cursor: pointer; }
   .th-name { font-size: 16.5px; font-weight: 800; margin: 0 0 2px; }
   .th-meta { font-size: 13.5px; color: var(--ink-2); }
@@ -790,7 +802,7 @@
   .due-strip { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 14px; padding: 13px 15px; margin-bottom: 20px; }
   .due-strip .dn { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
   .due-strip .dt2 { flex: 1; font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
-  .due-strip .dt2 b { color: var(--overdue); }
+  .due-strip .dt2 b { color: var(--overdue-ink); }
 
   /* はじめて使うときの案内 */
   .onboard { text-align: center; padding: 30px 18px 24px; }
@@ -813,7 +825,7 @@
   .quick2 button { border: 1.5px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: 13px; min-height: 56px; font-size: 15.5px; font-weight: 700; font-family: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 9px; }
   .quick2 button svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 2; }
   .quick2 button.sel { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); }
-  .quick2 button.alt.sel { border-color: var(--brass); background: var(--brass-soft); color: var(--brass-ink, var(--brass)); }
+  .quick2 button.alt.sel { border-color: var(--brass-ink); background: var(--brass-soft); color: var(--brass-ink, var(--brass)); }
   .quick2 button:active { transform: scale(.99); }
 
   /* タップで入る選択肢（キーボードを出さない） */
@@ -2194,7 +2206,7 @@
       +   (h.pay ? '<div class="rep-row"><span class="k">お支払い</span><span class="v">'+esc(h.pay)+'</span></div>' : '')
       +   (h.memo ? '<div class="rep-row"><span class="k">所見</span><span class="v">'+esc(h.memo)+'</span></div>' : '')
       +   '<div class="rep-row"><span class="k">次回の目安</span><span class="v">'+esc(fmtJ(dueDateP(p)))+'ごろ</span></div>'
-      +   (todo.length ? '<div class="rep-row"><span class="k">次回の課題</span><span class="v" style="color:var(--overdue)">'+esc(todo.join("／"))+'</span></div>' : '')
+      +   (todo.length ? '<div class="rep-row"><span class="k">次回の課題</span><span class="v" style="color:var(--overdue-ink)">'+esc(todo.join("／"))+'</span></div>' : '')
       +   ph + cond + diffHTML(p, h, prev)
       + '</div></div>';
   }
@@ -2425,7 +2437,7 @@
         + '<div class="field"><label>メモ</label><textarea id="e-memo">'+esc(h.memo||"")+'</textarea></div>'
         + '<div class="form-actions"><button class="btn ghost" id="sheetCancel" style="flex:1">やめる</button>'
         + '<button class="btn primary" id="sheetOk" style="flex:2">'+ICON.check+'この内容に直す</button></div>'
-        + '<button class="btn link" id="e-del" style="width:100%;text-align:center;color:var(--overdue);margin-top:6px">この記録を取り消す</button>';
+        + '<button class="btn link" id="e-del" style="width:100%;text-align:center;color:var(--overdue-ink);margin-top:6px">この記録を取り消す</button>';
 
       sheet.querySelectorAll("[data-ek]").forEach(function (b) {
         b.onclick = function () { h.kind = b.getAttribute("data-ek"); h.work = kindOf(h.kind).works[0]; paint(); };
@@ -3197,7 +3209,7 @@
                   + (countsToCycle(x) ? '' : '<span class="intake-chip">'+esc(kindName(x.kind))+'</span>')
                   + (x.via?'<span class="via-tag">ご案内から</span>':'')+'</div>'
                   + '<div class="tl-body">'+esc(x.work)+' ・ '+money(x.fee)+(x.memo?'<br>'+esc(x.memo):'')
-                  + (td.length?'<br><span style="color:var(--overdue)">要相談：'+esc(td.join("／"))+'</span>':'')+'</div>'
+                  + (td.length?'<br><span style="color:var(--overdue-ink)">要相談：'+esc(td.join("／"))+'</span>':'')+'</div>'
                   + ((x.photoBefore||x.photoAfter||x.photo)?'<img class="tl-photo" src="'+(x.photoAfter||x.photoBefore||x.photo)+'" alt="作業時の写真">':'')
                   + '<button class="tl-receipt" data-karte="'+c.id+'|'+p.id+'|'+hi+'">報告書</button>'
                   + '　<button class="tl-receipt" data-receipt="'+c.id+'|'+p.id+'|'+hi+'">領収書</button>'
@@ -3238,7 +3250,7 @@
       + '</div>'
       + '<button class="btn ghost" data-revoke="'+c.id+'" style="width:100%;margin-top:8px">'
       +   ICON.warn+'予約ページのURLを作り直す</button>'
-      + '<button class="btn link" data-delcust="'+c.id+'" style="width:100%;text-align:center;color:var(--overdue);margin-top:10px">'
+      + '<button class="btn link" data-delcust="'+c.id+'" style="width:100%;text-align:center;color:var(--overdue-ink);margin-top:10px">'
       +   'このお客様を削除する</button>';
 
     box.innerHTML = h;
@@ -3791,7 +3803,7 @@
       + '<div class="fee-line sum"><span class="lb">合計（調律ぶんを含む）</span><span class="am">'+money((parseInt($("r-fee").value,10)||0) + worksTotal()) + '</span></div>'
       + '</div>'
       + (recApproved ? '<p class="hint"><span class="approved-tag">'+ICON.check+'承諾済み</span>　'+esc(recApproved)+'</p>'
-                     : '<p class="hint" style="color:var(--overdue)">まだ承諾をいただいていません。金額をお見せしてから作業に入ってください。</p>');
+                     : '<p class="hint" style="color:var(--overdue-ink)">まだ承諾をいただいていません。金額をお見せしてから作業に入ってください。</p>');
     $("awApprove").textContent = recApproved ? "承諾内容をもう一度見せる" : "お客様に見せて承諾をもらう";
   }
 
