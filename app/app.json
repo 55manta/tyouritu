@@ -3,7 +3,7 @@
     "name": "調律ノート",
     "slug": "choritsu-note",
     "scheme": "choritsunote",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -15,7 +15,20 @@
           "image": "./assets/icon.png",
           "resizeMode": "contain",
           "backgroundColor": "#F4F2EC",
-          "dark": { "backgroundColor": "#12110D" }
+          "dark": {
+            "backgroundColor": "#12110D"
+          }
+        }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      "expo-apple-authentication",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
         }
       ]
     ],
@@ -24,7 +37,9 @@
       "bundleIdentifier": "jp.izumikawa.choritsunote",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
-      }
+      },
+      "usesAppleSignIn": true,
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "package": "jp.izumikawa.choritsunote",
@@ -32,7 +47,8 @@
         "backgroundColor": "#F4F2EC",
         "foregroundImage": "./assets/icon.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/icon.png"

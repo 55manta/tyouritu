@@ -15,6 +15,12 @@ import { seed } from './seed';
 
 const KEY_CUSTOMERS = 'choritsu.customers.v1';
 const KEY_SETTINGS = 'choritsu.settings.v1';
+/**
+ * 「まだサンプルのまま、一度も触っていない」印。
+ * 新しい端末でサインインしたとき、サンプルでクラウドの台帳を
+ * 上書きしてしまわないために要る。
+ */
+const KEY_PRISTINE = 'choritsu.pristine.v1';
 
 export type SaveResult = { ok: true } | { ok: false; error: string };
 
@@ -33,7 +39,22 @@ export async function loadCustomers(): Promise<Customer[]> {
   }
   const s = seed();
   await saveCustomers(s);
+  await AsyncStorage.setItem(KEY_PRISTINE, '1');
   return s;
+}
+
+/** サンプルのまま、一度も編集していないか */
+export async function isPristine(): Promise<boolean> {
+  try {
+    return (await AsyncStorage.getItem(KEY_PRISTINE)) === '1';
+  } catch {
+    return false;
+  }
+}
+
+/** 一度でも書き換えたら、もうサンプルではない */
+export async function markTouched(): Promise<void> {
+  try { await AsyncStorage.removeItem(KEY_PRISTINE); } catch { /* 印が残っても実害は小さい */ }
 }
 
 export async function saveCustomers(list: Customer[]): Promise<SaveResult> {

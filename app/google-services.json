@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "256206159985",
+    "project_id": "choritsu-note",
+    "storage_bucket": "choritsu-note.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:256206159985:android:c8bd8c12fed76dd1de5bd0",
+        "android_client_info": {
+          "package_name": "jp.izumikawa.choritsunote"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_3HsmcperACxyvkz9CSlai6VMZRGi8CI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

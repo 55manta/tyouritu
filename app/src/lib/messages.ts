@@ -12,10 +12,10 @@ import { pianoName } from './select';
 import type { Customer, Piano, Visit } from '../types';
 
 /**
- * お客様用ページの置き場所。
- * 試作からの引き継ぎ。実際に公開するときはここだけ直せばよい。
+ * お客様用ページの置き場所。Firebase Hosting に出してある。
+ * 独自ドメインを取ったら、ここだけ差し替える。
  */
-export const BOOKING_ORIGIN = 'https://choritsu-note.app';
+export const BOOKING_ORIGIN = 'https://choritsu-note.web.app';
 
 export function bookingUrl(token: string): string {
   return BOOKING_ORIGIN + '/b/' + token;

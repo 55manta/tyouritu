@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>調律のご案内</title>
+<style>
+/*
+  お客様が開くページ。アプリは入れない。開いて、どちらかを押すだけ。
+  配色はアプリと同じ（象牙・ティール・真鍮）。文字は大きめ、押せるものは44px以上。
+*/
+/* キャレット・スクロールバー・チェックボックスの既定の見た目もテーマに従わせる */
+:root {
+  color-scheme: light dark;
+  --ground:#F4F2EC; --surface:#FFFFFF; --surface2:#EDEAE1;
+  --ink:#1E1C17; --ink2:#5E594F; --ink3:#6E695F;
+  --line:#E7E2D6; --line-strong:#D6CFBF;
+  --accent:#0C7F74; --accent-ink:#0A6A60; --accent-soft:#DBEFEB; --on-accent:#FFFFFF;
+  --brass-ink:#785C27; --brass-soft:#F0E7D2;
+  --overdue-ink:#A34230; --overdue-soft:#F6E2DB;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground:#12110D; --surface:#1B1A15; --surface2:#25231C;
+    --ink:#F2EFE6; --ink2:#B0A999; --ink3:#948B78;
+    --line:#2E2B22; --line-strong:#3C3830;
+    --accent:#2CC2B0; --accent-ink:#63D8C7; --accent-soft:#0F302D; --on-accent:#04231F;
+    --brass-ink:#D9B063; --brass-soft:#2E2612;
+    --overdue-ink:#EC8067; --overdue-soft:#37231C;
+  }
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; background:var(--ground); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;
+  font-size:16px; line-height:1.7;
+  padding:max(18px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom));
+}
+.wrap { max-width:520px; margin:0 auto; }
+h1 { font-size:22px; font-weight:800; margin:8px 0 2px; letter-spacing:.2px; }
+.lead { color:var(--ink2); font-size:14.5px; margin:0 0 16px; }
+.card { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:14px; }
+.piano { display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-top:1px solid var(--line); }
+.piano:first-of-type { border-top:0; }
+.piano .r { font-weight:700; }
+.piano .n { color:var(--ink2); font-size:13.5px; }
+.piano .d { color:var(--ink2); font-size:13.5px; white-space:nowrap; }
+.total { display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+  border-top:1px solid var(--line); margin-top:8px; padding-top:10px; }
+.total .y { font-size:24px; font-weight:800; }
+.note { background:var(--overdue-soft); color:var(--overdue-ink); border-radius:11px;
+  padding:11px 13px; font-size:13.5px; line-height:1.65; margin-top:10px; }
+button {
+  display:block; width:100%; min-height:52px; border-radius:13px; font-size:16.5px; font-weight:700;
+  font-family:inherit; cursor:pointer; margin-top:10px; padding:12px 16px; line-height:1.4;
+}
+.go { background:var(--accent); color:var(--on-accent); border:1px solid var(--accent); }
+.skip { background:var(--surface); color:var(--ink); border:1px solid var(--line-strong); }
+.go:disabled, .skip:disabled { background:var(--surface2); color:var(--ink3); border-color:var(--line-strong); cursor:default; }
+label.f { display:block; font-size:14px; font-weight:700; margin:14px 0 5px; }
+input[type=text], textarea {
+  width:100%; background:var(--surface); color:var(--ink);
+  border:1px solid var(--line-strong); border-radius:12px; padding:12px 14px;
+  font-size:16px; font-family:inherit; min-height:52px;
+}
+textarea { min-height:88px; line-height:1.6; resize:vertical; }
+.picks { display:flex; flex-direction:column; gap:8px; margin-top:6px; }
+.picks label {
+  display:flex; align-items:flex-start; gap:10px; min-height:52px;
+  border:1px solid var(--line-strong); background:var(--surface);
+  border-radius:12px; padding:13px 14px; font-size:14.5px; line-height:1.55; cursor:pointer;
+}
+.picks input { width:21px; height:21px; flex:0 0 auto; margin:2px 0 0; accent-color:var(--accent); }
+.done { text-align:center; padding:22px 8px; }
+.done .t { font-size:20px; font-weight:800; margin-bottom:6px; }
+.done .s { color:var(--ink2); font-size:14.5px; }
+.mark { display:inline-block; width:52px; height:52px; border-radius:50%;
+  background:var(--accent-soft); color:var(--accent-ink); line-height:52px; font-size:26px; margin-bottom:10px; }
+.foot { color:var(--ink3); font-size:12.5px; text-align:center; margin-top:22px; line-height:1.7; }
+.err { color:var(--overdue-ink); }
+.hide { display:none; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <p class="lead" id="boot">読み込んでいます…</p>
+</div>
+
+<script type="module">
+/*
+  このページは Firestore の bookings/{token} を1件だけ読む。
+  台帳（お客様の住所・電話・メモ・写真・売上）には手が届かない。
+  鍵はURLの最後の32文字で、書類のIDそのもの。
+*/
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js';
+import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js';
+import {
+  getFirestore, doc, getDoc, updateDoc, serverTimestamp,
+} from 'https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js';
+
+const app = initializeApp({
+  projectId: 'choritsu-note',
+  appId: '1:256206159985:web:483f4f088cbabf83de5bd0',
+  apiKey: 'AIzaSyCiFRJunevzA3hSWAy_3gM1WsB1iqjArI4',
+  authDomain: 'choritsu-note.firebaseapp.com',
+  messagingSenderId: '256206159985',
+});
+const db = getFirestore(app);
+
+const INTAKE = [
+  '音が全体的に狂ってきた気がする',
+  '特定の鍵盤の音が出ない・鳴りにくい',
+  '鍵盤が重い・戻りが悪い',
+  '弾くとカタカタ・ビリビリと雑音がする',
+  'ペダルの効きが気になる',
+  '特に気になることはない',
+];
+
+const wrap = document.getElementById('wrap');
+const token = (location.pathname.split('/').filter(Boolean).pop() || '').trim();
+const yen = (n) => (Number(n) || 0).toLocaleString('ja-JP') + '円';
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (m) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m]));
+const month = (s) => {
+  const m = /^(\d{4})-(\d{2})$/.exec(String(s || ''));
+  return m ? `${+m[1]}年${+m[2]}月` : '';
+};
+
+function show(html) { wrap.innerHTML = html; }
+
+function fail(msg) {
+  show(`<h1>ご案内</h1><div class="card"><p class="err">${esc(msg)}</p>
+    <p style="color:var(--ink2);font-size:14px">お手数ですが、ご担当の調律師までご連絡ください。</p></div>`);
+}
+
+let ref = null;
+let data = null;
+
+async function start() {
+  if (!/^[0-9a-f]{8,64}$/.test(token)) { fail('このページのリンクが正しくないようです。'); return; }
+  try {
+    await signInAnonymously(getAuth(app));
+  } catch {
+    fail('ページを開けませんでした。通信の状態をお確かめのうえ、もう一度お試しください。');
+    return;
+  }
+  ref = doc(db, 'bookings', token);
+  let snap;
+  try {
+    snap = await getDoc(ref);
+  } catch {
+    fail('このご案内は、すでに新しいものに切り替わっています。');
+    return;
+  }
+  if (!snap.exists()) { fail('このご案内は見つかりませんでした。'); return; }
+  data = snap.data();
+  if (data.reply === 'yes') { paintDone('requested'); return; }
+  if (data.reply === 'skip') { paintDone('skipped'); return; }
+  paintAsk();
+}
+
+function paintAsk() {
+  const list = (data.pianos || []).map((p) => `
+    <div class="piano">
+      <div><div class="r">${esc(p.room)}</div><div class="n">${esc(p.name)}</div></div>
+      <div class="d">${esc(month(p.dueMonth))}ごろ</div>
+    </div>`).join('');
+
+  show(`
+    <h1>調律のご案内</h1>
+    <p class="lead">${esc(data.customerName)} 様</p>
+    <div class="card">
+      ${list}
+      <div class="total"><span>料金の目安</span><span class="y">${yen(data.total)}</span></div>
+      ${data.roughNeeded ? '<div class="note">前回から長くあいているため、音が安定するまでの下準備（粗調律）が必要です。</div>' : ''}
+    </div>
+    <button class="go" id="go">お願いします</button>
+    <button class="skip" id="skip">今回は見送ります</button>
+    <p class="foot">どちらを選んでも、お電話は要りません。<br>ご都合が変われば、調律師までお知らせください。</p>
+  `);
+  document.getElementById('go').onclick = paintIntake;
+  document.getElementById('skip').onclick = () => send('skip', '', { items: [], note: '' });
+}
+
+function paintIntake() {
+  show(`
+    <h1>ありがとうございます</h1>
+    <p class="lead">日程は、あらためてご連絡します。<br>よろしければ、ご希望と気になっていることを教えてください。</p>
+    <div class="card">
+      <label class="f" for="want">ご希望の時期（任意）</label>
+      <input type="text" id="want" maxlength="100" placeholder="例：来月の土日が助かります">
+
+      <label class="f">気になっていること（任意）</label>
+      <div class="picks">
+        ${INTAKE.map((t, i) => `<label><input type="checkbox" data-ik="${i}"><span>${esc(t)}</span></label>`).join('')}
+      </div>
+
+      <label class="f" for="note">どの曲の、どのあたりで気づきましたか（任意）</label>
+      <textarea id="note" maxlength="400" placeholder="例：エリーゼのために の出だし、右手の高いミのあたり"></textarea>
+    </div>
+    <button class="go" id="send">この内容で送る</button>
+    <button class="skip" id="plain">特にないので、そのまま送る</button>
+  `);
+  const collect = () => ({
+    want: document.getElementById('want').value.trim().slice(0, 100),
+    intake: {
+      items: [...document.querySelectorAll('[data-ik]')].filter((b) => b.checked).map((b) => INTAKE[+b.dataset.ik]),
+      note: document.getElementById('note').value.trim().slice(0, 400),
+    },
+  });
+  document.getElementById('send').onclick = () => { const v = collect(); send('yes', v.want, v.intake); };
+  document.getElementById('plain').onclick = () => send('yes', '', { items: [], note: '' });
+}
+
+async function send(reply, want, intake) {
+  document.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+  try {
+    await updateDoc(ref, { reply, want, intake, repliedAt: serverTimestamp() });
+  } catch {
+    document.querySelectorAll('button').forEach((b) => { b.disabled = false; });
+    const p = document.createElement('p');
+    p.className = 'err';
+    p.style.marginTop = '12px';
+    p.textContent = 'お送りできませんでした。通信の状態をお確かめのうえ、もう一度お試しください。';
+    wrap.appendChild(p);
+    return;
+  }
+  paintDone(reply === 'yes' ? 'requested' : 'skipped');
+}
+
+function paintDone(kind) {
+  if (kind === 'requested') {
+    show(`<div class="card"><div class="done">
+      <div class="mark">✓</div>
+      <div class="t">ご依頼を承りました</div>
+      <div class="s">日程について、あらためてご連絡いたします。</div>
+    </div></div>`);
+  } else {
+    show(`<div class="card"><div class="done">
+      <div class="mark">◷</div>
+      <div class="t">承知しました</div>
+      <div class="s">今回は見送りとして承ります。<br>次の時期が来ましたら、またご案内します。</div>
+    </div></div>`);
+  }
+}
+
+start();
+</script>
+</body>
+</html>

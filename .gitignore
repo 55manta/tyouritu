@@ -9,3 +9,6 @@ server.log
 
 # ルール確認用の道具
 tools/node_modules/
+
+# firebase deploy が作る一時ファイル
+.firebase/

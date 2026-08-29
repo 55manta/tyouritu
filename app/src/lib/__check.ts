@@ -118,7 +118,7 @@ check('日本は「13,000円」', money(13000), '13,000円');
   check('SMSは番号の記号を落とす', channelUrl('SMS', cust, 's', 'あ').startsWith('sms:09012345678'), true);
   check('メールは宛先つき', channelUrl('メール', cust, 's', 'あ').startsWith('mailto:a%40example.com?subject='), true);
   check('LINEは共有画面', channelUrl('LINE', cust, 's', 'あ').startsWith('https://line.me/R/share?text='), true);
-  check('予約URL', bookingUrl('abc123'), 'https://choritsu-note.app/b/abc123');
+  check('予約URL', bookingUrl('abc123'), 'https://choritsu-note.web.app/b/abc123');
   check('連絡先が無ければ送れない',
     channelsFor({ ...cust, phone: '', email: '', line: '' }).filter((x) => x.ok).length, 0);
 }

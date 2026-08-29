@@ -12,6 +12,13 @@ import type { RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
+const SYNC_LABEL: Record<'off' | 'syncing' | 'synced' | 'failed', string> = {
+  off: '控えは止まっています',
+  syncing: '控えを送っています…',
+  synced: '控えが残っています',
+  failed: '控えを送れていません',
+};
+
 const THEMES: { k: ThemePref; label: string; note: string }[] = [
   { k: 'auto', label: '端末に合わせる', note: 'iPhone や Android 本体の設定に従います' },
   { k: 'light', label: '明るい', note: '昼の屋外でも見やすい配色に固定します' },
@@ -25,7 +32,10 @@ const THEMES: { k: ThemePref; label: string; note: string }[] = [
  */
 export default function SettingsScreen({ navigation }: Props) {
   const c = useColors();
-  const { customers, settings, updateSettings, resetToSamples, clearAll } = useApp();
+  const {
+    customers, settings, updateSettings, resetToSamples, clearAll,
+    cloudAvailable, user, syncState, canSignInWithApple, signInWithApple, signOut,
+  } = useApp();
 
   const [dur, setDur] = useState(String(settings.durationMinutes));
   const [rate, setRate] = useState(String(settings.taxRate));
@@ -49,6 +59,67 @@ export default function SettingsScreen({ navigation }: Props) {
     <SafeAreaView style={{ flex: 1, backgroundColor: c.ground }} edges={['bottom']}>
       <ScrollView contentContainerStyle={st.pad}>
         <Title>設定</Title>
+
+        {cloudAvailable && (
+          <>
+            <Text style={[st.sec, { color: c.ink }]}>台帳の控え</Text>
+            <Card style={{ borderColor: user ? c.accent : c.line }}>
+              {user ? (
+                <>
+                  <Text style={{ color: c.ink, fontSize: 15, fontWeight: '700' }}>
+                    {SYNC_LABEL[syncState]}
+                  </Text>
+                  {user.email ? (
+                    <Text style={{ color: c.ink2, fontSize: 13.5 }}>{user.email}</Text>
+                  ) : null}
+                  <Text style={{ color: c.ink2, fontSize: 13, lineHeight: 20 }}>
+                    端末を無くしても、新しい端末で同じ Apple ID でサインインすれば台帳が戻ります。
+                  </Text>
+                  {syncState === 'failed' && (
+                    <Text style={{ color: c.overdueInk, fontSize: 13, lineHeight: 20 }}>
+                      控えを送れていません。台帳そのものはこの端末に残っています。通信できるところで、もう一度お試しください。
+                    </Text>
+                  )}
+                  <Button
+                    label="サインアウト"
+                    variant="ghost"
+                    style={{ marginTop: 6 }}
+                    onPress={() =>
+                      Alert.alert('サインアウトしますか', '台帳はこの端末に残ります。控えの更新だけが止まります。', [
+                        { text: 'やめておく', style: 'cancel' },
+                        { text: 'サインアウト', onPress: () => signOut() },
+                      ])
+                    }
+                  />
+                </>
+              ) : (
+                <>
+                  <Text style={{ color: c.ink, fontSize: 15, fontWeight: '700' }}>
+                    いまは、この端末の中だけに保存されています
+                  </Text>
+                  <Text style={{ color: c.ink2, fontSize: 13.5, lineHeight: 21 }}>
+                    端末を無くしたり、初期化したりすると、台帳は戻せません。{'\n'}
+                    サインインしておくと控えが残り、新しい端末で元どおりに開けます。
+                  </Text>
+                  {canSignInWithApple ? (
+                    <Button
+                      label="Apple でサインイン"
+                      style={{ marginTop: 6 }}
+                      onPress={async () => {
+                        const r = await signInWithApple();
+                        if (!r.ok && r.reason) Alert.alert('サインインできませんでした', r.reason);
+                      }}
+                    />
+                  ) : (
+                    <Text style={{ color: c.ink2, fontSize: 13 }}>
+                      この端末では、まだサインインの方法をご用意できていません。
+                    </Text>
+                  )}
+                </>
+              )}
+            </Card>
+          </>
+        )}
 
         <Text style={[st.sec, { color: c.ink }]}>表示</Text>
         <Card>

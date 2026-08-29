@@ -1,10 +1,13 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { cycleKey, recalcLastTuned } from '../lib/cycle';
-import { pendingPianos } from '../lib/select';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { cycleKey, dueDate, recalcLastTuned } from '../lib/cycle';
+import { pendingPianos, pianoName, quoted, reminderState } from '../lib/select';
+import { needsRoughTuning } from '../lib/pricing';
 import { iso, today } from '../lib/date';
 import type { Customer, Piano, Settings, Visit, WorkRecord } from '../types';
 import { DEFAULT_SETTINGS, FREE_LIMIT } from '../types';
 import * as db from './db';
+import { cloud } from './cloud';
+import type { CloudUser } from './cloudTypes';
 
 /**
  * アプリ全体の状態。
@@ -13,6 +16,11 @@ import * as db from './db';
  * 画面から piano.lastTunedOn を直接触らせない——監査（所見3）で、基準日を
  * 決める処理が2箇所に分かれていたために、過去日の記録を足すと次回時期が
  * 壊れる不具合が起きていたため。
+ *
+ * 台帳の正は端末の中（AsyncStorage）。クラウドへは控えを送る。
+ * サインインしていなくても、圏外でも、クラウドが落ちていても、
+ * アプリは今までどおり動く。控えが要るのは、端末を無くしたときに
+ * 台帳ごと消えるのが、このアプリでいちばん取り返しがつかないため。
  */
 
 type Ctx = {
@@ -48,10 +56,24 @@ type Ctx = {
   unskipCycle: (customerId: string) => Promise<boolean>;
   /** お客様用ページの鍵。無ければ作って保存し、必ず値を返す */
   ensureBookingToken: (customerId: string) => Promise<string>;
+  /** お客様に見せる写しをクラウドへ置く。ご案内を送るときに呼ぶ */
+  publishBooking: (customerId: string) => Promise<void>;
+  /** 古い予約ページを開かなくする */
+  revokeBooking: (token: string) => Promise<void>;
 
   updateSettings: (patch: Partial<Settings>) => Promise<boolean>;
   resetToSamples: () => Promise<void>;
   clearAll: () => Promise<void>;
+
+  // ── 控えとサインイン ────────────────────────────
+  /** この端末でクラウドが使えるか */
+  cloudAvailable: boolean;
+  user: CloudUser;
+  /** 控えの状況。画面に出して、黙って失敗している状態を作らない */
+  syncState: 'off' | 'syncing' | 'synced' | 'failed';
+  canSignInWithApple: boolean;
+  signInWithApple: () => Promise<{ ok: true } | { ok: false; reason: string }>;
+  signOut: () => Promise<void>;
 };
 
 const AppCtx = createContext<Ctx | null>(null);
@@ -61,6 +83,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [saveFailed, setSaveFailed] = useState(false);
+  const [user, setUser] = useState<CloudUser>(null);
+  const [syncState, setSyncState] = useState<'off' | 'syncing' | 'synced' | 'failed'>('off');
+  const [canApple, setCanApple] = useState(false);
+
+  /** 最後にクラウドへ送った内容。差分だけ送るために持つ */
+  const pushed = useRef<Map<string, Customer>>(new Map());
 
   useEffect(() => {
     (async () => {
@@ -69,19 +97,147 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setSettings(st);
       setReady(true);
     })();
+    cloud.canSignInWithApple().then(setCanApple);
+    return cloud.onUser(setUser);
+  }, []);
+
+  /**
+   * 変わったお客様だけをクラウドへ送る。
+   * 参照が同じものは触っていないので送らない（replace() が変更した1件だけ
+   * 新しい object にしているため、参照の比較で足りる）。
+   */
+  const mirror = useCallback(async (uid: string, next: Customer[]) => {
+    setSyncState('syncing');
+    try {
+      const seen = new Set<string>();
+      for (const c of next) {
+        seen.add(c.id);
+        if (pushed.current.get(c.id) !== c) {
+          await cloud.pushCustomer(uid, c);
+          pushed.current.set(c.id, c);
+        }
+      }
+      for (const id of [...pushed.current.keys()]) {
+        if (!seen.has(id)) {
+          await cloud.removeCustomer(uid, id);
+          pushed.current.delete(id);
+        }
+      }
+      setSyncState('synced');
+    } catch {
+      // 控えが送れなくても、端末の中の台帳は無事。画面に状態だけ出す
+      setSyncState('failed');
+    }
   }, []);
 
   /** 保存して、成否を必ず返す。失敗したら画面に出す */
   const commit = useCallback(async (next: Customer[]): Promise<boolean> => {
     const res = await db.saveCustomers(next);
-    if (res.ok) {
-      setCustomers(next);
-      setSaveFailed(false);
-      return true;
+    if (!res.ok) {
+      setSaveFailed(true);
+      return false;
     }
-    setSaveFailed(true);
-    return false;
+    setCustomers(next);
+    setSaveFailed(false);
+    db.markTouched();
+    if (user) mirror(user.uid, next);   // 控えは後追いでよい。待たせない
+    return true;
+  }, [user, mirror]);
+
+  // 効果の中から最新の値を読むための控え。値が変わるたびに効果を回したくない
+  const latest = useRef({ customers, settings });
+  latest.current = { customers, settings };
+
+  /**
+   * サインインした直後の一度だけ。
+   *
+   * 端末の中がまだサンプルのままなら、クラウドの台帳を取り込む（機種変更）。
+   * 一度でも触っていれば、端末の中が正なので、そちらを送る。
+   * サンプルでクラウドの台帳を上書きしてしまう事故を、これで防ぐ。
+   */
+  useEffect(() => {
+    if (!ready) return;
+    if (!user) { setSyncState('off'); pushed.current.clear(); return; }
+
+    let alive = true;
+    (async () => {
+      setSyncState('syncing');
+      try {
+        const [remote, pristine] = await Promise.all([
+          cloud.pullCustomers(user.uid),
+          db.isPristine(),
+        ]);
+        if (!alive) return;
+
+        if (pristine && remote.length > 0) {
+          const res = await db.saveCustomers(remote);
+          if (!alive) return;
+          if (res.ok) {
+            setCustomers(remote);
+            db.markTouched();
+            pushed.current = new Map(remote.map((c) => [c.id, c]));
+            setSyncState('synced');
+          } else {
+            setSaveFailed(true);
+            setSyncState('failed');
+          }
+        } else {
+          pushed.current = new Map();            // 全件を送り直す
+          await mirror(user.uid, latest.current.customers);
+        }
+        await cloud.pushSettings(user.uid, latest.current.settings);
+      } catch {
+        if (alive) setSyncState('failed');
+      }
+    })();
+    return () => { alive = false; };
+  }, [ready, user, mirror]);
+
+  /**
+   * お客様からのお返事を受け取る。
+   *
+   * 「お願いします」はご依頼として台帳に立て、日程は調律師が決める
+   * （お客様に日付を選ばせない＝ダブルブッキングを構造で防ぐ）。
+   * 「見送ります」は、その周期だけ見送りの印をつける。
+   */
+  const applyReply = useCallback((r: { customerId: string; reply: 'yes' | 'skip'; want: string; intake: { items: string[]; note: string } }) => {
+    const cur = latest.current.customers;
+    const c = cur.find((x) => x.id === r.customerId);
+    if (!c) return;
+
+    if (r.reply === 'yes') {
+      if (c.request) return;                       // 二重に立てない
+      const pend = pendingPianos(c);
+      const next = cur.map((x) => (x.id !== c.id ? x : {
+        ...x,
+        request: { at: iso(today()), pianoIds: pend.map((p) => p.id), want: r.want, intake: r.intake },
+      }));
+      commitRef.current(next);
+    } else {
+      const ids = new Set(pendingPianos(c).map((p) => p.id));
+      if (reminderState(pendingPianos(c)) === 'custSkipped') return;
+      const next = cur.map((x) => (x.id !== c.id ? x : {
+        ...x,
+        pianos: x.pianos.map((p) => (ids.has(p.id) ? { ...p, custSkippedCycle: cycleKey(p) } : p)),
+      }));
+      commitRef.current(next);
+    }
   }, []);
+
+  const commitRef = useRef(commit);
+  commitRef.current = commit;
+
+  /** 送ったご案内の鍵だけを見張る。一覧では引かない（ルールで閉じてある） */
+  const watchTokens = customers
+    .filter((c) => c.bookToken && reminderState(pendingPianos(c)) === 'reminded')
+    .map((c) => c.bookToken as string)
+    .sort()
+    .join(',');
+
+  useEffect(() => {
+    if (!ready || !user || !watchTokens) return;
+    return cloud.watchBookings(watchTokens.split(','), applyReply);
+  }, [ready, user, watchTokens, applyReply]);
 
   const find = useCallback((id: string) => customers.find((c) => c.id === id), [customers]);
 
@@ -215,12 +371,63 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return t;
       },
 
+      publishBooking: async (cid) => {
+        const c = customers.find((x) => x.id === cid);
+        if (!c || !c.bookToken || !user) return;
+        const pend = pendingPianos(c);
+        const sur = settings.locale === 'ja-JP';
+        // 写しに入れるのは、お客様に見せてよいものだけ。
+        // 住所・電話・メモ・写真・売上は入れない（firestore-design.md §4）
+        await cloud.putBooking(c.bookToken, {
+          tunerUid: user.uid,
+          customerId: c.id,
+          customerName: c.name,
+          pianos: pend.map((p) => ({
+            room: p.room,
+            name: pianoName(p),
+            dueMonth: iso(dueDate(p)).slice(0, 7),
+            fee: quoted(p, sur),
+          })),
+          total: pend.reduce((s, p) => s + quoted(p, sur), 0),
+          roughNeeded: pend.some((p) => needsRoughTuning(p.lastTunedOn)),
+        });
+      },
+
+      revokeBooking: (token) => cloud.revokeBooking(token),
+
       updateSettings: async (patch) => {
         const next = { ...settings, ...patch };
         const res = await db.saveSettings(next);
-        if (res.ok) { setSettings(next); return true; }
-        setSaveFailed(true);
-        return false;
+        if (!res.ok) { setSaveFailed(true); return false; }
+        setSettings(next);
+        db.markTouched();
+        if (user) cloud.pushSettings(user.uid, next).catch(() => setSyncState('failed'));
+        return true;
+      },
+
+      cloudAvailable: cloud.available,
+      user,
+      syncState,
+      canSignInWithApple: canApple,
+
+      signInWithApple: async () => {
+        try {
+          await cloud.signInWithApple();
+          return { ok: true as const };
+        } catch (e) {
+          const code = (e as { code?: string }).code || '';
+          // 利用者が自分でやめた場合は、失敗として騒がない
+          if (code.includes('CANCEL') || code === 'ERR_REQUEST_CANCELED') {
+            return { ok: false as const, reason: '' };
+          }
+          return { ok: false as const, reason: 'サインインできませんでした。通信の状態をお確かめのうえ、もう一度お試しください。' };
+        }
+      },
+
+      signOut: async () => {
+        await cloud.signOut();
+        pushed.current.clear();
+        setSyncState('off');
       },
 
       resetToSamples: async () => {
@@ -231,7 +438,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       clearAll: async () => { await commit([]); },
     }),
-    [ready, customers, settings, saveFailed, find, replace, commit]
+    [ready, customers, settings, saveFailed, find, replace, commit, user, syncState, canApple]
   );
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;

@@ -4,3 +4,7 @@ node_modules/
 dist/
 *.log
 .web/
+
+# prebuild が作るネイティブの一式。EAS 側で毎回生成するので持たない
+android/
+ios/

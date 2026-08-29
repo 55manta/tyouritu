@@ -16,7 +16,7 @@ export function ReminderSheet({
   customerId: string | null;
   onClose: () => void;
 }) {
-  const { find, settings, ensureBookingToken, markReminded } = useApp();
+  const { find, settings, ensureBookingToken, markReminded, publishBooking } = useApp();
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -43,7 +43,12 @@ export function ReminderSheet({
       message={reminderMessage(customer, pianos, bookingUrl(token), settings.locale === 'ja-JP')}
       note="送信先のアプリが立ち上がります。お客様が予約ページで選ばれた内容は、この画面に届きます。"
       onClose={onClose}
-      onSent={async () => { await markReminded(customer.id); onClose(); }}
+      onSent={async () => {
+        // 送る前に写しを置く。お客様がリンクを開いたときに空でないようにする
+        await publishBooking(customer.id).catch(() => { /* 圏外なら次回の送信で置き直す */ });
+        await markReminded(customer.id);
+        onClose();
+      }}
     />
   );
 }

@@ -25,7 +25,7 @@ export default function CustomerDetailScreen({ route, navigation }: Props) {
   const { id } = route.params;
   const {
     find, settings, updateCustomer, deleteCustomer, deletePiano,
-    addVisit, updateVisit, deleteVisit, skipCycle, unskipCycle,
+    addVisit, updateVisit, deleteVisit, skipCycle, unskipCycle, revokeBooking,
   } = useApp();
   const customer = find(id);
   const [openHistory, setOpenHistory] = useState<string | null>(null);
@@ -298,7 +298,15 @@ export default function CustomerDetailScreen({ route, navigation }: Props) {
         <Button label="予約ページのURLを作り直す" variant="ghost" style={{ marginTop: 10 }}
           onPress={() => Alert.alert('予約ページのURLを作り直しますか', 'いまのURLは開けなくなります。お送りしたご案内のリンクも無効になります。', [
             { text: 'やめる', style: 'cancel' },
-            { text: '作り直す', onPress: () => updateCustomer(id, { bookToken: newToken() }) },
+            {
+              text: '作り直す',
+              onPress: async () => {
+                const old = customer.bookToken;
+                await updateCustomer(id, { bookToken: newToken() });
+                // 古いページを開かなくする。消さずに残すのは、届いた返事まで消えると困るため
+                if (old) revokeBooking(old).catch(() => { /* 圏外なら次に開いたときに */ });
+              },
+            },
           ])} />
 
         <Pressable onPress={confirmDelete} style={st.deleteBtn}>
