@@ -532,3 +532,46 @@ EXPO_APPLE_TEAM_ID=KPXFL5CQN8 EXPO_APPLE_TEAM_TYPE=INDIVIDUAL npx eas-cli build 
 
 これで EAS が capability を同期した新しいプロファイルを自動で作る。
 `.p8` の鍵ファイルを手元に置く必要はない。
+
+## 20. 残作業の棚卸し（2026-08-30）
+
+### やったこと
+
+**Android の Google サインイン（コードのみ）**
+
+サインインの入口を `signInMethods` / `signIn(method)` に一般化した。
+iOS は Apple、Android は Google を返す。画面はどちらが来ても同じ形で出す。
+
+Firebase 側で **Google プロバイダを有効化**（公開名「調律ノート」、
+サポートメール manabu@izumikawa.jp）。ウェブ クライアント ID は
+`256206159985-ah138ob5ah1nj0ltaaa9uupttiltmaih.apps.googleusercontent.com`
+（`google-services.json` の client_type: 3。秘密ではない）。
+
+**まだ動かない。** Android の Google サインインは、実行時に
+**SHA-1 の登録**が要る。しかも Play 経由で配ると Google が署名し直すので、
+本番で効くのは **Play App Signing の証明書の SHA-1**。これは Play Console に
+アプリを登録しないと出てこない。つまり順番は
+「Play Console 登録 → App Signing の SHA-1 を Firebase に登録 →
+`google-services.json` を取り直す → Android ビルド」。
+
+そのため **Android ビルドはまだ流していない**。SHA-1 が入る前に建てても
+サインインが失敗するだけで、ビルドを1本無駄にする。
+
+**Play Console のアプリ作成フォームは途中まで入れてある**
+（調律ノート / jp.izumikawa.choritsunote / 日本語 ja-JP / アプリ / 無料）。
+残っているのは「デベロッパー プログラム ポリシー」と「米国輸出法」の
+2つの申告チェックだけ。これは法的な申告なのでオーナー本人が入れる。
+
+### できなかったこと（判断がオーナー側にある）
+
+**Cloud Storage は Blaze プラン（有料）が必要だった。**
+無料枠で選べるロケーションは US-EAST1 のみ。Firestore を東京に置いた以上、
+お宅の中が写る写真を米国に置くのは筋が通らないので ASIA-NORTHEAST1 を
+選んだところ、料金プランのアップグレードを求められた。課金は
+オーナーの判断なので、ここで止めてある。`storage.rules` は書いてあり、
+バケットができたら `firebase deploy --only storage` で配れる。
+
+**写真の自動削除（Cloud Functions）は、そもそも時期が早い。**
+写真は型（`photoBefore` / `photoAfter`）があるだけで、撮影も保存も
+まだ実装していない。消す対象が無いものを消す仕組みから作らない。
+Blaze が要るのも同じ理由で保留。

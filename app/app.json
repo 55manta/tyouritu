@@ -37,7 +37,8 @@
             "useFrameworks": "static"
           }
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "ios": {
       "supportsTablet": true,

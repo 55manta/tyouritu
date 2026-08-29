@@ -13,6 +13,9 @@ import type { Customer, Settings } from '../types';
 
 export type CloudUser = { uid: string; email: string | null } | null;
 
+/** サインインの方法。増やしてもルールは request.auth.uid しか見ないので影響しない */
+export type SignInMethod = 'apple' | 'google';
+
 /** お客様に見せる分だけを写したもの。住所・電話・メモ・写真・売上は入れない */
 export type BookingMirror = {
   tunerUid: string;
@@ -38,9 +41,12 @@ export type Cloud = {
 
   /** サインイン状態の変化。戻り値を呼ぶと購読をやめる */
   onUser(cb: (u: CloudUser) => void): () => void;
-  /** この端末で「Appleでサインイン」が使えるか */
-  canSignInWithApple(): Promise<boolean>;
-  signInWithApple(): Promise<CloudUser>;
+  /**
+   * この端末で使えるサインインの方法。
+   * iOS は Apple、Android は Google。どちらもパスワードを覚えなくてよい。
+   */
+  availableSignIn(): Promise<SignInMethod[]>;
+  signIn(method: SignInMethod): Promise<CloudUser>;
   signOut(): Promise<void>;
 
   // ── 台帳の控え ──────────────────────────────────

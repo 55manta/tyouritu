@@ -34,7 +34,7 @@ export default function SettingsScreen({ navigation }: Props) {
   const c = useColors();
   const {
     customers, settings, updateSettings, resetToSamples, clearAll,
-    cloudAvailable, user, syncState, canSignInWithApple, signInWithApple, signOut,
+    cloudAvailable, user, syncState, signInMethods, signIn, signOut,
   } = useApp();
 
   const [dur, setDur] = useState(String(settings.durationMinutes));
@@ -73,7 +73,7 @@ export default function SettingsScreen({ navigation }: Props) {
                     <Text style={{ color: c.ink2, fontSize: 13.5 }}>{user.email}</Text>
                   ) : null}
                   <Text style={{ color: c.ink2, fontSize: 13, lineHeight: 20 }}>
-                    端末を無くしても、新しい端末で同じ Apple ID でサインインすれば台帳が戻ります。
+                    端末を無くしても、新しい端末で同じアカウントからサインインすれば台帳が戻ります。
                   </Text>
                   {syncState === 'failed' && (
                     <Text style={{ color: c.overdueInk, fontSize: 13, lineHeight: 20 }}>
@@ -101,15 +101,18 @@ export default function SettingsScreen({ navigation }: Props) {
                     端末を無くしたり、初期化したりすると、台帳は戻せません。{'\n'}
                     サインインしておくと控えが残り、新しい端末で元どおりに開けます。
                   </Text>
-                  {canSignInWithApple ? (
-                    <Button
-                      label="Apple でサインイン"
-                      style={{ marginTop: 6 }}
-                      onPress={async () => {
-                        const r = await signInWithApple();
-                        if (!r.ok && r.reason) Alert.alert('サインインできませんでした', r.reason);
-                      }}
-                    />
+                  {signInMethods.length > 0 ? (
+                    signInMethods.map((m) => (
+                      <Button
+                        key={m}
+                        label={m === 'apple' ? 'Apple でサインイン' : 'Google でサインイン'}
+                        style={{ marginTop: 6 }}
+                        onPress={async () => {
+                          const r = await signIn(m);
+                          if (!r.ok && r.reason) Alert.alert('サインインできませんでした', r.reason);
+                        }}
+                      />
+                    ))
                   ) : (
                     <Text style={{ color: c.ink2, fontSize: 13 }}>
                       この端末では、まだサインインの方法をご用意できていません。

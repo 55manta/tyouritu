@@ -7,7 +7,7 @@ import type { Customer, Piano, Settings, Visit, WorkRecord } from '../types';
 import { DEFAULT_SETTINGS, FREE_LIMIT } from '../types';
 import * as db from './db';
 import { cloud } from './cloud';
-import type { CloudUser } from './cloudTypes';
+import type { CloudUser, SignInMethod } from './cloudTypes';
 
 /**
  * アプリ全体の状態。
@@ -71,8 +71,9 @@ type Ctx = {
   user: CloudUser;
   /** 控えの状況。画面に出して、黙って失敗している状態を作らない */
   syncState: 'off' | 'syncing' | 'synced' | 'failed';
-  canSignInWithApple: boolean;
-  signInWithApple: () => Promise<{ ok: true } | { ok: false; reason: string }>;
+  /** この端末で使えるサインインの方法。iOSはApple、AndroidはGoogle */
+  signInMethods: SignInMethod[];
+  signIn: (method: SignInMethod) => Promise<{ ok: true } | { ok: false; reason: string }>;
   signOut: () => Promise<void>;
 };
 
@@ -85,7 +86,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [saveFailed, setSaveFailed] = useState(false);
   const [user, setUser] = useState<CloudUser>(null);
   const [syncState, setSyncState] = useState<'off' | 'syncing' | 'synced' | 'failed'>('off');
-  const [canApple, setCanApple] = useState(false);
+  const [signInMethods, setSignInMethods] = useState<SignInMethod[]>([]);
 
   /** 最後にクラウドへ送った内容。差分だけ送るために持つ */
   const pushed = useRef<Map<string, Customer>>(new Map());
@@ -97,7 +98,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setSettings(st);
       setReady(true);
     })();
-    cloud.canSignInWithApple().then(setCanApple);
+    cloud.availableSignIn().then(setSignInMethods);
     return cloud.onUser(setUser);
   }, []);
 
@@ -408,11 +409,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       cloudAvailable: cloud.available,
       user,
       syncState,
-      canSignInWithApple: canApple,
+      signInMethods,
 
-      signInWithApple: async () => {
+      signIn: async (method) => {
         try {
-          await cloud.signInWithApple();
+          await cloud.signIn(method);
           return { ok: true as const };
         } catch (e) {
           const code = (e as { code?: string }).code || '';
@@ -438,7 +439,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       clearAll: async () => { await commit([]); },
     }),
-    [ready, customers, settings, saveFailed, find, replace, commit, user, syncState, canApple]
+    [ready, customers, settings, saveFailed, find, replace, commit, user, syncState, signInMethods]
   );
 
   return <AppCtx.Provider value={value}>{children}</AppCtx.Provider>;

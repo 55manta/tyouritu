@@ -14,8 +14,8 @@ export const cloud: Cloud = {
     cb(null);
     return () => {};
   },
-  async canSignInWithApple() { return false; },
-  async signInWithApple() { return null; },
+  async availableSignIn() { return []; },
+  async signIn() { return null; },
   async signOut() {},
 
   async pushCustomer() {},

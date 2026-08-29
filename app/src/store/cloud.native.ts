@@ -1,17 +1,26 @@
 import { Platform } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { getApp } from '@react-native-firebase/app';
 import {
   getAuth, onAuthStateChanged, signInWithCredential, signOut as fbSignOut,
-  AppleAuthProvider,
+  AppleAuthProvider, GoogleAuthProvider,
 } from '@react-native-firebase/auth';
 import {
   getFirestore, doc, collection, getDocs, setDoc, deleteDoc, onSnapshot,
   serverTimestamp,
 } from '@react-native-firebase/firestore';
 
-import type { Cloud, CloudUser, BookingMirror, BookingReply } from './cloudTypes';
+import type { Cloud, CloudUser, BookingMirror, BookingReply, SignInMethod } from './cloudTypes';
 import type { Customer, Settings } from '../types';
+
+/**
+ * Google 側の「ウェブ クライアント ID」。Firebase の Google プロバイダを
+ * 有効にすると発行される（google-services.json の client_type: 3）。
+ * 秘密ではない。
+ */
+const GOOGLE_WEB_CLIENT_ID =
+  '256206159985-ah138ob5ah1nj0ltaaa9uupttiltmaih.apps.googleusercontent.com';
 
 /**
  * 実機のクラウド入口。
@@ -44,25 +53,36 @@ export const cloud: Cloud = {
     return onAuthStateChanged(auth, (u) => cb(toUser(u)));
   },
 
-  async canSignInWithApple() {
-    if (Platform.OS !== 'ios') return false;
-    try {
-      return await AppleAuthentication.isAvailableAsync();
-    } catch {
-      return false;
+  async availableSignIn() {
+    if (Platform.OS === 'ios') {
+      try {
+        return (await AppleAuthentication.isAvailableAsync()) ? ['apple' as const] : [];
+      } catch {
+        return [];
+      }
     }
+    if (Platform.OS === 'android') return ['google' as const];
+    return [];
   },
 
-  async signInWithApple() {
-    // 氏名は使わないので求めない。サインインの画面で聞くことを1つ減らす。
-    // 本人を見分けるのはメールアドレス（Firebase 側に残るので2回目以降も引ける）。
-    const res = await AppleAuthentication.signInAsync({
-      requestedScopes: [AppleAuthentication.AppleAuthenticationScope.EMAIL],
-    });
-    if (!res.identityToken) throw new Error('Apple から本人確認の情報を受け取れませんでした。');
+  async signIn(method: SignInMethod) {
+    if (method === 'apple') {
+      // 氏名は使わないので求めない。サインインの画面で聞くことを1つ減らす。
+      // 本人を見分けるのはメールアドレス（Firebase 側に残るので2回目以降も引ける）。
+      const res = await AppleAuthentication.signInAsync({
+        requestedScopes: [AppleAuthentication.AppleAuthenticationScope.EMAIL],
+      });
+      if (!res.identityToken) throw new Error('Apple から本人確認の情報を受け取れませんでした。');
+      await signInWithCredential(auth, AppleAuthProvider.credential(res.identityToken));
+      return toUser(auth.currentUser);
+    }
 
-    const credential = AppleAuthProvider.credential(res.identityToken);
-    await signInWithCredential(auth, credential);
+    GoogleSignin.configure({ webClientId: GOOGLE_WEB_CLIENT_ID });
+    await GoogleSignin.hasPlayServices();
+    const res = await GoogleSignin.signIn();
+    const idToken = res.data?.idToken;
+    if (!idToken) throw new Error('Google から本人確認の情報を受け取れませんでした。');
+    await signInWithCredential(auth, GoogleAuthProvider.credential(idToken));
     return toUser(auth.currentUser);
   },
 
