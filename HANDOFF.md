@@ -355,3 +355,26 @@ expo-doctor が検出する。割ペイも 0.86.0 なので同じ確認をした
 リンク先が無い。ページはお客様の応答（お願いします／見送ります）を書き戻す先が要るため、
 Firebase の用意が前提になる。ドメイン `choritsu-note.app` も未取得。
 置き場所を変えるときは `src/lib/messages.ts` の `BOOKING_ORIGIN` だけ直せばよい。
+
+## 16. Firebase（2026-08-29 用意まで）
+
+| | |
+|---|---|
+| プロジェクト | `choritsu-note`（割ペイの `warikan-bu` とは分ける） |
+| 親リソース | `izumikawa.jp`（Workspace組織配下のため選択が必須だった） |
+| Google アナリティクス | **無効**。お客様の氏名・住所を扱うので既定では入れない。必要になれば後から有効化できる |
+| Firestore | Standard エディション / `(default)` / **asia-northeast1（東京）** |
+| セキュリティルール | 本番環境モード（`allow read, write: if false`）で作成。まだ何も開けていない |
+
+ロケーションは**後から変更できない**。日本のお客様の個人情報を置くので東京にした。
+
+まだ**アプリの登録（iOS / Android）はしていない**。登録すると
+`GoogleService-Info.plist` と `google-services.json` のダウンロードが要る。
+`@react-native-firebase` の導入とデータ層の書き換えは、Firestore の
+コレクション設計とセキュリティルールを決めてから一度にやる。
+
+## 17. 0.2.0 の配信（2026-08-29）
+
+`0.2.0 (build 7)` を EAS でビルドし、TestFlight へ提出済み。
+Internal グループは自動配信なので、Apple の処理が終われば内部テスターに届く。
+中身はフェーズ2まで（保存はまだ端末内の AsyncStorage）。
