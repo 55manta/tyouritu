@@ -522,17 +522,32 @@
   .photo-pair .photo-thumb { width: 100%; height: auto; aspect-ratio: 1; margin-top: 6px; }
 
   /* A4/A5 お客様側の画面（デモ） */
+  /* お客様から「お願いします」が届いた先 */
+  .req-card { background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 34%, transparent);
+    border-radius: 16px; padding: 14px 15px; margin-bottom: 12px; }
+  .rq-head { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 800;
+    letter-spacing: .04em; color: var(--accent-ink); }
+  .rq-head svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2.4; flex: 0 0 auto; }
+  .rq-when { margin-left: auto; font-weight: 700; color: var(--ink-2); font-size: 11.5px; }
+  .rq-name { font-size: 17px; font-weight: 800; margin-top: 6px; cursor: pointer; }
+  .rq-room { font-size: 12.5px; font-weight: 600; color: var(--ink-2); margin-left: 8px; }
+  .rq-note { font-size: 13px; color: var(--ink-2); line-height: 1.65; margin-top: 5px; }
+  .rq-acts { display: flex; gap: 8px; margin-top: 11px; }
+  .rq-acts .btn { flex: 1; }
+  .rq-acts .btn.ghost { flex: 0 0 auto; padding: 0 15px; }
   .cust-view { border: 1px solid var(--line-strong); border-radius: 16px; overflow: hidden; background: var(--surface); }
   .cv-bar { background: var(--ink); color: var(--ground); font-size: 11px; letter-spacing: .1em; text-align: center; padding: 6px; font-weight: 700; }
   .cv-body { padding: 16px 15px; }
   .cv-body h4 { font-size: 16px; margin: 0 0 4px; font-weight: 800; }
   .cv-body .cvs { font-size: 12.5px; color: var(--ink-2); line-height: 1.7; margin: 0 0 14px; }
-  .cv-slot { display: flex; align-items: center; gap: 11px; width: 100%; border: 1px solid var(--line-strong); background: var(--surface); border-radius: 12px; padding: 13px 14px; margin-bottom: 8px; font-family: inherit; cursor: pointer; color: var(--ink); text-align: left; }
-  .cv-slot:active { transform: scale(.99); }
-  .cv-slot .dd { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
-  .cv-slot .ww { font-size: 12px; color: var(--accent-ink); font-weight: 700; }
-  .cv-slot .go { margin-left: auto; color: var(--ink-3); font-size: 17px; }
-  .cv-skip { width: 100%; border: none; background: none; color: var(--ink-3); font-size: 13px; font-family: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; padding: 12px 0 2px; }
+  /* お客様が押すのはこの2つだけ。日付は選ばせない（重複予約を作らないため） */
+  .cv-go { display: block; width: 100%; border: none; background: var(--accent); color: var(--on-accent);
+    border-radius: 12px; padding: 0 14px; min-height: 52px; margin-bottom: 8px; font-family: inherit;
+    font-size: 16px; font-weight: 800; cursor: pointer; }
+  .cv-go:active { transform: scale(.99); }
+  .cv-skip { width: 100%; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2);
+    border-radius: 12px; min-height: 48px; font-size: 14px; font-family: inherit; cursor: pointer; padding: 0 14px; }
+  .cv-skip:active { transform: scale(.99); }
   .cv-done { text-align: center; padding: 22px 10px; }
   .cv-done .ic { width: 46px; height: 46px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-ink); display: grid; place-items: center; margin: 0 auto 11px; font-size: 22px; }
   .cv-done .t { font-size: 15px; font-weight: 800; margin-bottom: 5px; }
@@ -721,7 +736,6 @@
   .cond-item .cn { font-size: 12px; }
   .cond-item .cv { font-size: 13.5px; }
   .cv-body .cvs { font-size: 13.5px; }
-  .cv-slot .ww { font-size: 13px; }
   .cv-done .s { font-size: 14px; }
   .diff-line { font-size: 13.5px; }
   .diff-line .dk { font-size: 12.5px; flex-basis: 104px; }
@@ -868,6 +882,7 @@
       <!-- HOME -->
       <section class="view active" id="view-home">
         <h1 class="view-title" id="homeTitle">ご案内</h1>
+        <div id="reqStrip"></div>
         <div id="todayStrip"></div>
         <div id="dueStrip"></div>
         <div class="hero" id="homeHero">
@@ -1663,6 +1678,42 @@
     return todays.length;
   }
 
+  /* お客様から「お願いします」が届いた先。
+     日付はお客様に決めさせないので、ここから調律師が日程を押さえる。 */
+  function renderRequests() {
+    var box = $("reqStrip"); if (!box) return;
+    var arr = state.filter(function (c) { return c.request; });
+    if (!arr.length) { box.innerHTML = ""; return; }
+    box.innerHTML = arr.map(function (c) {
+      var r = c.request;
+      var rooms = (r.pianoIds || []).map(function (id) {
+        var p = findPiano(c, id); return p ? p.room : null;
+      }).filter(Boolean).join("・");
+      var ik = r.intake || {};
+      var detail = [];
+      if (r.want) detail.push("ご希望：" + r.want);
+      if (ik.items && ik.items.length) detail.push(ik.items.join("／"));
+      if (ik.note) detail.push("「" + ik.note + "」");
+      return '<div class="req-card">'
+        + '<div class="rq-head">'+ICON.check+'<span>ご依頼をいただきました</span>'
+        +   '<span class="rq-when">'+esc(fmtMd(fromIso(r.at)))+'</span></div>'
+        + '<div class="rq-name" data-open="'+c.id+'">'+esc(c.name)+' 様'
+        +   (rooms ? '<span class="rq-room">'+esc(rooms)+'</span>' : '')+'</div>'
+        + (detail.length ? '<div class="rq-note">'+esc(detail.join(" ・ "))+'</div>' : '')
+        + '<div class="rq-acts">'
+        +   '<button class="btn primary" data-reqappt="'+c.id+'">'+ICON.appt+'日程を決める</button>'
+        +   '<button class="btn ghost" data-reqclear="'+c.id+'">取り下げ</button>'
+        + '</div></div>';
+    }).join("");
+    box.querySelectorAll("[data-open]").forEach(function (b) { b.onclick = function () { openDetail(b.getAttribute("data-open")); }; });
+    box.querySelectorAll("[data-reqappt]").forEach(function (b) { b.onclick = function () { openAppt(b.getAttribute("data-reqappt")); }; });
+    box.querySelectorAll("[data-reqclear]").forEach(function (b) { b.onclick = function () {
+      var c = find(b.getAttribute("data-reqclear")); if (!c) return;
+      c.request = null; save(); refreshAll();
+      toast("ご依頼を取り下げました。");
+    }; });
+  }
+
   function renderHome() {
     /* はじめて使うとき（お客様が1軒もない） */
     if (!state.length) { renderOnboard(); return; }
@@ -1670,6 +1721,7 @@
     $("roiBanner").style.display = "";
 
     var nToday = renderToday();
+    renderRequests();
     var groups = { overdue:[], due:[], next:[], dormant:[] };
     var dueTotal = 0, dueYen = 0;
     state.forEach(function (c) {
@@ -1725,7 +1777,7 @@
 
   /** はじめて使うとき。全件入力を求めない＝これが導入の分かれ目になる。 */
   function renderOnboard() {
-    $("todayStrip").innerHTML = ""; $("dueStrip").innerHTML = "";
+    $("reqStrip").innerHTML = ""; $("todayStrip").innerHTML = ""; $("dueStrip").innerHTML = "";
     $("homeHero").style.display = "none"; $("roiBanner").style.display = "none";
     $("homeTitle").style.display = "none";
     $("reminderList").innerHTML = '<div class="onboard">'
@@ -1937,52 +1989,43 @@
     if (b) b.onclick = function () { openCustomerView(id); };
   }
 
-  /* ---------- A4 / A5：お客様に届く画面（ワンタップ再予約・見送り） ---------- */
-  function candidateDates(c) {
-    var out = [], d = addDays(today(), 10), guard = 0;
-    var busyDays = {};
-    allVisits().forEach(function (x) { busyDays[x.v.date] = (busyDays[x.v.date]||0) + 1; });
-    while (out.length < 3 && guard++ < 120) {
-      var wd = d.getDay();
-      if (wd !== 0 && (busyDays[iso(d)] || 0) < 2) out.push(new Date(d));
-      d = addDays(d, wd === 6 ? 3 : 2);
-    }
-    return out;
-  }
-
+  /* ---------- お客様に届く画面（お願いします／見送ります） ---------- */
   function openCustomerView(cid) {
     var c = find(cid); if (!c) return;
     var pianos = pendingPianos(c);
     if (!pianos.length) pianos = c.pianos.slice();
     var base = pianos.reduce(function (s,p) { return s + (p.fee||0); }, 0);
     var sur  = pianos.reduce(function (s,p) { return s + surcharge(p); }, 0);
-    var dates = candidateDates(c);
     var sheet = $("sheet");
+    var picked = {};
 
-    var newVisit = null, picked = {};
-
+    /* お客様に日付を選ばせない。
+       選ばせると、同じ空き日を提示した相手が別々に確定でき、重複が起きる。
+       ここで受け取るのは「お願いします／見送ります」の意思だけ。
+       日程は調律師が押さえる——お願いすると言った相手に連絡するのは、営業ではない。 */
     function paint(step) {
       var body, note;
       if (step === "intake") {
-        /* C3：事前問診。顧客の「なんか変」を、行く前に具体化しておく */
-        body = '<h4>ご予約ありがとうございます</h4>'
-          + '<p class="cvs">'+esc(fmtMd(fromIso(newVisit.date)))+' にお伺いします。<br>'
-          + '当日までに、気になっていることを教えてください。<br>準備して伺えます。</p>'
+        body = '<h4>ありがとうございます</h4>'
+          + '<p class="cvs">日程は、あらためてご連絡します。<br>'
+          + 'よろしければ、ご希望と気になっていることを教えてください。</p>'
+          + '<div class="field"><label>ご希望の時期（任意）</label>'
+          +   '<input id="ikWant" placeholder="例：来月の土日が助かります">'
+          +   '</div>'
           + '<div class="intake-pick">' + INTAKE_ITEMS.map(function (t, i) {
               return '<label><input type="checkbox" data-ik="'+i+'"'+(picked[i]?" checked":"")+'><span>'+esc(t)+'</span></label>';
             }).join("") + '</div>'
           + '<div class="field"><label>どの曲の、どのあたりで気づきましたか（任意）</label>'
           +   '<textarea id="ikNote" placeholder="例：エリーゼのために の出だし、右手の高いミのあたり"></textarea>'
           +   '</div>'
-          + '<button class="cv-slot" id="ikSend" style="justify-content:center;background:var(--accent);color:var(--on-accent);border-color:var(--accent)">'
-          +   '<span class="dd" style="font-size:14px">この内容で送る</span></button>'
-          + '<button class="cv-skip" id="ikSkip">特にないので飛ばす</button>';
-        note = 'お客様の「なんか変」と、測ってみた数値は食い違うことがあります。行く前に「どの曲のどこで」を引き出しておくと、原因の絞り込みが早くなります。';
-      } else if (step === "booked") {
-        body = '<div class="cv-done"><div class="ic">'+ICON.appt+'</div>'
-          + '<div class="t">ご予約を承りました</div>'
-          + '<div class="s">当日の訪問時間は、前日の夕方までに<br>あらためてご連絡します。</div></div>';
-        note = 'お客様の操作で第2層（日付だけ確定）の予定が入りました。時間は前日にまとめて決められます。';
+          + '<button class="cv-go" id="ikSend">この内容で送る</button>'
+          + '<button class="cv-skip" id="ikSkip">特にないので、そのまま送る</button>';
+        note = '日付を選ばせないので、重複予約が起きません。希望の時期だけ聞いておけば、こちらで日程を組めます。';
+      } else if (step === "requested") {
+        body = '<div class="cv-done"><div class="ic">'+ICON.check+'</div>'
+          + '<div class="t">ご依頼を承りました</div>'
+          + '<div class="s">日程について、あらためて<br>ご連絡いたします。</div></div>';
+        note = '調律師側の「ご案内」画面の先頭に、ご依頼として出ます。そこから日程を決めます。';
       } else if (step === "skipped") {
         body = '<div class="cv-done"><div class="ic">'+ICON.clock+'</div>'
           + '<div class="t">承知しました</div>'
@@ -1993,15 +2036,10 @@
           + '<p class="cvs">'+esc(c.name)+' 様<br>'
           +   esc(pianos.map(function(p){return p.room;}).join("・"))+'　'
           +   '料金の目安 '+money(base+sur)+(sur?'（期間があいたぶんの調整 '+money(sur) + 'を含む）':'')+'<br>'
-          +   'ご都合のよい日をお選びください。</p>'
-          + dates.map(function (d) {
-              return '<button class="cv-slot" data-book="'+iso(d)+'">'
-                + '<span class="dd">'+(d.getMonth()+1)+'/'+d.getDate()+'</span>'
-                + '<span class="ww">'+WD[d.getDay()]+'曜日</span>'
-                + '<span class="go">›</span></button>';
-            }).join("")
-          + '<button class="cv-skip" data-cskip="1">今回は見送る</button>';
-        note = 'お客様はアプリを入れる必要がありません。ご案内メッセージのリンクを開くだけです。年に1回しか使わないので、ここは軽くしておくのが要点です。';
+          +   'そろそろ調律の時期です。いかがなさいますか。</p>'
+          + '<button class="cv-go" data-creq="1">お願いします</button>'
+          + '<button class="cv-skip" data-cskip="1">今回は見送ります</button>';
+        note = 'お客様はアプリを入れません。ご案内のリンクを開いて、どちらかを押すだけです。';
       }
 
       sheet.innerHTML = '<h3>お客様に届く画面</h3><p class="to">'+esc(bookingUrl(c))+'</p>'
@@ -2011,31 +2049,31 @@
         + '<div class="form-actions"><button class="btn ghost" id="sheetCancel" style="flex:1">閉じる</button></div>';
       $("sheetCancel").onclick = function () { closeSheet(); refreshAll(cid); };
 
-      sheet.querySelectorAll("[data-book]").forEach(function (b) {
-        b.onclick = function () {
-          c.visits = c.visits || [];
-          newVisit = { id: uid("v"), date: b.getAttribute("data-book"), time: "", pianoIds: pianos.map(function(p){return p.id;}), note: "お客様がWebから選択" };
-          c.visits.push(newVisit);
-          pianos.forEach(function (p) { p.skippedCycle = null; p.custSkippedCycle = null; });
-          save(); paint("intake");
-          toast("お客様が日付を選びました。続けて事前のお申し出を伺います。");
-        };
-      });
+      var rq = sheet.querySelector("[data-creq]");
+      if (rq) rq.onclick = function () { paint("intake"); };
 
       sheet.querySelectorAll("[data-ik]").forEach(function (b) {
         b.onchange = function () { picked[+b.getAttribute("data-ik")] = b.checked; };
       });
-      if ($("ikSend")) $("ikSend").onclick = function () {
+      function commitRequest() {
         var items = INTAKE_ITEMS.filter(function (t, i) { return picked[i]; });
-        newVisit.intake = { items: items, note: $("ikNote").value.trim(), at: iso(today()) };
-        save(); paint("booked");
-        toast(items.length || newVisit.intake.note ? "事前のお申し出を受け取りました。" : "ご予約を確定しました。");
-      };
-      if ($("ikSkip")) $("ikSkip").onclick = function () { paint("booked"); };
+        c.request = {
+          at: iso(today()),
+          pianoIds: pianos.map(function (p) { return p.id; }),
+          want: ($("ikWant") ? $("ikWant").value.trim() : ""),
+          intake: { items: items, note: ($("ikNote") ? $("ikNote").value.trim() : "") }
+        };
+        pianos.forEach(function (p) { p.skippedCycle = null; p.custSkippedCycle = null; });
+        save(); paint("requested");
+        toast(c.name + " 様からご依頼をいただきました。日程を決めてください。");
+      }
+      if ($("ikSend")) $("ikSend").onclick = commitRequest;
+      if ($("ikSkip")) $("ikSkip").onclick = commitRequest;
 
       var sk = sheet.querySelector("[data-cskip]");
       if (sk) sk.onclick = function () {
         pianos.forEach(function (p) { p.custSkippedCycle = cycleKey(p); });
+        c.request = null;
         save(); paint("skipped");
         toast("お客様が見送りを選ばれました。次の時期にまたご案内します。");
       };
@@ -2082,6 +2120,7 @@
       if (!ids.length) { toast("ピアノを1台以上選んでください。"); return; }
       c.visits = c.visits || [];
       c.visits.push({ id: uid("v"), date: dv, time: tbd.checked ? "" : tin.value, pianoIds: ids, note: "" });
+      c.request = null;   // 日程が決まればご依頼は片付く
       save(); closeSheet(); refreshAll(id);
       toast(tbd.checked ? "日付を押さえました。時間は前日までに決められます。" : "日時を予定に入れました。");
     };
@@ -4264,6 +4303,7 @@
       v.pianoIds = ids;
       return ids.length > 0;
     });
+    recCust.request = null;   // 伺ったので、ご依頼は片付く
     var ok = save();
     var nc = recCust, np = recPiano, nm = recCust.name, rm = recPiano.room;
     var wasCycle = countsToCycle(entry), kn = kindName(entry.kind);
