@@ -491,3 +491,44 @@ Windows では iOS の prebuild が動かないので、**Android で prebuild �
   （ウェブAPIキーと同じで秘密ではない。守っているのはセキュリティルール）
 - **Apple ログインを有効化**。iOS ネイティブの流れなのでサービスIDは不要
 - Hosting を有効化。`/b/**` は `noindex` と `no-store` を付けている
+
+### 0.3.0 のビルドで詰まった3点（次回のため）
+
+**1. pod install が落ちる（SPM と静的リンクの衝突）**
+
+react-native-firebase 26 は Firebase を SPM で解決する。SPM は静的リンクと
+両立しない（各 pod が Firebase の写しを抱え、リンク時に重複シンボルになる）。
+
+対処は `app.json` のプラグイン設定で CocoaPods 側に寄せる。
+
+```json
+["@react-native-firebase/app", { "ios": { "disableSPM": true } }]
+```
+
+`useFrameworks: "static"` はそのまま。動的リンクにすると起動が遅くなるうえ、
+Xcode 26 の SPM は追加の設定が要るとパッケージ側が書いているため。
+
+**2. Provisioning Profile に Sign In with Apple が入っていない**
+
+`expo-apple-authentication` を足しても、Apple Developer 側の App ID で
+capability を有効にしないと署名で落ちる。
+
+Developer Portal → Identifiers → `jp.izumikawa.choritsunote` →
+チェックボックス `APPLE_ID_AUTH` を入れて保存 →
+**「アプリの機能を変更する」ダイアログで「確認する」を押す**（押さないと静かに未保存）。
+翻訳で表示が化けるので、値は DOM の id で確かめること。
+
+**3. capability を変えると、既存のプロファイルが無効になる**
+
+Apple 側で無効化されるが、Expo に保存された記録は "Valid" のままなので、
+そのままビルドすると同じ失敗を繰り返す。Expo の認証情報ページで
+**プロビジョニングプロファイルだけを削除**し（証明書は残す）、EAS に作り直させる。
+
+ただし非対話モードでは Apple Team ID を聞かれて止まる。環境変数で渡す：
+
+```bash
+EXPO_APPLE_TEAM_ID=KPXFL5CQN8 EXPO_APPLE_TEAM_TYPE=INDIVIDUAL npx eas-cli build --platform ios --profile production --non-interactive
+```
+
+これで EAS が capability を同期した新しいプロファイルを自動で作る。
+`.p8` の鍵ファイルを手元に置く必要はない。
