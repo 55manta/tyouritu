@@ -4,10 +4,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { Button, Card, StatusPill, Title } from '../components/ui';
+import { ReminderSheet } from '../components/ReminderSheet';
+import { SendSheet } from '../components/SendSheet';
 import { dueDate, dueStatus, kindName } from '../lib/cycle';
-import { fmtJ, fmtJd, fromIso, iso, today } from '../lib/date';
+import { fmtJ, fmtJd, fmtMd, fromIso, iso, today } from '../lib/date';
+import { prepMessage } from '../lib/messages';
 import { gapText, money, needsRoughTuning } from '../lib/pricing';
-import { customerStats, fullAddr, pianoName, quoted, recordTotal } from '../lib/select';
+import {
+  customerStats, fullAddr, pendingPianos, pianoName, quoted, recordTotal, reminderState,
+} from '../lib/select';
 import { newToken, uid } from '../store/db';
 import { useApp } from '../store/AppContext';
 import { MIN_TAP, useColors } from '../theme/useColors';
@@ -18,9 +23,14 @@ type Props = NativeStackScreenProps<RootStackParamList, 'CustomerDetail'>;
 export default function CustomerDetailScreen({ route, navigation }: Props) {
   const c = useColors();
   const { id } = route.params;
-  const { find, settings, updateCustomer, deleteCustomer, deletePiano, addVisit } = useApp();
+  const {
+    find, settings, updateCustomer, deleteCustomer, deletePiano,
+    addVisit, updateVisit, deleteVisit, skipCycle, unskipCycle,
+  } = useApp();
   const customer = find(id);
   const [openHistory, setOpenHistory] = useState<string | null>(null);
+  const [remindOpen, setRemindOpen] = useState(false);
+  const [prepVisitId, setPrepVisitId] = useState<string | null>(null);
 
   if (!customer) {
     return (
@@ -32,6 +42,11 @@ export default function CustomerDetailScreen({ route, navigation }: Props) {
 
   const stats = customerStats(customer);
   const surcharge = settings.locale === 'ja-JP';
+  const pending = pendingPianos(customer);
+  const rs = reminderState(pending);
+  const skipped = rs === 'skipped' || rs === 'custSkipped';
+  const prepVisit = customer.visits.find((v) => v.id === prepVisitId) ?? null;
+  const visits = [...customer.visits].sort((a, b) => a.date.localeCompare(b.date));
 
   const confirmDelete = () => {
     Alert.alert(
@@ -82,6 +97,45 @@ export default function CustomerDetailScreen({ route, navigation }: Props) {
           </Card>
         )}
 
+        {pending.length > 0 && (
+          <Card style={{ borderColor: skipped ? c.line : c.accent }}>
+            <Text style={[st.sec, { color: c.ink }]}>調律のご案内</Text>
+            <Text style={{ color: c.ink2, fontSize: 13.5 }}>
+              {pending.length}台が時期を迎えています。合計 約
+              {money(pending.reduce((s, p) => s + quoted(p, surcharge), 0))}
+            </Text>
+            {skipped ? (
+              <View style={st.skipRow}>
+                <Text style={{ color: c.ink2, fontSize: 13.5, flex: 1 }}>
+                  {rs === 'custSkipped'
+                    ? 'お客様が「今回は見送る」を選ばれました'
+                    : '今回のご案内は見送りました'}
+                </Text>
+                <Pressable onPress={() => unskipCycle(id)} style={st.toggle}>
+                  <Text style={{ color: c.accentInk, fontSize: 13.5, fontWeight: '700' }}>取り消す</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <>
+                <View style={st.row}>
+                  <Button
+                    label={rs === 'reminded' ? 'もう一度ご案内する' : 'ご案内を送る'}
+                    variant={rs === 'reminded' ? 'ghost' : 'primary'}
+                    style={{ flex: 1 }}
+                    onPress={() => setRemindOpen(true)}
+                  />
+                  <Button label="見送る" variant="ghost" onPress={() => skipCycle(id)} />
+                </View>
+                {rs === 'reminded' && (
+                  <Text style={{ color: c.ink2, fontSize: 13 }}>
+                    ご案内を送りました。お客様のお返事を待っています。
+                  </Text>
+                )}
+              </>
+            )}
+          </Card>
+        )}
+
         <Card>
           <Text style={{ color: c.ink, fontSize: 15 }}>{fullAddr(customer) || '（住所が未登録）'}</Text>
           {customer.parking ? <Text style={{ color: c.ink2, fontSize: 13.5 }}>駐車場　{customer.parking}</Text> : null}
@@ -111,6 +165,49 @@ export default function CustomerDetailScreen({ route, navigation }: Props) {
               </View>
             ))}
           </Card>
+        )}
+
+        {visits.length > 0 && (
+          <>
+            <Text style={[st.sec, { color: c.ink, marginTop: 8 }]}>予定</Text>
+            {visits.map((v) => (
+              <Card key={v.id} style={{ marginBottom: 10 }}>
+                <View style={st.rowTop}>
+                  <Text style={{ color: c.ink, fontSize: 16, fontWeight: '800' }}>
+                    {fmtMd(fromIso(v.date))}
+                  </Text>
+                  <Text style={{ color: v.time ? c.ink : c.brassInk, fontSize: 15, fontWeight: '700' }}>
+                    {v.time || '時間未定'}
+                  </Text>
+                </View>
+                <Text style={{ color: c.ink2, fontSize: 13.5 }}>
+                  {v.pianoIds.length}台{v.note ? ` ・ ${v.note}` : ''}
+                </Text>
+                {v.prepSent ? (
+                  <Text style={{ color: c.ink2, fontSize: 13 }}>
+                    訪問前のご案内を {fmtJd(fromIso(v.prepSent))} に送りました
+                  </Text>
+                ) : null}
+                <View style={st.row}>
+                  <Button
+                    label={v.prepSent ? '訪問前のご案内をもう一度送る' : '訪問前のご案内を送る'}
+                    variant={v.prepSent ? 'ghost' : 'primary'}
+                    style={{ flex: 1 }}
+                    onPress={() => setPrepVisitId(v.id)}
+                  />
+                </View>
+                <Pressable
+                  onPress={() => Alert.alert('この予定を取り消しますか', `${fmtMd(fromIso(v.date))}の訪問予定を消します。`, [
+                    { text: 'やめておく', style: 'cancel' },
+                    { text: '取り消す', style: 'destructive', onPress: () => deleteVisit(id, v.id) },
+                  ])}
+                  style={st.toggle}
+                >
+                  <Text style={{ color: c.ink3, fontSize: 12.5 }}>この予定を取り消す</Text>
+                </Pressable>
+              </Card>
+            ))}
+          </>
         )}
 
         <Text style={[st.sec, { color: c.ink, marginTop: 8 }]}>ピアノ</Text>
@@ -188,7 +285,7 @@ export default function CustomerDetailScreen({ route, navigation }: Props) {
               return (
                 <Pressable key={label} onPress={() => setConsent(v)}
                   style={[st.chip, { backgroundColor: on ? c.accent : c.surface, borderColor: on ? c.accent : c.lineStrong }]}>
-                  <Text style={{ color: on ? '#FFF' : c.ink2, fontSize: 13.5, fontWeight: '700' }}>{label}</Text>
+                  <Text style={{ color: on ? c.onAccent : c.ink2, fontSize: 13.5, fontWeight: '700' }}>{label}</Text>
                 </Pressable>
               );
             })}
@@ -208,6 +305,27 @@ export default function CustomerDetailScreen({ route, navigation }: Props) {
           <Text style={{ color: c.overdueInk, fontSize: 14, fontWeight: '700' }}>このお客様を削除する</Text>
         </Pressable>
       </ScrollView>
+
+      <ReminderSheet customerId={remindOpen ? id : null} onClose={() => setRemindOpen(false)} />
+
+      <SendSheet
+        visible={!!prepVisit}
+        customer={customer}
+        title="訪問前のご案内を送る"
+        subtitle={
+          prepVisit
+            ? `${customer.name} 様 ・ ${fmtMd(fromIso(prepVisit.date))}${prepVisit.time ? ` ${prepVisit.time}` : ''}`
+            : ''
+        }
+        subject="調律に伺う前のご案内"
+        message={prepVisit ? prepMessage(customer, prepVisit, settings.durationMinutes) : ''}
+        note="当日の不安を先に消しておくと、立ち会いや駐車の行き違いが減ります。"
+        onClose={() => setPrepVisitId(null)}
+        onSent={async () => {
+          if (prepVisit) await updateVisit(id, prepVisit.id, { prepSent: iso(today()) });
+          setPrepVisitId(null);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -231,6 +349,7 @@ const st = StyleSheet.create({
   kv: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 4 },
   warn: { fontSize: 13, lineHeight: 20, marginTop: 6, paddingHorizontal: 11, paddingVertical: 8, borderRadius: 10, overflow: 'hidden' },
   toggle: { minHeight: MIN_TAP, justifyContent: 'center' },
+  skipRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 },
   hist: { flexDirection: 'row', alignItems: 'center', gap: 10, borderTopWidth: 1, paddingVertical: 10, minHeight: MIN_TAP },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginTop: 6 },
   chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 14, minHeight: MIN_TAP, justifyContent: 'center' },

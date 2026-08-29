@@ -31,20 +31,30 @@ export function Button({
   variant?: 'primary' | 'ghost' | 'danger'; style?: ViewStyle; disabled?: boolean;
 }) {
   const c = useColors();
+  // 明るい色の地に白を置くとダークテーマで 2.2:1 まで落ちる。地ごとの文字色をパレットから採る
   const bg = variant === 'primary' ? c.accent : variant === 'danger' ? c.overdue : c.surface;
-  const fg = variant === 'ghost' ? c.ink : '#FFFFFF';
+  const fg = variant === 'ghost' ? c.ink : variant === 'danger' ? c.onOverdue : c.onAccent;
+  // 押せないときは全体を薄くしない。薄くすると地と文字が一緒に沈んで読めなくなる。
+  // 落ち着いた地に落ち着いた文字を置き、読めるまま「いまは押せない」を示す
+  const offBg = c.surface2;
+  const offFg = c.ink3;
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
       style={({ pressed }) => [
         s.btn,
-        { backgroundColor: bg, borderColor: variant === 'ghost' ? c.lineStrong : bg, opacity: disabled ? 0.45 : pressed ? 0.85 : 1 },
+        {
+          backgroundColor: disabled ? offBg : bg,
+          borderColor: disabled ? c.lineStrong : variant === 'ghost' ? c.lineStrong : bg,
+          opacity: pressed && !disabled ? 0.85 : 1,
+        },
         style,
       ]}
       accessibilityRole="button"
+      accessibilityState={{ disabled: !!disabled }}
     >
-      <Text style={[s.btnLabel, { color: fg }]}>{label}</Text>
+      <Text style={[s.btnLabel, { color: disabled ? offFg : fg }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -86,7 +96,7 @@ export function SaveAlert() {
   const c = useColors();
   return (
     <View style={[s.alert, { backgroundColor: c.overdue }]}>
-      <Text style={s.alertText}>
+      <Text style={[s.alertText, { color: c.onOverdue }]}>
         保存できていません。端末の空き容量が足りず、ここでの変更が残っていません。
       </Text>
     </View>
@@ -108,5 +118,5 @@ const s = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   empty: { paddingVertical: 40, paddingHorizontal: 24, alignItems: 'center' },
   alert: { paddingHorizontal: 15, paddingVertical: 11 },
-  alertText: { color: '#FFFFFF', fontSize: 13.5, lineHeight: 20, fontWeight: '600' },
+  alertText: { fontSize: 13.5, lineHeight: 20, fontWeight: '600' },
 });

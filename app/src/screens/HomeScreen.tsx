@@ -1,22 +1,25 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { Button, Card, Empty, SaveAlert, StatusPill, Title } from '../components/ui';
+import { ReminderSheet } from '../components/ReminderSheet';
 import { dueDate, dueStatus, type DueStatus } from '../lib/cycle';
 import { fmtJ, fmtMd, fromIso } from '../lib/date';
 import { gapText, money, needsRoughTuning } from '../lib/pricing';
 import {
-  customerStatus, pendingPianos, pianoName, quoted, shortAddr, todaysVisits,
+  customerStatus, isSkipped, pendingPianos, pianoName, quoted, reminderState,
+  shortAddr, todaysVisits,
 } from '../lib/select';
 import { useApp } from '../store/AppContext';
-import { useColors } from '../theme/useColors';
+import { MIN_TAP, useColors } from '../theme/useColors';
 import type { Customer, Piano } from '../types';
 import type { RootStackParamList } from '../navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
+type Group = { customer: Customer; pianos: Piano[] };
 
 /**
  * ご案内。
@@ -26,13 +29,14 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const c = useColors();
-  const { customers, settings, saveFailed } = useApp();
+  const { customers, settings, saveFailed, skipCycle, unskipCycle } = useApp();
   const surcharge = settings.locale === 'ja-JP';
+  const [remindTo, setRemindTo] = useState<string | null>(null);
 
   const today = useMemo(() => todaysVisits(customers), [customers]);
 
   const groups = useMemo(() => {
-    const g: Record<DueStatus, { customer: Customer; pianos: Piano[] }[]> = {
+    const g: Record<DueStatus, Group[]> = {
       overdue: [], due: [], next: [], dormant: [], calm: [],
     };
     customers.forEach((cust) => {
@@ -43,10 +47,10 @@ export default function HomeScreen() {
     return g;
   }, [customers]);
 
-  const dueCount = groups.overdue.concat(groups.due).reduce((s, x) => s + x.pianos.length, 0);
-  const dueYen = groups.overdue
-    .concat(groups.due)
-    .reduce((s, x) => s + x.pianos.reduce((t, p) => t + quoted(p, surcharge), 0), 0);
+  // 見送った台は「まだご案内が要る数」には数えない。カード自体は取り消せるように残す
+  const live = groups.overdue.concat(groups.due).filter((x) => !isSkipped(x.pianos));
+  const dueCount = live.reduce((s, x) => s + x.pianos.length, 0);
+  const dueYen = live.reduce((s, x) => s + x.pianos.reduce((t, p) => t + quoted(p, surcharge), 0), 0);
 
   const requests = customers.filter((x) => x.request);
 
@@ -72,6 +76,14 @@ export default function HomeScreen() {
       </SafeAreaView>
     );
   }
+
+  const sectionProps = {
+    nav: navigation,
+    surcharge,
+    onRemind: setRemindTo,
+    onSkip: skipCycle,
+    onUnskip: unskipCycle,
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.ground }} edges={['top']}>
@@ -129,26 +141,31 @@ export default function HomeScreen() {
           )}
         </Card>
 
-        <Section title="時期を過ぎています" items={groups.overdue} nav={navigation} surcharge={surcharge} />
-        <Section title="今月が時期" items={groups.due} nav={navigation} surcharge={surcharge} />
-        <Section title="来月が時期" items={groups.next} nav={navigation} surcharge={surcharge} />
-        <Section title="掘り起こしたいお客様" items={groups.dormant} nav={navigation} surcharge={surcharge} />
+        <Section title="時期を過ぎています" items={groups.overdue} {...sectionProps} />
+        <Section title="今月が時期" items={groups.due} {...sectionProps} />
+        <Section title="来月が時期" items={groups.next} {...sectionProps} />
+        <Section title="掘り起こしたいお客様" items={groups.dormant} {...sectionProps} />
 
         {dueCount === 0 && groups.next.length === 0 && groups.dormant.length === 0 && (
           <Empty>いまご案内が必要なピアノはありません。</Empty>
         )}
       </ScrollView>
+
+      <ReminderSheet customerId={remindTo} onClose={() => setRemindTo(null)} />
     </SafeAreaView>
   );
 }
 
 function Section({
-  title, items, nav, surcharge,
+  title, items, nav, surcharge, onRemind, onSkip, onUnskip,
 }: {
   title: string;
-  items: { customer: Customer; pianos: Piano[] }[];
+  items: Group[];
   nav: Nav;
   surcharge: boolean;
+  onRemind: (id: string) => void;
+  onSkip: (id: string) => void;
+  onUnskip: (id: string) => void;
 }) {
   const c = useColors();
   if (!items.length) return null;
@@ -161,9 +178,11 @@ function Section({
       </Text>
       {items.map(({ customer, pianos }) => {
         const fee = pianos.reduce((s, p) => s + quoted(p, surcharge), 0);
+        const rs = reminderState(pianos);
+        const skipped = rs === 'skipped' || rs === 'custSkipped';
         return (
-          <Pressable key={customer.id} onPress={() => nav.navigate('CustomerDetail', { id: customer.id })}>
-            <Card>
+          <Card key={customer.id}>
+            <Pressable onPress={() => nav.navigate('CustomerDetail', { id: customer.id })}>
               <View style={st.cardHead}>
                 <Text style={[st.name, { color: c.ink, flexShrink: 1 }]}>{customer.name} 様</Text>
                 <StatusPill status={dueStatus(pianos[0])} />
@@ -184,8 +203,38 @@ function Section({
                   {gapText(pianos[0].lastTunedOn)}あいています。音が安定するまで粗調律（下準備）が必要です
                 </Text>
               )}
-            </Card>
-          </Pressable>
+            </Pressable>
+
+            {skipped ? (
+              <View style={[st.skipRow, { borderTopColor: c.line }]}>
+                <Text style={{ color: c.ink2, fontSize: 13.5, flex: 1 }}>
+                  {rs === 'custSkipped'
+                    ? 'お客様が「今回は見送る」を選ばれました'
+                    : '今回のご案内は見送りました'}
+                </Text>
+                <Pressable onPress={() => onUnskip(customer.id)} style={st.link}>
+                  <Text style={{ color: c.accentInk, fontSize: 13.5, fontWeight: '700' }}>取り消す</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <>
+                <View style={st.acts}>
+                  <Button
+                    label={rs === 'reminded' ? 'もう一度ご案内する' : 'ご案内を送る'}
+                    variant={rs === 'reminded' ? 'ghost' : 'primary'}
+                    style={{ flex: 1 }}
+                    onPress={() => onRemind(customer.id)}
+                  />
+                  <Button label="見送る" variant="ghost" onPress={() => onSkip(customer.id)} />
+                </View>
+                {rs === 'reminded' && (
+                  <Text style={{ color: c.ink2, fontSize: 13 }}>
+                    ご案内を送りました。お客様のお返事を待っています。
+                  </Text>
+                )}
+              </>
+            )}
+          </Card>
         );
       })}
     </View>
@@ -200,13 +249,19 @@ const st = StyleSheet.create({
   secHead: { fontSize: 15, fontWeight: '800', marginTop: 4 },
   cardHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   name: { fontSize: 17, fontWeight: '800' },
-  todayRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, minHeight: 44 },
+  todayRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, minHeight: MIN_TAP },
   time: { fontSize: 19, fontWeight: '800', minWidth: 62, fontVariant: ['tabular-nums'] },
   pianoRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingTop: 4 },
   rough: {
     fontSize: 13, lineHeight: 20, marginTop: 6, overflow: 'hidden',
     paddingHorizontal: 11, paddingVertical: 8, borderRadius: 10,
   },
+  acts: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  skipRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderTopWidth: 1, marginTop: 8, paddingTop: 4,
+  },
+  link: { minHeight: MIN_TAP, justifyContent: 'center', paddingHorizontal: 4 },
   req: { borderWidth: 1, borderRadius: 16, padding: 14, gap: 3 },
   reqHead: { fontSize: 12.5, fontWeight: '800' },
   reqName: { fontSize: 17, fontWeight: '800' },

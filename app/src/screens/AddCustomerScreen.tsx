@@ -111,7 +111,7 @@ export default function AddCustomerScreen({ navigation }: Props) {
               const on = k === kind;
               return (
                 <Text key={k} onPress={() => setKind(k)}
-                  style={[st.chip, { backgroundColor: on ? c.accent : c.surface, borderColor: on ? c.accent : c.lineStrong, color: on ? '#FFF' : c.ink2 }]}>
+                  style={[st.chip, { backgroundColor: on ? c.accent : c.surface, borderColor: on ? c.accent : c.lineStrong, color: on ? c.onAccent : c.ink2 }]}>
                   {k}
                 </Text>
               );

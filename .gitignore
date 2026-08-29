@@ -3,3 +3,6 @@ app/.expo/
 app/.export/
 app/.check/
 icon-src.jpeg
+
+# ローカル確認用サーバのログ
+server.log

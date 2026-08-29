@@ -224,7 +224,7 @@ function Chips({
             onPress={() => onChange(on && allowEmpty ? '' : it.v)}
             style={[st.chip, { backgroundColor: on ? c.accent : c.surface, borderColor: on ? c.accent : c.lineStrong }]}
           >
-            <Text style={{ color: on ? '#FFF' : c.ink2, fontSize: 14, fontWeight: '700' }}>{it.n}</Text>
+            <Text style={{ color: on ? c.onAccent : c.ink2, fontSize: 14, fontWeight: '700' }}>{it.n}</Text>
           </Pressable>
         );
       })}

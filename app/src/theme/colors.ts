@@ -15,9 +15,11 @@ export type Palette = {
   line: string; lineStrong: string;
   accent: string; accentInk: string; accentSoft: string; onAccent: string;
   brass: string; brassInk: string; brassSoft: string;
-  overdue: string; overdueInk: string; overdueSoft: string;
+  overdue: string; overdueInk: string; overdueSoft: string; onOverdue: string;
   next: string; nextInk: string; nextSoft: string;
   calm: string; calmInk: string; calmSoft: string;
+  /** シートの背後を暗くする幕 */
+  scrim: string;
 };
 
 export const light: Palette = {
@@ -42,6 +44,7 @@ export const light: Palette = {
   overdue: '#C6503A',
   overdueInk: '#A34230',
   overdueSoft: '#F6E2DB',
+  onOverdue: '#FFFFFF',
 
   next: '#3E77AC',
   nextInk: '#356394',
@@ -50,6 +53,8 @@ export const light: Palette = {
   calm: '#6E7A70',
   calmInk: '#5B655D',
   calmSoft: '#E7EAE4',
+
+  scrim: 'rgba(30, 28, 23, 0.42)',
 };
 
 export const dark: Palette = {
@@ -74,6 +79,7 @@ export const dark: Palette = {
   overdue: '#EC8067',
   overdueInk: '#EC8067',
   overdueSoft: '#37231C',
+  onOverdue: '#33150E',
 
   next: '#82B0DC',
   nextInk: '#82B0DC',
@@ -82,6 +88,8 @@ export const dark: Palette = {
   calm: '#9DA99B',
   calmInk: '#9DA99B',
   calmSoft: '#20241D',
+
+  scrim: 'rgba(0, 0, 0, 0.62)',
 };
 
 

@@ -70,6 +70,8 @@ export type Visit = {
   time: string;              // 空なら「日付だけ確定」
   pianoIds: string[];
   note: string;
+  /** 訪問前のご案内を送った日。二度送りを防ぐ */
+  prepSent?: string;
 };
 
 /** お客様から「お願いします」が届いた状態 */

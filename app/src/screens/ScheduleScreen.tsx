@@ -1,13 +1,15 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { Card, Empty, SaveAlert, Title } from '../components/ui';
+import { Button, Card, Empty, SaveAlert, Title } from '../components/ui';
+import { SendSheet } from '../components/SendSheet';
 import { dueDate } from '../lib/cycle';
 import { fmtJ, fmtMd, fromIso, iso, today } from '../lib/date';
-import { allVisits, pendingPianos, pianoName, shortAddr } from '../lib/select';
+import { prepMessage } from '../lib/messages';
+import { allVisits, isSkipped, pendingPianos, pianoName, shortAddr } from '../lib/select';
 import { useApp } from '../store/AppContext';
 import { useColors } from '../theme/useColors';
 import type { RootStackParamList } from '../navigation/types';
@@ -22,8 +24,9 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 export default function ScheduleScreen() {
   const c = useColors();
   const nav = useNavigation<Nav>();
-  const { customers, saveFailed } = useApp();
+  const { customers, settings, saveFailed, updateVisit } = useApp();
   const t = iso(today());
+  const [prepId, setPrepId] = useState<string | null>(null);
 
   const upcoming = useMemo(
     () => allVisits(customers).filter((x) => x.visit.date >= t)
@@ -35,11 +38,18 @@ export default function ScheduleScreen() {
   const confirmed = upcoming.filter((x) => x.visit.time);
   const dateOnly = upcoming.filter((x) => !x.visit.time);
 
-  /** 時期は来ているが、まだ日付が決まっていない台 */
+  const prep = useMemo(
+    () => upcoming.find((x) => x.visit.id === prepId) ?? null,
+    [upcoming, prepId]
+  );
+
+  /** 時期は来ているが、まだ日付が決まっていない台。見送った台はここに出さない */
   const poolByMonth = useMemo(() => {
     const m: Record<string, { name: string; id: string; room: string; maker: string; date: Date }[]> = {};
     customers.forEach((cust) => {
-      pendingPianos(cust).forEach((p) => {
+      const pend = pendingPianos(cust);
+      if (isSkipped(pend)) return;
+      pend.forEach((p) => {
         const d = dueDate(p);
         const key = fmtJ(d);
         (m[key] = m[key] || []).push({ name: cust.name, id: cust.id, room: p.room, maker: pianoName(p), date: d });
@@ -56,8 +66,8 @@ export default function ScheduleScreen() {
 
         <Text style={[st.sec, { color: c.ink }]}>日時が確定</Text>
         {confirmed.length ? confirmed.map(({ customer, visit }) => (
-          <Pressable key={visit.id} onPress={() => nav.navigate('CustomerDetail', { id: customer.id })}>
-            <Card style={{ marginBottom: 8 }}>
+          <Card key={visit.id} style={{ marginBottom: 8 }}>
+            <Pressable onPress={() => nav.navigate('CustomerDetail', { id: customer.id })}>
               <View style={st.row}>
                 <Text style={[st.date, { color: c.accentInk }]}>{fmtMd(fromIso(visit.date))}</Text>
                 <Text style={[st.time, { color: c.ink }]}>{visit.time}</Text>
@@ -66,8 +76,14 @@ export default function ScheduleScreen() {
               <Text style={{ color: c.ink2, fontSize: 13 }}>
                 {visit.pianoIds.length}台 ・ {shortAddr(customer)}
               </Text>
-            </Card>
-          </Pressable>
+            </Pressable>
+            <Button
+              label={visit.prepSent ? '訪問前のご案内は送信ずみ' : '訪問前のご案内を送る'}
+              variant={visit.prepSent ? 'ghost' : 'primary'}
+              style={{ marginTop: 8 }}
+              onPress={() => setPrepId(visit.id)}
+            />
+          </Card>
         )) : <Empty>日時が確定した訪問はありません。</Empty>}
 
         <Text style={[st.sec, { color: c.ink }]}>日付だけ確定</Text>
@@ -75,16 +91,22 @@ export default function ScheduleScreen() {
           時間は前日までに決められます。
         </Text>
         {dateOnly.length ? dateOnly.map(({ customer, visit }) => (
-          <Pressable key={visit.id} onPress={() => nav.navigate('CustomerDetail', { id: customer.id })}>
-            <Card style={{ marginBottom: 8, borderColor: c.brass }}>
+          <Card key={visit.id} style={{ marginBottom: 8, borderColor: c.brass }}>
+            <Pressable onPress={() => nav.navigate('CustomerDetail', { id: customer.id })}>
               <View style={st.row}>
                 <Text style={[st.date, { color: c.brassInk }]}>{fmtMd(fromIso(visit.date))}</Text>
                 <Text style={{ color: c.brassInk, fontSize: 13, fontWeight: '700' }}>時間未定</Text>
               </View>
               <Text style={[st.name, { color: c.ink }]}>{customer.name} 様</Text>
               <Text style={{ color: c.ink2, fontSize: 13 }}>{shortAddr(customer)}</Text>
-            </Card>
-          </Pressable>
+            </Pressable>
+            <Button
+              label={visit.prepSent ? '訪問前のご案内は送信ずみ' : '訪問前のご案内を送る'}
+              variant={visit.prepSent ? 'ghost' : 'primary'}
+              style={{ marginTop: 8 }}
+              onPress={() => setPrepId(visit.id)}
+            />
+          </Card>
         )) : <Empty>日付だけ押さえている訪問はありません。</Empty>}
 
         <Text style={[st.sec, { color: c.ink }]}>時期を迎える（日付未定）</Text>
@@ -104,6 +126,25 @@ export default function ScheduleScreen() {
           </View>
         )) : <Empty>時期を迎えるピアノはありません。</Empty>}
       </ScrollView>
+
+      <SendSheet
+        visible={!!prep}
+        customer={prep ? prep.customer : null}
+        title="訪問前のご案内を送る"
+        subtitle={
+          prep
+            ? `${prep.customer.name} 様 ・ ${fmtMd(fromIso(prep.visit.date))}${prep.visit.time ? ` ${prep.visit.time}` : ''}`
+            : ''
+        }
+        subject="調律に伺う前のご案内"
+        message={prep ? prepMessage(prep.customer, prep.visit, settings.durationMinutes) : ''}
+        note="当日の不安を先に消しておくと、立ち会いや駐車の行き違いが減ります。"
+        onClose={() => setPrepId(null)}
+        onSent={async () => {
+          if (prep) await updateVisit(prep.customer.id, prep.visit.id, { prepSent: iso(today()) });
+          setPrepId(null);
+        }}
+      />
     </SafeAreaView>
   );
 }

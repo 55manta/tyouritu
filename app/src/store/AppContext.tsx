@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { recalcLastTuned, type RecordKind } from '../lib/cycle';
+import { cycleKey, recalcLastTuned } from '../lib/cycle';
+import { pendingPianos } from '../lib/select';
 import { iso, today } from '../lib/date';
 import type { Customer, Piano, Settings, Visit, WorkRecord } from '../types';
 import { DEFAULT_SETTINGS, FREE_LIMIT } from '../types';
@@ -38,6 +39,15 @@ type Ctx = {
   addVisit: (customerId: string, v: Visit) => Promise<boolean>;
   updateVisit: (customerId: string, visitId: string, patch: Partial<Visit>) => Promise<boolean>;
   deleteVisit: (customerId: string, visitId: string) => Promise<boolean>;
+
+  /** ご案内を送った印。この周期のあいだ、案内済みとして扱う */
+  markReminded: (customerId: string) => Promise<boolean>;
+  /** 今回のご案内を見送る */
+  skipCycle: (customerId: string) => Promise<boolean>;
+  /** 見送りを取り消す。お客様側からの見送りも一緒に解く */
+  unskipCycle: (customerId: string) => Promise<boolean>;
+  /** お客様用ページの鍵。無ければ作って保存し、必ず値を返す */
+  ensureBookingToken: (customerId: string) => Promise<string>;
 
   updateSettings: (patch: Partial<Settings>) => Promise<boolean>;
   resetToSamples: () => Promise<void>;
@@ -168,6 +178,42 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       deleteVisit: (cid, vid) =>
         commit(replace(cid, (c) => ({ ...c, visits: c.visits.filter((v) => v.id !== vid) }))),
+
+      markReminded: (cid) => {
+        const cur = customers.find((x) => x.id === cid);
+        if (!cur) return Promise.resolve(false);
+        const ids = new Set(pendingPianos(cur).map((p) => p.id));
+        return commit(replace(cid, (c) => ({
+          ...c,
+          pianos: c.pianos.map((p) => (ids.has(p.id) ? { ...p, remindedCycle: cycleKey(p) } : p)),
+        })));
+      },
+
+      skipCycle: (cid) => {
+        const cur = customers.find((x) => x.id === cid);
+        if (!cur) return Promise.resolve(false);
+        const ids = new Set(pendingPianos(cur).map((p) => p.id));
+        return commit(replace(cid, (c) => ({
+          ...c,
+          pianos: c.pianos.map((p) => (ids.has(p.id) ? { ...p, skippedCycle: cycleKey(p) } : p)),
+        })));
+      },
+
+      // 見送り済みの台は pendingPianos に出てこないため、ここは全台を対象にする
+      unskipCycle: (cid) =>
+        commit(replace(cid, (c) => ({
+          ...c,
+          pianos: c.pianos.map((p) => ({ ...p, skippedCycle: null, custSkippedCycle: null })),
+        }))),
+
+      ensureBookingToken: async (cid) => {
+        const cur = customers.find((x) => x.id === cid);
+        if (!cur) return '';
+        if (cur.bookToken) return cur.bookToken;
+        const t = db.newToken();
+        await commit(replace(cid, (c) => ({ ...c, bookToken: t })));
+        return t;
+      },
 
       updateSettings: async (patch) => {
         const next = { ...settings, ...patch };

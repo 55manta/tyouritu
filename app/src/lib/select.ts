@@ -1,4 +1,4 @@
-import { dueDate, dueStatus, STATUS_RANK, type DueStatus } from './cycle';
+import { cycleKey, dueDate, dueStatus, STATUS_RANK, type DueStatus } from './cycle';
 import { fromIso, iso, monthIndex, today } from './date';
 import { quotedFee } from './pricing';
 import type { Customer, Piano, Visit, WorkRecord } from '../types';
@@ -28,16 +28,35 @@ function hasTuningVisit(c: Customer, p: Piano): boolean {
   return c.visits.some((v) => v.pianoIds.includes(p.id));
 }
 
-/** ご案内すべき台。見送り済みと、予定が入っている台は除く */
+/**
+ * ご案内すべき台。予定がすでに入っている台と、まだ時期でない台を除く。
+ *
+ * 見送った台は「除かない」。除くとお客様ごと一覧から消えてしまい、
+ * 押し間違えた見送りを取り消す手立てが無くなる（試作はここを残している）。
+ * 見送り済みかどうかは reminderState で判定し、画面側で見せ方を変える。
+ */
 export function pendingPianos(c: Customer): Piano[] {
   return c.pianos.filter((p) => {
     if (hasTuningVisit(c, p)) return false;
-    const st = dueStatus(p);
-    if (st === 'calm') return false;
-    const key = iso(dueDate(p));
-    if (p.skippedCycle === key || p.custSkippedCycle === key) return false;
-    return true;
+    return dueStatus(p) !== 'calm';
   });
+}
+
+/** ご案内の進み具合。台ごとにばらけるので「全台がそうなっているか」で判定する */
+export type ReminderState = 'none' | 'reminded' | 'skipped' | 'custSkipped';
+
+export function reminderState(pianos: Piano[]): ReminderState {
+  if (!pianos.length) return 'none';
+  if (pianos.every((p) => p.custSkippedCycle === cycleKey(p))) return 'custSkipped';
+  if (pianos.every((p) => p.skippedCycle === cycleKey(p))) return 'skipped';
+  if (pianos.every((p) => p.remindedCycle === cycleKey(p))) return 'reminded';
+  return 'none';
+}
+
+/** 今回は見送っている（調律師が見送った／お客様が見送られた） */
+export function isSkipped(pianos: Piano[]): boolean {
+  const s = reminderState(pianos);
+  return s === 'skipped' || s === 'custSkipped';
 }
 
 /** お客様単位の状態。いちばん悪い台に合わせる */

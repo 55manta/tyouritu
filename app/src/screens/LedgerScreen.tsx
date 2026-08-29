@@ -59,7 +59,7 @@ export default function LedgerScreen({ navigation }: Props) {
             return (
               <Pressable key={y} onPress={() => setYear(y)}
                 style={[st.yBtn, { backgroundColor: on ? c.accent : c.surface, borderColor: on ? c.accent : c.lineStrong }]}>
-                <Text style={{ color: on ? '#FFF' : c.ink2, fontSize: 14, fontWeight: '700' }}>{y}年</Text>
+                <Text style={{ color: on ? c.onAccent : c.ink2, fontSize: 14, fontWeight: '700' }}>{y}年</Text>
               </Pressable>
             );
           })}

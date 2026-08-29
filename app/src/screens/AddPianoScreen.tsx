@@ -63,7 +63,7 @@ export default function AddPianoScreen({ route, navigation }: Props) {
               const on = t === type;
               return (
                 <Text key={t} onPress={() => setType(t)}
-                  style={[st.chip, { backgroundColor: on ? c.accent : c.surface, borderColor: on ? c.accent : c.lineStrong, color: on ? '#FFF' : c.ink2 }]}>
+                  style={[st.chip, { backgroundColor: on ? c.accent : c.surface, borderColor: on ? c.accent : c.lineStrong, color: on ? c.onAccent : c.ink2 }]}>
                   {t}
                 </Text>
               );
