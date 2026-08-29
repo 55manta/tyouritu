@@ -1,0 +1,252 @@
+<title>調律ノート 機能棚卸し</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&family=Noto+Serif+JP:wght@500;600&display=swap">
+<style>
+  :root {
+    --ground:#F4F2EC; --surface:#FFFFFF; --surface-2:#EDEAE1;
+    --ink:#1E1C17; --ink-2:#5E594F; --ink-3:#948E80;
+    --line:#E7E2D6; --line-strong:#D6CFBF;
+    --accent:#0E8F83; --accent-ink:#0A6A60; --accent-soft:#DBEFEB;
+    --brass:#B0873A; --brass-ink:#8A6820; --brass-soft:#F0E7D2;
+    --alert:#C6503A; --alert-ink:#A23A26; --alert-soft:#F6E2DB;
+    --badge-q:#6B4E12;
+    --font-sans:-apple-system,BlinkMacSystemFont,system-ui,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans JP","Segoe UI",Roboto,sans-serif;
+    --font-serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP","Times New Roman",serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    --measure:41rem;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#12110D; --surface:#1B1A15; --surface-2:#25231C;
+      --ink:#F2EFE6; --ink-2:#B0A999; --ink-3:#7C7565;
+      --line:#2E2B22; --line-strong:#3C3830;
+      --accent:#2CC2B0; --accent-ink:#63D8C7; --accent-soft:#0F302D;
+      --brass:#D9B063; --brass-ink:#E8C88A; --brass-soft:#2E2612;
+      --alert:#EC8067; --alert-ink:#F3A48F; --alert-soft:#37231C;
+      --badge-q:#E8C88A;
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#12110D; --surface:#1B1A15; --surface-2:#25231C;
+    --ink:#F2EFE6; --ink-2:#B0A999; --ink-3:#7C7565;
+    --line:#2E2B22; --line-strong:#3C3830;
+    --accent:#2CC2B0; --accent-ink:#63D8C7; --accent-soft:#0F302D;
+    --brass:#D9B063; --brass-ink:#E8C88A; --brass-soft:#2E2612;
+    --alert:#EC8067; --alert-ink:#F3A48F; --alert-soft:#37231C;
+    --badge-q:#E8C88A;
+  }
+
+  body{background:var(--ground);}
+  .page{background:var(--ground);color:var(--ink);font-family:var(--font-sans);font-size:16px;line-height:1.85;
+    padding:clamp(20px,5vw,64px) clamp(16px,5vw,40px) 96px;display:flex;flex-direction:column;align-items:center;-webkit-font-smoothing:antialiased;}
+  .wrap{width:100%;max-width:66rem;display:flex;flex-direction:column;gap:44px;}
+
+  .masthead{display:flex;flex-direction:column;gap:14px;}
+  .eyebrow{font-size:12px;letter-spacing:.16em;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;}
+  .eyebrow b{color:var(--accent-ink);font-weight:600;letter-spacing:.1em;}
+  h1{font-family:var(--font-serif);font-size:clamp(28px,5vw,42px);line-height:1.3;font-weight:600;text-wrap:balance;margin:0;}
+  .standfirst{max-width:var(--measure);color:var(--ink-2);font-size:16.5px;}
+  .rule{height:1px;background:var(--line-strong);border:0;margin:0;}
+
+  section{display:flex;flex-direction:column;gap:14px;}
+  h2{font-family:var(--font-serif);font-size:clamp(19px,2.6vw,24px);line-height:1.4;font-weight:600;margin:0;
+    padding-bottom:9px;border-bottom:2px solid var(--ink);display:flex;align-items:baseline;gap:11px;flex-wrap:wrap;}
+  h2 .cnt{font-size:12.5px;color:var(--ink-2);font-family:var(--font-sans);font-weight:600;letter-spacing:.06em;}
+  p{margin:0;max-width:var(--measure);}
+  code{font-family:var(--mono);font-size:.87em;background:var(--surface-2);padding:.12em .4em;border-radius:3px;}
+  strong{font-weight:700;}
+
+  .scroller{overflow-x:auto;border:1px solid var(--line);border-radius:4px;background:var(--surface);}
+  table{border-collapse:collapse;width:100%;min-width:660px;font-size:14px;color:var(--ink);}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.65;}
+  thead th{font-size:11.5px;letter-spacing:.08em;color:var(--ink-2);font-weight:700;background:var(--surface-2);
+    border-bottom:1px solid var(--line-strong);white-space:nowrap;position:sticky;top:0;}
+  tbody tr:last-child td{border-bottom:0;}
+  td.no{font-variant-numeric:tabular-nums;color:var(--ink-2);width:2.2rem;font-size:12.5px;}
+  td.f{font-weight:700;width:13rem;}
+  td.n{color:var(--ink-2);}
+
+  .b{display:inline-block;font-size:10.5px;letter-spacing:.06em;font-weight:700;padding:2px 7px;border-radius:3px;white-space:nowrap;}
+  .b.core{background:var(--accent-soft);color:var(--accent-ink);}
+  .b.good{background:var(--surface-2);color:var(--ink-2);}
+  .b.q{background:var(--brass-soft);color:var(--badge-q);}
+  .b.bad{background:var(--alert-soft);color:var(--alert-ink);}
+  td.j{width:6.5rem;white-space:nowrap;}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--tone,var(--line-strong));
+    border-radius:3px;padding:15px 17px;display:flex;flex-direction:column;gap:8px;}
+  .card.warn{--tone:var(--alert);} .card.note{--tone:var(--brass);} .card.ok{--tone:var(--accent);}
+  .card p{font-size:14.5px;line-height:1.75;color:var(--ink-2);max-width:none;}
+  .card .tag{align-self:flex-start;font-size:11px;letter-spacing:.12em;font-weight:700;padding:3px 8px;border-radius:2px;}
+  .warn .tag{background:var(--alert-soft);color:var(--alert-ink);}
+  .note .tag{background:var(--brass-soft);color:var(--brass-ink);}
+  .ok .tag{background:var(--accent-soft);color:var(--accent-ink);}
+
+  .legend{display:flex;flex-wrap:wrap;gap:9px 18px;font-size:13px;color:var(--ink-2);
+    background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:13px 16px;}
+  .legend span{display:flex;align-items:center;gap:7px;}
+
+  ul.plain{margin:0;padding-left:1.15em;max-width:var(--measure);display:flex;flex-direction:column;gap:8px;}
+  ul.plain li::marker{color:var(--brass);}
+</style>
+
+<div class="page">
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow"><b>調律ノート</b><span>機能棚卸し</span><span>2026-08-28</span></div>
+    <h1>いま入っている44機能と、私の見立て</h1>
+    <p class="standfirst">仕様書ではなく<strong>実際のコードから</strong>数えました。判定は私の意見であり、決めるのはご自身です。<strong>中核は18。</strong>そのほかに<strong>要否を疑っているものが7つ</strong>あり、請求書はその1つです。</p>
+    <hr class="rule">
+    <div class="legend">
+      <span><i class="b core">中核</i>これが無いとアプリの意味が消える</span>
+      <span><i class="b good">有用</i>あると効くが、無くても成立する</span>
+      <span><i class="b q">疑問</i>使われるか怪しい／割に合わない</span>
+      <span><i class="b bad">未完</i>いま機能として成立していない</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>台帳<span class="cnt">8</span></h2>
+    <div class="scroller"><table>
+      <thead><tr><th>　</th><th>機能</th><th>中身</th><th>判定</th></tr></thead>
+      <tbody>
+        <tr><td class="no">1</td><td class="f">お客様の登録</td><td class="n">かんたん4項目＋詳細は折りたたみ</td><td class="j"><span class="b core">中核</span></td></tr>
+        <tr><td class="no">2</td><td class="f">1軒にピアノ複数台</td><td class="n">学校・教室の複数台に対応。汎用CRMに無い構造</td><td class="j"><span class="b core">中核</span></td></tr>
+        <tr><td class="no">3</td><td class="f">ピアノ台帳</td><td class="n">メーカー・型番・製造番号・製造年・設置環境・料金・周期</td><td class="j"><span class="b core">中核</span></td></tr>
+        <tr><td class="no">4</td><td class="f">住所・駐車場・搬入経路</td><td class="n">番地まで＋現場メモ</td><td class="j"><span class="b core">中核</span></td></tr>
+        <tr><td class="no">5</td><td class="f">検索</td><td class="n">名前・住所・機種・製造番号</td><td class="j"><span class="b core">中核</span></td></tr>
+        <tr><td class="no">6</td><td class="f">並べ替え</td><td class="n">期限順・あいうえお順・最近伺った順・売上順</td><td class="j"><span class="b good">有用</span></td></tr>
+        <tr><td class="no">7</td><td class="f">お客様・ピアノの削除</td><td class="n">名前確認つき。個人情報の削除要求に対応</td><td class="j"><span class="b core">中核</span></td></tr>
+        <tr><td class="no">8</td><td class="f">この方との歩み</td><td class="n">お付き合い年数・訪問回数・累計売上・種別内訳</td><td class="j"><span class="b good">有用</span></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>ご案内 ── 買う理由<span class="cnt">8</span></h2>
+    <div class="scroller"><table>
+      <thead><tr><th>　</th><th>機能</th><th>中身</th><th>判定</th></tr></thead>
+      <tbody>
+        <tr><td class="no">9</td><td class="f">調律時期の自動判定</td><td class="n">周期から超過／今月／来月／長期ご無沙汰を仕分け</td><td class="j"><span class="b core">中核</span></td></tr>
+        <tr><td class="no">10</td><td class="f">ご案内の送信</td><td class="n">LINE・SMS・メール。連絡先が無ければ自動で無効化</td><td class="j"><span class="b core">中核</span></td></tr>
+        <tr><td class="no">11</td><td class="f">複数台をまとめて1通</td><td class="n">3台ある教室に3通送らない</td><td class="j"><span class="b core">中核</span></td></tr>
+        <tr><td class="no">12</td><td class="f">見送り（調律師側）</td><td class="n">今回は案内しない、を記録して一覧から外す</td><td class="j"><span class="b good">有用</span></td></tr>
+        <tr><td class="no">13</td><td class="f">お客様側のWeb予約</td><td class="n">認証なしのページで日付を選ぶ／見送る。<strong>モックでは調律師が見るプレビューのみ</strong></td><td class="j"><span class="b core">中核</span></td></tr>
+        <tr><td class="no">14</td><td class="f">掘り起こし</td><td class="n">1年以上ご案内できていない先に、気づかいの文面で</td><td class="j"><span class="b good">有用</span></td></tr>
+        <tr><td class="no">15</td><td class="f">未調律期間の割増</td><td class="n">1年ごと+1,500円／上限15,000円／10年超は粗調律の警告。日本固有</td><td class="j"><span class="b good">有用</span></td></tr>
+        <tr><td class="no">16</td><td class="f">ROI表示</td><td class="n">「ご案内から生まれた売上」を常時表示</td><td class="j"><span class="b good">有用</span></td></tr>
+      </tbody>
+    </table></div>
+    <div class="card note">
+      <span class="tag">13について</span>
+      <p><strong>お客様用ページは、実装されると別のWebページになります。</strong>いまモックで見られるのは「お客様にはこう見えます」というプレビューです。ここは中核なので、Expo版では<em>アプリ本体とは別に作る</em>必要があります（アーキテクチャ仕様の第8章）。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>予定<span class="cnt">7</span></h2>
+    <div class="scroller"><table>
+      <thead><tr><th>　</th><th>機能</th><th>中身</th><th>判定</th></tr></thead>
+      <tbody>
+        <tr><td class="no">17</td><td class="f">三層の予定</td><td class="n">時期（日付未定）→ 日付だけ確定 → 日時確定。実際の運用に合わせた構造</td><td class="j"><span class="b core">中核</span></td></tr>
+        <tr><td class="no">18</td><td class="f">カレンダー表示</td><td class="n">月表示。日をタップでその日の訪問</td><td class="j"><span class="b good">有用</span></td></tr>
+        <tr><td class="no">19</td><td class="f">前日確定アシスタント</td><td class="n">同日複数件をエリア順に並べ、移動時間込みで時刻を自動割付、一括連絡</td><td class="j"><span class="b q">疑問</span></td></tr>
+        <tr><td class="no">20</td><td class="f">繁閑の平準化</td><td class="n">12ヶ月の混み具合グラフ＋前倒しのご案内</td><td class="j"><span class="b q">疑問</span></td></tr>
+        <tr><td class="no">21</td><td class="f">訪問前3点セット</td><td class="n">片付け・所要時間・駐車場を前日に自動送信</td><td class="j"><span class="b good">有用</span></td></tr>
+        <tr><td class="no">22</td><td class="f">訪問者カード</td><td class="n">顔写真・資格・車のナンバーを案内に添える</td><td class="j"><span class="b q">疑問</span></td></tr>
+        <tr><td class="no">23</td><td class="f">事前問診</td><td class="n">予約時に症状を選んでもらう（「特定の鍵盤が鳴らない」等）</td><td class="j"><span class="b q">疑問</span></td></tr>
+      </tbody>
+    </table></div>
+    <div class="card note">
+      <span class="tag">19・20・22・23 を疑う理由</span>
+      <p><strong>19 前日確定</strong>：1日2軒の商売で、まとめて時刻を割り付ける場面がどれだけ来るか。機能は凝っていますが、出番は繁忙期の一部に限られます。<br>
+      <strong>20 繁閑の平準化</strong>：20年やっている調律師は、自分の繁忙期をグラフで教わる必要がありません。<br>
+      <strong>22 訪問者カード</strong>：効くのは初回訪問だけ。実際の訪問の大半は10年来のお客様です。<br>
+      <strong>23 事前問診</strong>：13のWebページが前提。単体では成立しません。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>記録<span class="cnt">9</span></h2>
+    <div class="scroller"><table>
+      <thead><tr><th>　</th><th>機能</th><th>中身</th><th>判定</th></tr></thead>
+      <tbody>
+        <tr><td class="no">24</td><td class="f">作業の記録</td><td class="n">チップ選択・定型文・大きな二択で、キーボードを出さずに書ける</td><td class="j"><span class="b core">中核</span></td></tr>
+        <tr><td class="no">25</td><td class="f">記録の種別</td><td class="n">定期調律だけが周期を動かす。修理・整調・点検・運搬は動かさない</td><td class="j"><span class="b core">中核</span></td></tr>
+        <tr><td class="no">26</td><td class="f">臨時のご依頼</td><td class="n">単発の修理・点検を同じ台帳に積む。技術作業の半分以上が単発</td><td class="j"><span class="b core">中核</span></td></tr>
+        <tr><td class="no">27</td><td class="f">写真</td><td class="n">作業前・作業後。長辺1280pxへ自動縮小、同意の無い先では保存しない</td><td class="j"><span class="b good">有用</span></td></tr>
+        <tr><td class="no">28</td><td class="f">前回との差分</td><td class="n">ピッチ・湿度・状態の変化を報告書に</td><td class="j"><span class="b good">有用</span></td></tr>
+        <tr><td class="no">29</td><td class="f">記録の修正・取り消し</td><td class="n">日付を直すと次回時期も追随。請求済みには警告</td><td class="j"><span class="b core">中核</span></td></tr>
+        <tr><td class="no">30</td><td class="f">作業報告書</td><td class="n">写真つきでお客様へ送る</td><td class="j"><span class="b good">有用</span></td></tr>
+        <tr><td class="no">31</td><td class="f">追加作業のその場承諾</td><td class="n">内容・金額・やらない場合のリスクを画面で見せ、承諾を記録</td><td class="j"><span class="b good">有用</span></td></tr>
+        <tr><td class="no">32</td><td class="f">道具の置き忘れチェック</td><td class="n">記録の保存後にチェックリストが出る</td><td class="j"><span class="b q">疑問</span></td></tr>
+      </tbody>
+    </table></div>
+    <div class="card note">
+      <span class="tag">32を疑う理由</span>
+      <p>20年間ひとつも忘れずにやってきた人に、毎回チェックリストを出すのは<strong>敬意を欠く上に邪魔</strong>です。記録のたびに1画面増えるコストは、毎日効いてきます。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>お金<span class="cnt">5</span></h2>
+    <div class="scroller"><table>
+      <thead><tr><th>　</th><th>機能</th><th>中身</th><th>判定</th></tr></thead>
+      <tbody>
+        <tr><td class="no">33</td><td class="f">売上の集計</td><td class="n">今月・直近6ヶ月グラフ・種別内訳・支払方法内訳</td><td class="j"><span class="b core">中核</span></td></tr>
+        <tr><td class="no">34</td><td class="f">売上帳（年間）</td><td class="n">年間売上・消費税・未入金・月別・全明細。申告の数字がここで揃う</td><td class="j"><span class="b good">有用</span></td></tr>
+        <tr><td class="no">35</td><td class="f">領収書</td><td class="n">その場で送れる。個人のお客様はこれで完結</td><td class="j"><span class="b good">有用</span></td></tr>
+        <tr><td class="no">36</td><td class="f">請求書の発行</td><td class="n">月締めで複数台を1枚に。<strong>送る手段が無く、画面に描いてフラグを立てるだけ</strong></td><td class="j"><span class="b bad">未完</span></td></tr>
+        <tr><td class="no">37</td><td class="f">入金の管理</td><td class="n">未請求／請求済／入金済のステータスと、未入金の一覧</td><td class="j"><span class="b good">有用</span></td></tr>
+      </tbody>
+    </table></div>
+    <div class="card warn">
+      <span class="tag">36について</span>
+      <p><strong>ご指摘のとおりだと思います。</strong>いまの実装は送信・PDF・印刷のいずれも持たず、「請求済みにする」ボタンでフラグを立てるだけです。仮に送れるようにしても、学校・ホールは指定様式と押印を求めるのが通例で、通らない見込みが高い。<br><br>
+      <strong>ただし 37（入金の管理）は別で、これは残す価値があります。</strong>「学校の4台ぶん33,000円がまだ入っていない」が分かることに、書類の生成は要りません。<em>36を落として37を残す</em>のが筋だと考えます。あわせて銀行口座・登録番号・税率の設定も不要になります。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>土台<span class="cnt">7</span></h2>
+    <div class="scroller"><table>
+      <thead><tr><th>　</th><th>機能</th><th>中身</th><th>判定</th></tr></thead>
+      <tbody>
+        <tr><td class="no">38</td><td class="f">無料15軒／有料プラン</td><td class="n">月額1,200円・年額12,000円。上限で新規登録のみ停止</td><td class="j"><span class="b core">中核</span></td></tr>
+        <tr><td class="no">39</td><td class="f">初回起動の案内</td><td class="n">「次に伺った1軒から登録すれば1年で揃う」。移行しない移行</td><td class="j"><span class="b core">中核</span></td></tr>
+        <tr><td class="no">40</td><td class="f">写真の保存同意</td><td class="n">お客様ごとに同意／辞退。辞退なら取り込まない</td><td class="j"><span class="b good">有用</span></td></tr>
+        <tr><td class="no">41</td><td class="f">規約・ポリシー</td><td class="n">設定から閲覧。公開前に文面の確認が要る</td><td class="j"><span class="b good">有用</span></td></tr>
+        <tr><td class="no">42</td><td class="f">予約URLの失効</td><td class="n">転送されたときに作り直せる</td><td class="j"><span class="b good">有用</span></td></tr>
+        <tr><td class="no">43</td><td class="f">事業者情報の設定</td><td class="n">屋号・氏名・資格・車・顔写真・作業時間。税まわりは36次第で不要に</td><td class="j"><span class="b good">有用</span></td></tr>
+        <tr><td class="no">44</td><td class="f">国と地域（4ロケール）</td><td class="n">住所の並び・通貨・基準ピッチ・税の呼び方。日本／米／英／独</td><td class="j"><span class="b q">疑問</span></td></tr>
+      </tbody>
+    </table></div>
+    <div class="card note">
+      <span class="tag">44を疑う理由</span>
+      <p>海外に出す計画はまだ決まっていません。<strong>住所を国際構造で持つ判断（データの形）は正しい</strong>——後から直すと移行が要るからです。しかし<em>設定画面に4カ国の選択肢を並べ、通貨や基準ピッチを切り替える動作</em>まで作り込むのは、使う人がいない機能に画面を割いていることになります。データ構造だけ残し、画面は日本に絞るのが妥当だと思います。</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>まとめ</h2>
+    <div class="scroller"><table>
+      <thead><tr><th>判定</th><th>数</th><th>内訳</th></tr></thead>
+      <tbody>
+        <tr><td><span class="b core">中核</span></td><td class="no">18</td><td class="n">1〜5・7・9〜11・13・17・24〜26・29・33・38・39</td></tr>
+        <tr><td><span class="b good">有用</span></td><td class="no">19</td><td class="n">6・8・12・14〜16・18・21・27・28・30・31・34・35・37・40〜43</td></tr>
+        <tr><td><span class="b q">疑問</span></td><td class="no">6</td><td class="n">19 前日確定／20 繁閑平準化／22 訪問者カード／23 事前問診／32 道具チェック／44 ロケール切替</td></tr>
+        <tr><td><span class="b bad">未完</span></td><td class="no">1</td><td class="n">36 請求書の発行</td></tr>
+      </tbody>
+    </table></div>
+    <div class="card ok">
+      <span class="tag">私の見立て</span>
+      <p><strong>疑問6つと未完1つ、あわせて7機能を落とすと、アプリは軽くなっても弱くなりません。</strong>中核16はすべて「失注を防ぐ」「台帳を厚くする」のどちらかに効いていますが、落とす7つはどれもそこに効いていません。<br><br>
+      副次的な効き目として、<strong>設定画面から税・銀行口座・4カ国のロケールが消え</strong>、初めて開いた調律師が面食らう量が減ります。第一印象は導入の成否に直結します。</p>
+    </div>
+    <p>もっとも、これは私の判断です。<strong>19（前日確定）と20（繁閑平準化）は、実際に繁忙期を回している方の実感でしか判定できません。</strong>ここだけはご自身の見立てを優先してください。</p>
+  </section>
+
+</div>
+</div>
