@@ -22,9 +22,6 @@
 ## 2. コレクション
 
 ```
-tuners/{uid}
-    { displayName, createdAt, updatedAt }
-
 tuners/{uid}/meta/settings
     { taxMode, taxRate, durationMinutes, locale, plan, theme }
 
@@ -41,7 +38,7 @@ tuners/{uid}/customers/{customerId}
       updatedAt }
 
 bookings/{token}
-    { tunerUid, customerId, tunerName, customerName,
+    { tunerUid, customerId, customerName,
       pianos: [ { room, name, dueMonth, fee } ],
       total, roughNeeded,
       reply: null | 'yes' | 'skip', want, intake: { items[], note },
@@ -84,7 +81,10 @@ photos/{uid}/{customerId}/{fileName}
 
 **写しには、お客様に見せてよいものしか入れない。**
 
-入れる：調律師の名前、お客様のお名前、部屋の呼び名、機種名、次回の時期（年月）、料金の目安、粗調律が要るかどうか。
+入れる：お客様のお名前、部屋の呼び名、機種名、次回の時期（年月）、料金の目安、粗調律が要るかどうか。
+
+調律師の名前は入れない。事業者情報の設定は要らないと判断して落としてあるうえ、
+ご案内は LINE や SMS でご本人から届くので、ページ側で名乗る必要がない。
 
 入れない：**住所・電話番号・メールアドレス・メモ・搬入経路・写真・売上・ほかのお客様の情報**。
 
@@ -113,11 +113,29 @@ photos/{uid}/{customerId}/{fileName}
 
 ---
 
+## 4.5 いまの実装（2026-08-29）
+
+ページは **https://choritsu-note.web.app/b/{token}**（Firebase Hosting、`web/b/index.html`）。
+アプリ側は `publishBooking()` で写しを置き、`watchBookings()` で送ったぶんの鍵を
+1件ずつ購読してお返事を受け取る。一覧では引いていない。
+
+台帳の控えは `tuners/{uid}/customers/{id}`。ただし**正は端末の中**（AsyncStorage）で、
+ここは控え。そうした理由は HANDOFF.md §19。
+
+---
+
 ## 5. 認証
 
-調律師のサインイン方法はまだ決めていない。ルールは `request.auth.uid` しか見ていないので、どれを選んでも影響しない。
+**Apple でサインイン**（iOS）にした。この利用者層（年配の個人事業主が多い）は
+パスワードの再発行で詰まりやすいため、パスワードを覚えなくてよい方法を第一にしている。
+iOS ネイティブの流れなので、Firebase 側は Apple プロバイダを有効にするだけでよく、
+サービスIDや鍵は要らない。
 
-決めるときの観点：この利用者層（年配の個人事業主が多い）はパスワードの再発行で詰まりやすい。Sign in with Apple / Google のように**パスワードを覚えなくてよい方法**を第一にする。
+**Android はまだ**。Google サインインは Android 着手時に足す。ルールは
+`request.auth.uid` しか見ていないので、増やしても影響しない。
+
+お客様の予約ページは**匿名認証**。姿は見えないが、これがあると App Check を
+効かせられ、悪用時にたどれる手がかりも残る。匿名アカウントは30日で自動削除する設定。
 
 ---
 
