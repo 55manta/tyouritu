@@ -1379,16 +1379,6 @@
     var list = [];
     var c, ps;
 
-    // 1台・日時確定の予約あり
-    ps = [P({room:"リビング",maker:"YAMAHA",model:"U3",type:"アップライト",serial:"5312884",made:"1998",env:"リビング（一般家庭）",fee:13000,ago:14,interval:12,
-      hist:[{ago:14,work:"調律",fee:13000,memo:"問題なし"},{ago:26,work:"調律＋整調",fee:18000}]})];
-    c = C({name:"佐藤 美咲",kana:"さとう みさき",kind:"一般家庭",phone:"090-2244-1188",email:"m.sato@example.com",line:"みさき",
-      zip:"224-0032",pref:"神奈川県",city:"横浜市都筑区",rest:"茅ケ崎中央12-5",bldg:"パークサイド 402",
-      parking:"近隣のコインパーキング",access:"エレベーターあり。玄関前が狭いので工具は2回に分けて搬入。",
-      memo:"娘さんが受験期。夜間の使用が多い。",pianos:ps});
-    c.visits = [V({date: iso(addDays(today(),25)), time:"13:30", pianoIds:[ps[0].id]})];
-    list.push(c);
-
     // 音楽教室・3台・今日の訪問
     ps = [
       P({room:"レッスン室A",maker:"KAWAI",model:"RX-2",type:"グランド",serial:"2451190",made:"2006",env:"音楽教室",fee:16000,ago:13,interval:12,hist:[{ago:13,work:"調律",fee:16000},{ago:25,work:"調律",fee:16000}]}),
@@ -1402,9 +1392,9 @@
     c.visits = [V({date: iso(today()), time:"10:00", pianoIds:[ps[0].id, ps[1].id, ps[2].id], note:"3台まとめて"})];
     list.push(c);
 
-    // 1台・防音室
-    ps = [P({room:"防音室",maker:"YAMAHA",model:"C3",type:"グランド",serial:"5904112",made:"2004",env:"防音室",fee:18000,ago:15,interval:12,
-      hist:[{ago:15,work:"調律＋整音",fee:22000,memo:"整音にこだわり。ハンマー整形も実施。"}]})];
+    // 1台・防音室（今月が時期。ホームの「今すぐご案内すべき」に出る）
+    ps = [P({room:"防音室",maker:"YAMAHA",model:"C3",type:"グランド",serial:"5904112",made:"2004",env:"防音室",fee:18000,ago:12,interval:12,
+      hist:[{ago:12,work:"調律＋整音",fee:22000,memo:"整音にこだわり。ハンマー整形も実施。"}]})];
     list.push(C({name:"田中 誠一",kana:"たなか せいいち",kind:"一般家庭",phone:"090-5566-7788",line:"タナカ",
       zip:"158-0083",pref:"東京都",city:"世田谷区",rest:"奥沢5-22-9",
       parking:"駐車不可・要相談",access:"地下の防音室。階段が急なので足元注意。",
@@ -1440,12 +1430,6 @@
       parking:"敷地内に駐車可",access:"搬入用エレベーターあり。事前に管理室へ連絡。",
       memo:"半年ごと契約。録音が入る週は避ける。",pianos:ps}));
 
-    // 1台
-    ps = [P({room:"リビング",maker:"YAMAHA",model:"U3",type:"アップライト",serial:"4102778",made:"1989",env:"リビング（一般家庭）",fee:13000,ago:8,interval:12,hist:[{ago:8,work:"調律",fee:13000}]})];
-    list.push(C({name:"山本 洋子",kana:"やまもと ようこ",kind:"一般家庭",phone:"090-8899-0011",
-      zip:"213-0001",pref:"神奈川県",city:"川崎市高津区",rest:"溝口4-9-6",
-      parking:"路上（短時間のみ）",access:"",memo:"コーラスの伴奏。",pianos:ps}));
-
     // 学校・4台（複数台の本命ケース）
     ps = [
       P({room:"音楽室",maker:"YAMAHA",model:"C3",type:"グランド",serial:"5731004",made:"2002",env:"学校・ホール",fee:18000,ago:6,interval:12,hist:[{ago:6,work:"調律",fee:18000,via:true}]}),
@@ -1460,29 +1444,11 @@
       parking:"敷地内に駐車可",access:"守衛室で入館証を受け取る。土日は不可。",
       memo:"年度初めに一括発注。請求書払い（月末締め翌月末）。",pianos:ps}));
 
-    // 1台
-    ps = [P({room:"リビング",maker:"KAWAI",model:"ND-21",type:"アップライト",serial:"2011456",made:"2001",env:"リビング（一般家庭）",fee:13000,ago:20,interval:12,hist:[{ago:20,work:"調律",fee:13000}]})];
-    list.push(C({name:"小林 あゆみ",kana:"こばやし あゆみ",kind:"一般家庭",phone:"080-4545-6767",email:"ayumi.k@example.com",line:"あゆ",
-      zip:"144-0051",pref:"東京都",city:"大田区",rest:"西蒲田7-5-13",bldg:"蒲田コーポ 305",
-      parking:"近隣のコインパーキング",access:"エレベーターなし・3階。",memo:"習慣づけ中。",pianos:ps}));
-
-    // 休眠
-    ps = [P({room:"リビング",maker:"YAMAHA",model:"U1",type:"アップライト",serial:"4455901",made:"1994",env:"リビング（一般家庭）",fee:13000,ago:30,interval:12,hist:[{ago:30,work:"調律",fee:13000}]})];
-    list.push(C({name:"森 由紀",kana:"もり ゆき",kind:"一般家庭",phone:"090-3131-2020",line:"ゆき",
-      zip:"244-0003",pref:"神奈川県",city:"横浜市戸塚区",rest:"戸塚町145-6",
-      parking:"敷地内に駐車可",access:"",memo:"進学後、足が遠のいている。",pianos:ps}));
-
     // 長期休眠
     ps = [P({room:"和室",maker:"YAMAHA",model:"U3",type:"アップライト",serial:"3712008",made:"1983",env:"和室",fee:13000,ago:148,interval:12,hist:[{ago:148,work:"調律",fee:13000}]})];
     list.push(C({name:"岡田 家",kana:"おかだ け",kind:"一般家庭",phone:"044-555-6363",
       zip:"215-0004",pref:"神奈川県",city:"川崎市麻生区",rest:"万福寺1-2-4",
       parking:"敷地内に駐車可",access:"",memo:"12年以上ご無沙汰。お子様が独立されてから触っていないとのこと。",pianos:ps}));
-
-    // 教室・1台
-    ps = [P({room:"スタジオ",maker:"YAMAHA",model:"G2",type:"グランド",serial:"2890331",made:"1975",env:"音楽教室",fee:15000,ago:1,interval:12,hist:[{ago:1,work:"調律",fee:15000,via:true},{ago:13,work:"調律",fee:15000}]})];
-    list.push(C({name:"近藤 バレエ教室",kana:"こんどう ばれえきょうしつ",kind:"音楽教室",phone:"03-4444-8181",email:"kondo@ballet.example.com",
-      zip:"141-0022",pref:"東京都",city:"品川区",rest:"東五反田3-14-7",bldg:"五反田スタジオ 4F",
-      parking:"駐車不可・要相談",access:"レッスンの合間（12〜13時）のみ作業可。",memo:"毎年5月ごろ。",pianos:ps}));
 
     // 今月調律済み
     ps = [P({room:"リビング",maker:"KAWAI",model:"BL-61",type:"アップライト",serial:"1750224",made:"1980",env:"リビング（一般家庭）",fee:13000,ago:0,day:4,interval:12,
@@ -1490,23 +1456,6 @@
     list.push(C({name:"石井 家",kana:"いしい け",kind:"一般家庭",phone:"090-7777-2323",line:"いしい",
       zip:"232-0067",pref:"神奈川県",city:"横浜市南区",rest:"弘明寺町265",
       parking:"近隣のコインパーキング",access:"",memo:"今月調律済み。",pianos:ps}));
-
-    // 今月調律済み
-    ps = [P({room:"和室",maker:"YAMAHA",model:"UX",type:"アップライト",serial:"3560119",made:"1981",env:"和室",fee:14000,ago:0,day:2,interval:12,
-      hist:[{ago:0,day:2,work:"調律＋整調",fee:19000},{ago:12,work:"調律",fee:14000}]})];
-    list.push(C({name:"藤田 良子",kana:"ふじた りょうこ",kind:"一般家庭",phone:"080-9898-5454",
-      zip:"216-0033",pref:"神奈川県",city:"川崎市宮前区",rest:"宮崎2-11-8",
-      parking:"敷地内に駐車可",access:"",memo:"",pianos:ps}));
-
-    // ホール・2台
-    ps = [
-      P({room:"大ホール",maker:"STEINWAY",model:"D-274",type:"グランド",serial:"S-601442",made:"1998",env:"学校・ホール",fee:30000,ago:2,interval:6,hist:[{ago:2,work:"調律",fee:30000},{ago:8,work:"調律＋整音",fee:38000}]}),
-      P({room:"小ホール",maker:"YAMAHA",model:"C7",type:"グランド",serial:"6233015",made:"2013",env:"学校・ホール",fee:24000,ago:2,interval:6,hist:[{ago:2,work:"調律",fee:24000}]})
-    ];
-    list.push(C({name:"青木 ホール",kana:"あおき ほーる",kind:"学校・ホール",phone:"045-666-1212",email:"hall@aoki.example.com",
-      zip:"231-0023",pref:"神奈川県",city:"横浜市中区",rest:"山下町2-3",
-      parking:"敷地内に駐車可",access:"公演がない日のみ。搬入口は建物北側。",
-      memo:"コンサート前は都度依頼。請求書払い。",pianos:ps}));
 
     return list;
   }
@@ -1815,7 +1764,7 @@
       +   '<div class="s"><span class="n">3</span><div><b>時期が来たらお知らせします</b>あとは、届いたご案内を送るだけです。</div></div>'
       + '</div>'
       + '<button class="btn primary" id="obAdd" style="width:100%">はじめのお客様を登録する</button>'
-      + '<button class="btn link" id="obDemo" style="width:100%;text-align:center;margin-top:6px">サンプルのお客様15軒で試す</button>'
+      + '<button class="btn link" id="obDemo" style="width:100%;text-align:center;margin-top:6px">サンプルのお客様8軒で試す</button>'
       + '</div>';
     $("obAdd").onclick = function () { $("fab").click(); };
     $("obDemo").onclick = function () { state = seed(); save(); refreshAll(); toast("サンプルのお客様を入れました。"); };
