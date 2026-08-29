@@ -3,7 +3,6 @@ import { Text } from 'react-native';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useColorScheme } from 'react-native';
 
 import HomeScreen from '../screens/HomeScreen';
 import ScheduleScreen from '../screens/ScheduleScreen';
@@ -15,8 +14,10 @@ import AddCustomerScreen from '../screens/AddCustomerScreen';
 import AddPianoScreen from '../screens/AddPianoScreen';
 import RecordFormScreen from '../screens/RecordFormScreen';
 import LedgerScreen from '../screens/LedgerScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 
 import { dark, light } from '../theme/colors';
+import { useScheme } from '../theme/ThemeContext';
 import type { RootStackParamList, TabParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -30,7 +31,7 @@ function tabIcon(label: string) {
 }
 
 function Tabs() {
-  const scheme = useColorScheme();
+  const scheme = useScheme();
   const c = scheme === 'dark' ? dark : light;
   return (
     <Tab.Navigator
@@ -52,7 +53,7 @@ function Tabs() {
 }
 
 export default function Navigation() {
-  const scheme = useColorScheme();
+  const scheme = useScheme();
   const c = scheme === 'dark' ? dark : light;
   const navTheme = {
     ...(scheme === 'dark' ? DarkTheme : DefaultTheme),
@@ -81,6 +82,7 @@ export default function Navigation() {
         <Stack.Screen name="AddPiano" component={AddPianoScreen} options={{ title: 'ピアノを追加' }} />
         <Stack.Screen name="RecordForm" component={RecordFormScreen} options={{ title: '記録' }} />
         <Stack.Screen name="Ledger" component={LedgerScreen} options={{ title: '売上帳' }} />
+        <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: '設定' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -1,35 +1,48 @@
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import Navigation from './src/navigation';
 import { AppProvider, useApp } from './src/store/AppContext';
-import { dark, light } from './src/theme/colors';
+import { ThemeProvider, useScheme } from './src/theme/ThemeContext';
+import { useColors } from './src/theme/useColors';
 
 function Gate() {
-  const scheme = useColorScheme();
-  const c = scheme === 'dark' ? dark : light;
+  const c = useColors();
+  const scheme = useScheme();
   const { ready } = useApp();
 
-  if (!ready) {
-    return (
-      <View style={{ flex: 1, backgroundColor: c.ground, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={c.accent} />
-      </View>
-    );
-  }
-  return <Navigation />;
+  return (
+    <>
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      {ready ? (
+        <Navigation />
+      ) : (
+        <View style={{ flex: 1, backgroundColor: c.ground, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color={c.accent} />
+        </View>
+      )}
+    </>
+  );
+}
+
+/** 表示テーマは保存された設定で決まるので、AppProvider の内側に置く */
+function Themed() {
+  const { settings } = useApp();
+  return (
+    <ThemeProvider pref={settings.theme}>
+      <Gate />
+    </ThemeProvider>
+  );
 }
 
 export default function App() {
-  const scheme = useColorScheme();
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <AppProvider>
-          <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-          <Gate />
+          <Themed />
         </AppProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

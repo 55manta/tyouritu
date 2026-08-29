@@ -106,12 +106,16 @@ export type Customer = {
 
 export type Plan = 'free' | 'monthly' | 'yearly';
 
+/** 端末の設定に合わせる / 明るい / 暗い */
+export type ThemePref = 'auto' | 'light' | 'dark';
+
 export type Settings = {
   taxMode: 'none' | 'incl';  // 免税事業者 / 課税事業者
   taxRate: number;
   durationMinutes: number;   // 1台あたりの作業時間
   locale: string;
   plan: Plan;
+  theme: ThemePref;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -120,6 +124,7 @@ export const DEFAULT_SETTINGS: Settings = {
   durationMinutes: 120,
   locale: 'ja-JP',
   plan: 'free',
+  theme: 'auto',
 };
 
 /** 無料で預かれるお客様の数。超えても既存の台帳は読めるままにする */

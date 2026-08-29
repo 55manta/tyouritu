@@ -133,6 +133,7 @@ export default function RevenueScreen() {
         )}
 
         <Button label="年間の売上帳を見る" variant="ghost" onPress={() => nav.navigate('Ledger')} style={{ marginTop: 12 }} />
+        <Button label="設定" variant="ghost" onPress={() => nav.navigate('Settings')} style={{ marginTop: 8 }} />
       </ScrollView>
     </SafeAreaView>
   );
