@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "調律ノート",
+    "slug": "choritsu-note",
+    "scheme": "choritsunote",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#F4F2EC",
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#F4F2EC",
+          "dark": { "backgroundColor": "#12110D" }
+        }
+      ]
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "jp.izumikawa.choritsunote",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "jp.izumikawa.choritsunote",
+      "adaptiveIcon": {
+        "backgroundColor": "#F4F2EC",
+        "foregroundImage": "./assets/icon.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/icon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "af261cf3-153d-4ed4-8d39-e237d79b2313"
+      }
+    },
+    "owner": "manta55"
+  }
+}
