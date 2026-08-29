@@ -18,6 +18,12 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "manabu@izumikawa.jp",
+        "ascAppId": "6806505606",
+        "appleTeamId": "KPXFL5CQN8"
+      }
+    }
   }
 }
