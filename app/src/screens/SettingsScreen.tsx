@@ -73,7 +73,8 @@ export default function SettingsScreen({ navigation }: Props) {
                     <Text style={{ color: c.ink2, fontSize: 13.5 }}>{user.email}</Text>
                   ) : null}
                   <Text style={{ color: c.ink2, fontSize: 13, lineHeight: 20 }}>
-                    端末を無くしても、新しい端末で同じアカウントからサインインすれば台帳が戻ります。
+                    端末を無くしても、新しい端末で同じアカウントからサインインすれば台帳が戻ります。{'\n'}
+                    ただし作業の写真は、この端末の中だけに残ります。
                   </Text>
                   {syncState === 'failed' && (
                     <Text style={{ color: c.overdueInk, fontSize: 13, lineHeight: 20 }}>

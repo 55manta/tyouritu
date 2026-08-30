@@ -12,7 +12,28 @@
           "package_name": "jp.izumikawa.choritsunote"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "256206159985-lo7jkm7tat4ank50b80kfdbqrjdkfh7r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "jp.izumikawa.choritsunote",
+            "certificate_hash": "b8d0eac8ad9a894a26fe73ed13178421dfe7398c"
+          }
+        },
+        {
+          "client_id": "256206159985-p4cvhgk65govbg4kk6lj7le414jb1qbm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "jp.izumikawa.choritsunote",
+            "certificate_hash": "10a6926189147007dd9d716985a753ae10026199"
+          }
+        },
+        {
+          "client_id": "256206159985-ah138ob5ah1nj0ltaaa9uupttiltmaih.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyC_3HsmcperACxyvkz9CSlai6VMZRGi8CI"
@@ -20,7 +41,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "256206159985-ah138ob5ah1nj0ltaaa9uupttiltmaih.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "256206159985-29fv8ltu2qct1fv7alpvisc8fkil9s79.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "jp.izumikawa.choritsunote"
+              }
+            }
+          ]
         }
       }
     }

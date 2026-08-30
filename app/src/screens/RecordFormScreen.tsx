@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { Button, Card, Title } from '../components/ui';
+import { PhotoField } from '../components/PhotoField';
 import { addMonths, fmtJ, fromIso, iso, today } from '../lib/date';
 import { KINDS, dueDate, type RecordKind } from '../lib/cycle';
 import { money } from '../lib/pricing';
@@ -44,6 +45,8 @@ export default function RecordFormScreen({ route, navigation }: Props) {
   const [pitch, setPitch] = useState(existing?.pitch ?? '');
   const [humid, setHumid] = useState(existing?.humid ?? '');
   const [pay, setPay] = useState<PayMethod>(existing?.pay ?? '現金');
+  const [photoBefore, setPhotoBefore] = useState<string | null>(existing?.photoBefore ?? null);
+  const [photoAfter, setPhotoAfter] = useState<string | null>(existing?.photoAfter ?? null);
 
   // 既定の次回日。ここから変えたときだけ「この回かぎりの上書き」として持つ
   const defaultNext = useMemo(
@@ -73,8 +76,8 @@ export default function RecordFormScreen({ route, navigation }: Props) {
       pitch,
       humid,
       cond: existing?.cond ?? null,
-      photoBefore: existing?.photoBefore ?? null,
-      photoAfter: existing?.photoAfter ?? null,
+      photoBefore,
+      photoAfter,
       via: existing?.via ?? piano.remindedCycle === iso(dueDate(piano)),
       pay,
       bill: pay === '請求書（後日振込）' ? 'unbilled' : 'paid',
@@ -167,6 +170,27 @@ export default function RecordFormScreen({ route, navigation }: Props) {
             placeholderTextColor={c.ink3}
             style={[st.input, st.area, { backgroundColor: c.surface, borderColor: c.line, color: c.ink }]}
           />
+        </Field>
+
+        <Field label="写真">
+          <PhotoField
+            label="作業前"
+            name={photoBefore}
+            consent={customer.photoConsent}
+            onChange={setPhotoBefore}
+          />
+          <View style={{ height: 12 }} />
+          <PhotoField
+            label="作業後"
+            name={photoAfter}
+            consent={customer.photoConsent}
+            onChange={setPhotoAfter}
+          />
+          {customer.photoConsent === null && (
+            <Text style={{ color: c.ink2, fontSize: 13, lineHeight: 20, marginTop: 6 }}>
+              写真はこの端末の中だけに残ります。お客様の情報の画面で、保存の同意を記録しておけます。
+            </Text>
+          )}
         </Field>
 
         <Field label="お支払い">

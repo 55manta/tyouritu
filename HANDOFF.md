@@ -575,3 +575,49 @@ Firebase 側で **Google プロバイダを有効化**（公開名「調律ノ�
 写真は型（`photoBefore` / `photoAfter`）があるだけで、撮影も保存も
 まだ実装していない。消す対象が無いものを消す仕組みから作らない。
 Blaze が要るのも同じ理由で保留。
+
+## 21. 写真機能と Android の下ごしらえ（2026-08-30）
+
+### 写真
+
+`photoBefore` / `photoAfter` は型だけあって未実装だったので、実装した。
+
+**画像そのものは台帳に入れない。** 端末のファイルとして持ち、記録には
+**ファイル名だけ**を入れる。理由は2つ。Firestore は1件1MiBまでで写真を入れると
+一発で当たること。もう1つは、台帳を1軒開くたびに写真まで運ぶことになること。
+
+| ファイル | 役目 |
+|---|---|
+| `src/lib/photos.ts` | 撮る・縮める・保存・消す。expo-file-system の新API（`Paths`/`File`/`Directory`） |
+| `src/components/PhotoField.tsx` | 作業前・作業後の1枠ぶん |
+
+- 長辺 **1280px** に縮めて JPEG（品質0.72）で保存する
+- **お客様が写真を辞退されている場合は、そもそも取り込ませない**。運用ではなく
+  `PhotoField` が止める（`consent === 'no'` で入力欄ごと出さない）
+- 記録・ピアノ・お客様を消したら、ひもづく写真も端末から消す（`dropPhotos`）
+- 権限を断られたときは例外にせず、戻り値で理由を返して画面に出す
+
+**写真はクラウドへ送らない。** Cloud Storage が Blaze プラン（有料）を要求するため。
+新しい端末で台帳を戻しても写真は来ないので、その旨を画面に出している
+（設定の控え欄と、ファイルが無い写真枠）。
+
+iOS のカメラ・写真の権限文言は `app.json` の `expo-image-picker` に入れた。
+
+### Android
+
+- **Play Console にアプリを作成**（`4976287948192301459`。調律ノート /
+  jp.izumikawa.choritsunote / 日本語 / アプリ / 無料）
+- **SHA-1 を2つ Firebase に登録**した
+  - Play App Signing: `B8:D0:EA:C8:AD:9A:89:4A:26:FE:73:ED:13:17:84:21:DF:E7:39:8C`
+  - EAS の upload key: `10:A6:92:61:89:14:70:07:DD:9D:71:69:85:A7:53:AE:10:02:61:99`
+- `google-services.json` を取り直し、Android の OAuth クライアント（client_type 1）が
+  2件入っていることを確認した
+
+Play 経由で配ると Google が署名し直すので、**本番で効くのは Play App Signing のほう**。
+EAS が直接配る APK では upload key のほうが効く。両方入れてあるのはそのため。
+
+### コンソールで値を取り出すときの小技
+
+Play Console も Expo も、SHA-1 を「コピー」ボタンでしか出さない（DOMには無い）。
+`navigator.clipboard.readText()` は権限の確認で固まることがあるので、
+**ページに入力欄を差し込んで Ctrl+V で貼る**のが確実だった。

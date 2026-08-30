@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useR
 import { cycleKey, dueDate, recalcLastTuned } from '../lib/cycle';
 import { pendingPianos, pianoName, quoted, reminderState } from '../lib/select';
 import { needsRoughTuning } from '../lib/pricing';
+import { deletePhoto } from '../lib/photos';
 import { iso, today } from '../lib/date';
 import type { Customer, Piano, Settings, Visit, WorkRecord } from '../types';
 import { DEFAULT_SETTINGS, FREE_LIMIT } from '../types';
@@ -248,6 +249,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [customers]
   );
 
+  /** 消える記録に付いていた写真を、端末からも消す。残しておく理由がない */
+  const dropPhotos = (recs: WorkRecord[]) => {
+    recs.forEach((r) => { deletePhoto(r.photoBefore); deletePhoto(r.photoAfter); });
+  };
+
   /** ピアノの履歴を差し替えたうえで、基準日を計算し直す。ここだけが lastTunedOn を触る */
   const withRecalced = (p: Piano, history: WorkRecord[]): Piano => {
     const next: Piano = { ...p, history: [...history].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)) };
@@ -268,12 +274,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       updateCustomer: (id, patch) => commit(replace(id, (c) => ({ ...c, ...patch }))),
 
-      deleteCustomer: (id) => commit(customers.filter((c) => c.id !== id)),
+      deleteCustomer: (id) => {
+        const gone = customers.find((c) => c.id === id);
+        if (gone) dropPhotos(gone.pianos.flatMap((p) => p.history));
+        return commit(customers.filter((c) => c.id !== id));
+      },
 
       addPiano: (cid, p) => commit(replace(cid, (c) => ({ ...c, pianos: [...c.pianos, p] }))),
 
-      deletePiano: (cid, pid) =>
-        commit(
+      deletePiano: (cid, pid) => {
+        const gone = customers.find((c) => c.id === cid)?.pianos.find((p) => p.id === pid);
+        if (gone) dropPhotos(gone.history);
+        return commit(
           replace(cid, (c) => ({
             ...c,
             pianos: c.pianos.filter((p) => p.id !== pid),
@@ -282,7 +294,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
               .map((v) => ({ ...v, pianoIds: v.pianoIds.filter((x) => x !== pid) }))
               .filter((v) => v.pianoIds.length > 0),
           }))
-        ),
+        );
+      },
 
       saveRecord: (cid, pid, rec, nextDue) =>
         commit(
@@ -317,15 +330,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           }))
         ),
 
-      deleteRecord: (cid, pid, rid) =>
-        commit(
+      deleteRecord: (cid, pid, rid) => {
+        const gone = customers.find((c) => c.id === cid)?.pianos
+          .find((p) => p.id === pid)?.history.find((h) => h.id === rid);
+        if (gone) dropPhotos([gone]);
+        return commit(
           replace(cid, (c) => ({
             ...c,
             pianos: c.pianos.map((p) =>
               p.id === pid ? withRecalced(p, p.history.filter((h) => h.id !== rid)) : p
             ),
           }))
-        ),
+        );
+      },
 
       addVisit: (cid, v) =>
         commit(replace(cid, (c) => ({ ...c, visits: [...c.visits, v], request: null }))),
