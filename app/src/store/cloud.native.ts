@@ -4,7 +4,7 @@ import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { getApp } from '@react-native-firebase/app';
 import {
   getAuth, onAuthStateChanged, signInWithCredential, signOut as fbSignOut,
-  AppleAuthProvider, GoogleAuthProvider,
+  AppleAuthProvider, GoogleAuthProvider, deleteUser, reauthenticateWithCredential,
 } from '@react-native-firebase/auth';
 import {
   getFirestore, doc, collection, getDocs, setDoc, deleteDoc, onSnapshot,
@@ -88,6 +88,38 @@ export const cloud: Cloud = {
 
   async signOut() {
     await fbSignOut(auth);
+  },
+
+  async deleteAccount() {
+    const u = auth.currentUser;
+    if (!u) return { ok: false as const, reason: 'サインインしていません。' };
+    try {
+      const snap = await getDocs(collection(db, 'tuners', u.uid, 'customers'));
+      await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+      await deleteDoc(doc(db, 'tuners', u.uid, 'meta', 'settings'));
+      await deleteUser(u);
+      return { ok: true as const };
+    } catch (e) {
+      const code = (e as { code?: string }).code || '';
+      if (code === 'auth/requires-recent-login') {
+        // Apple のみを使っているので、Apple で再認証してからもう一度試す
+        try {
+          const res = await AppleAuthentication.signInAsync({
+            requestedScopes: [AppleAuthentication.AppleAuthenticationScope.EMAIL],
+          });
+          if (!res.identityToken) throw new Error('no token');
+          await reauthenticateWithCredential(u, AppleAuthProvider.credential(res.identityToken));
+          const snap = await getDocs(collection(db, 'tuners', u.uid, 'customers'));
+          await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+          await deleteDoc(doc(db, 'tuners', u.uid, 'meta', 'settings'));
+          await deleteUser(u);
+          return { ok: true as const };
+        } catch {
+          return { ok: false as const, reason: '本人確認が必要です。もう一度サインインし直してからお試しください。' };
+        }
+      }
+      return { ok: false as const, reason: '削除できませんでした。通信の状態をお確かめのうえ、もう一度お試しください。' };
+    }
   },
 
   // ── 台帳の控え ──────────────────────────────────

@@ -17,6 +17,7 @@ export const cloud: Cloud = {
   async availableSignIn() { return []; },
   async signIn() { return null; },
   async signOut() {},
+  async deleteAccount() { return { ok: false, reason: 'この端末では削除できません。' }; },
 
   async pushCustomer() {},
   async removeCustomer() {},

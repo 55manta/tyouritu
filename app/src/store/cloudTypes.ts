@@ -48,6 +48,12 @@ export type Cloud = {
   availableSignIn(): Promise<SignInMethod[]>;
   signIn(method: SignInMethod): Promise<CloudUser>;
   signOut(): Promise<void>;
+  /**
+   * サインインしているアカウントと、クラウド上の控え（台帳・設定）を削除する。
+   * 端末の中の台帳は消さない（サインアウトと同じ扱い）。
+   * セッションが古く再認証が要る場合は Apple の再認証を挟む。
+   */
+  deleteAccount(): Promise<{ ok: true } | { ok: false; reason: string }>;
 
   // ── 台帳の控え ──────────────────────────────────
   pushCustomer(uid: string, c: Customer): Promise<void>;

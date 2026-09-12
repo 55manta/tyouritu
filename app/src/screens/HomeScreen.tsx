@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
+import { Linking, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -7,16 +7,20 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Button, Card, Empty, SaveAlert, StatusPill, Title } from '../components/ui';
 import { ReminderSheet } from '../components/ReminderSheet';
 import { dueDate, dueStatus, type DueStatus } from '../lib/cycle';
-import { fmtJ, fmtMd, fromIso } from '../lib/date';
+import { fmtJ, fmtMd, fromIso, monthIndex, today as todayDate } from '../lib/date';
 import { gapText, money, needsRoughTuning } from '../lib/pricing';
 import {
-  customerStatus, isSkipped, pendingPianos, pianoName, quoted, reminderState,
-  shortAddr, todaysVisits,
+  allRecords, customerStatus, fullAddr, isSkipped, pendingPianos, pianoName, quoted,
+  recordTotal, reminderState, shortAddr, todaysVisits,
 } from '../lib/select';
 import { useApp } from '../store/AppContext';
 import { MIN_TAP, useColors } from '../theme/useColors';
 import type { Customer, Piano } from '../types';
 import type { RootStackParamList } from '../navigation/types';
+
+function openMap(customer: Customer) {
+  Linking.openURL(`https://maps.google.com/?q=${encodeURIComponent(fullAddr(customer))}`);
+}
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type Group = { customer: Customer; pianos: Piano[] };
@@ -29,11 +33,19 @@ type Group = { customer: Customer; pianos: Piano[] };
 export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const c = useColors();
-  const { customers, settings, saveFailed, skipCycle, unskipCycle } = useApp();
+  const { customers, settings, saveFailed, skipCycle, unskipCycle, updateCustomer } = useApp();
   const surcharge = settings.locale === 'ja-JP';
   const [remindTo, setRemindTo] = useState<string | null>(null);
 
   const today = useMemo(() => todaysVisits(customers), [customers]);
+
+  /** 今月、ご案内から生まれた売上 */
+  const viaYen = useMemo(() => {
+    const cur = monthIndex(todayDate());
+    return allRecords(customers)
+      .filter((r) => r.record.via && monthIndex(fromIso(r.record.date)) === cur)
+      .reduce((s, r) => s + recordTotal(r.record), 0);
+  }, [customers]);
 
   const groups = useMemo(() => {
     const g: Record<DueStatus, Group[]> = {
@@ -92,17 +104,21 @@ export default function HomeScreen() {
         <Title>ご案内</Title>
 
         {requests.map((cust) => (
-          <Pressable
-            key={cust.id}
-            onPress={() => navigation.navigate('CustomerDetail', { id: cust.id })}
-            style={[st.req, { backgroundColor: c.accentSoft, borderColor: c.accent }]}
-          >
-            <Text style={[st.reqHead, { color: c.accentInk }]}>ご依頼をいただきました</Text>
-            <Text style={[st.reqName, { color: c.ink }]}>{cust.name} 様</Text>
-            {cust.request?.want ? (
-              <Text style={{ color: c.ink2, fontSize: 13.5 }}>ご希望：{cust.request.want}</Text>
-            ) : null}
-          </Pressable>
+          <Card key={cust.id} style={{ backgroundColor: c.accentSoft, borderColor: c.accent }}>
+            <Pressable onPress={() => navigation.navigate('CustomerDetail', { id: cust.id })}>
+              <Text style={[st.reqHead, { color: c.accentInk }]}>ご依頼をいただきました</Text>
+              <Text style={[st.reqName, { color: c.ink }]}>{cust.name} 様</Text>
+              {cust.request?.want ? (
+                <Text style={{ color: c.ink2, fontSize: 13.5 }}>ご希望：{cust.request.want}</Text>
+              ) : null}
+            </Pressable>
+            <Pressable
+              onPress={() => updateCustomer(cust.id, { request: null })}
+              style={[st.link, { marginTop: 4 }]}
+            >
+              <Text style={{ color: c.ink2, fontSize: 13.5, fontWeight: '700' }}>取り下げ</Text>
+            </Pressable>
+          </Card>
         ))}
 
         {today.length > 0 && (
@@ -111,19 +127,38 @@ export default function HomeScreen() {
               きょう {fmtMd(new Date())}　{today.length}件
             </Text>
             {today.map(({ customer, visit }) => (
-              <Pressable
-                key={visit.id}
-                onPress={() => navigation.navigate('CustomerDetail', { id: customer.id })}
-                style={st.todayRow}
-              >
-                <Text style={[st.time, { color: c.ink }]}>{visit.time || '時間未定'}</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={[st.name, { color: c.ink }]}>{customer.name} 様</Text>
-                  <Text style={{ color: c.ink2, fontSize: 13 }}>
-                    {visit.pianoIds.length}台 ・ {shortAddr(customer)}
-                  </Text>
+              <View key={visit.id} style={{ marginBottom: 8 }}>
+                <Pressable
+                  onPress={() => navigation.navigate('CustomerDetail', { id: customer.id })}
+                  style={st.todayRow}
+                >
+                  <Text style={[st.time, { color: c.ink }]}>{visit.time || '時間未定'}</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[st.name, { color: c.ink }]}>{customer.name} 様</Text>
+                    <Text style={{ color: c.ink2, fontSize: 13 }}>
+                      {visit.pianoIds.length}台 ・ {shortAddr(customer)}
+                    </Text>
+                  </View>
+                </Pressable>
+                <View style={st.todayActs}>
+                  {customer.phone ? (
+                    <Button label="電話" variant="ghost" style={{ flex: 1 }}
+                      onPress={() => Linking.openURL(`tel:${customer.phone}`)} />
+                  ) : null}
+                  <Button label="地図" variant="ghost" style={{ flex: 1 }} onPress={() => openMap(customer)} />
+                  <Button
+                    label="記録する"
+                    style={{ flex: 2 }}
+                    onPress={() => {
+                      if (visit.pianoIds.length === 1) {
+                        navigation.navigate('RecordForm', { customerId: customer.id, pianoId: visit.pianoIds[0] });
+                      } else {
+                        navigation.navigate('CustomerDetail', { id: customer.id });
+                      }
+                    }}
+                  />
                 </View>
-              </Pressable>
+              </View>
             ))}
           </Card>
         )}
@@ -141,6 +176,17 @@ export default function HomeScreen() {
           )}
         </Card>
 
+        {viaYen > 0 && (
+          <Pressable onPress={() => navigation.navigate('Tabs', { screen: 'Revenue' })}>
+            <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Text style={{ color: c.ink, fontSize: 14, flex: 1 }}>
+                今月、ご案内から生まれた売上　<Text style={{ fontWeight: '800' }}>{money(viaYen)}</Text>
+              </Text>
+              <Text style={{ color: c.ink3, fontSize: 18 }}>›</Text>
+            </Card>
+          </Pressable>
+        )}
+
         <Section title="時期を過ぎています" items={groups.overdue} {...sectionProps} />
         <Section title="今月が時期" items={groups.due} {...sectionProps} />
         <Section title="来月が時期" items={groups.next} {...sectionProps} />
@@ -156,6 +202,9 @@ export default function HomeScreen() {
   );
 }
 
+/** お客様が増えても破綻しないよう、区分ごとに5軒で打ち切り「もっと見る」で開く */
+const CAP = 5;
+
 function Section({
   title, items, nav, surcharge, onRemind, onSkip, onUnskip,
 }: {
@@ -168,15 +217,17 @@ function Section({
   onUnskip: (id: string) => void;
 }) {
   const c = useColors();
+  const [open, setOpen] = useState(false);
   if (!items.length) return null;
   const total = items.reduce((s, x) => s + x.pianos.length, 0);
+  const shown = open ? items : items.slice(0, CAP);
   return (
     <View style={{ gap: 10, marginTop: 6 }}>
       <Text style={[st.secHead, { color: c.ink }]}>
         {title}
         <Text style={{ color: c.ink2, fontSize: 13, fontWeight: '600' }}>　{items.length}軒 / {total}台</Text>
       </Text>
-      {items.map(({ customer, pianos }) => {
+      {shown.map(({ customer, pianos }) => {
         const fee = pianos.reduce((s, p) => s + quoted(p, surcharge), 0);
         const rs = reminderState(pianos);
         const skipped = rs === 'skipped' || rs === 'custSkipped';
@@ -237,6 +288,13 @@ function Section({
           </Card>
         );
       })}
+      {items.length > CAP && (
+        <Button
+          label={open ? `上の${CAP}軒だけ表示する` : `ほかの${items.length - CAP}軒も見る`}
+          variant="ghost"
+          onPress={() => setOpen(!open)}
+        />
+      )}
     </View>
   );
 }
@@ -250,6 +308,7 @@ const st = StyleSheet.create({
   cardHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   name: { fontSize: 17, fontWeight: '800' },
   todayRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, minHeight: MIN_TAP },
+  todayActs: { flexDirection: 'row', gap: 8 },
   time: { fontSize: 19, fontWeight: '800', minWidth: 62, fontVariant: ['tabular-nums'] },
   pianoRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingTop: 4 },
   rough: {
@@ -262,7 +321,6 @@ const st = StyleSheet.create({
     borderTopWidth: 1, marginTop: 8, paddingTop: 4,
   },
   link: { minHeight: MIN_TAP, justifyContent: 'center', paddingHorizontal: 4 },
-  req: { borderWidth: 1, borderRadius: 16, padding: 14, gap: 3 },
   reqHead: { fontSize: 12.5, fontWeight: '800' },
   reqName: { fontSize: 17, fontWeight: '800' },
 });

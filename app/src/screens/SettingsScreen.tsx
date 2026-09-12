@@ -1,21 +1,20 @@
 import React, { useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { Button, Card, Title } from '../components/ui';
 import { money } from '../lib/pricing';
 import { useApp } from '../store/AppContext';
 import { MIN_TAP, useColors } from '../theme/useColors';
 import { FREE_LIMIT, PLANS, type ThemePref } from '../types';
-import type { RootStackParamList } from '../navigation/types';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
+/** Stack（他画面からの「設定」ボタン）とタブ、どちらから開いても使えるよう navigation の型は最小限にする */
+type Props = { navigation: { goBack: () => void } };
 
 const SYNC_LABEL: Record<'off' | 'syncing' | 'synced' | 'failed', string> = {
   off: '控えは止まっています',
   syncing: '控えを送っています…',
-  synced: '控えが残っています',
+  synced: '控えを保存しています',
   failed: '控えを送れていません',
 };
 
@@ -34,12 +33,59 @@ export default function SettingsScreen({ navigation }: Props) {
   const c = useColors();
   const {
     customers, settings, updateSettings, resetToSamples, clearAll,
-    cloudAvailable, user, syncState, signInMethods, signIn, signOut,
+    cloudAvailable, user, syncState, signInMethods, signIn, signOut, deleteAccount,
+    purchasesAvailable, purchasePlan, restorePurchases,
   } = useApp();
 
   const [dur, setDur] = useState(String(settings.durationMinutes));
   const [rate, setRate] = useState(String(settings.taxRate));
   const [doc, setDoc] = useState<null | 'privacy' | 'terms'>(null);
+  const [buying, setBuying] = useState<'monthly' | 'yearly' | 'restore' | null>(null);
+
+  const buy = async (plan: 'monthly' | 'yearly') => {
+    if (!purchasesAvailable) {
+      Alert.alert('この端末では購入できません', 'iPhone実機のApp Storeからお試しください。');
+      return;
+    }
+    setBuying(plan);
+    const r = await purchasePlan(plan);
+    setBuying(null);
+    if (!r.ok && r.reason) Alert.alert('お手続きが完了しませんでした', r.reason);
+  };
+
+  const restore = async () => {
+    setBuying('restore');
+    const r = await restorePurchases();
+    setBuying(null);
+    if (!r.ok) { if (r.reason) Alert.alert('復元できませんでした', r.reason); return; }
+    Alert.alert('確認しました', '購入の状況を反映しました。');
+  };
+
+  const manageSubscription = () => {
+    Linking.openURL(
+      Platform.OS === 'ios'
+        ? 'itms-apps://apps.apple.com/account/subscriptions'
+        : 'https://apps.apple.com/account/subscriptions'
+    );
+  };
+
+  const requestDeleteAccount = () => {
+    Alert.alert(
+      'アカウントを削除しますか',
+      'サインインに使ったアカウントと、クラウド上の台帳の控えが削除されます。元に戻せません。\n\n台帳そのものはこの端末に残ります。',
+      [
+        { text: 'やめておく', style: 'cancel' },
+        {
+          text: '削除する',
+          style: 'destructive',
+          onPress: async () => {
+            const r = await deleteAccount();
+            if (!r.ok) Alert.alert('削除できませんでした', r.reason);
+          },
+        },
+      ]
+    );
+  };
 
   const taxable = settings.taxMode === 'incl';
   const pro = settings.plan !== 'free';
@@ -91,6 +137,12 @@ export default function SettingsScreen({ navigation }: Props) {
                         { text: 'サインアウト', onPress: () => signOut() },
                       ])
                     }
+                  />
+                  <Button
+                    label="アカウントを削除する"
+                    variant="danger"
+                    style={{ marginTop: 6 }}
+                    onPress={requestDeleteAccount}
                   />
                 </>
               ) : (
@@ -224,8 +276,8 @@ export default function SettingsScreen({ navigation }: Props) {
               <Text style={{ color: c.ink2, fontSize: 13.5 }}>
                 {money(PLANS[settings.plan as 'monthly' | 'yearly'].price)} / {PLANS[settings.plan as 'monthly' | 'yearly'].unit}
               </Text>
-              <Button label="無料プランに戻す" variant="ghost" style={{ marginTop: 6 }}
-                onPress={() => updateSettings({ plan: 'free' })} />
+              <Button label="サブスクリプションを管理する" variant="ghost" style={{ marginTop: 6 }}
+                onPress={manageSubscription} />
             </>
           ) : (
             <>
@@ -240,9 +292,20 @@ export default function SettingsScreen({ navigation }: Props) {
                     <Text style={{ color: c.ink, fontSize: 15, fontWeight: '700' }}>{PLANS[k].name}</Text>
                     <Text style={{ color: c.ink2, fontSize: 12.5 }}>{PLANS[k].note}</Text>
                   </View>
-                  <Button label={`${money(PLANS[k].price)}にする`} onPress={() => updateSettings({ plan: k })} />
+                  <Button
+                    label={buying === k ? 'お手続き中…' : `${money(PLANS[k].price)}にする`}
+                    onPress={() => buy(k)}
+                    disabled={buying !== null}
+                  />
                 </View>
               ))}
+              <Button
+                label={buying === 'restore' ? '確認しています…' : '購入を復元する'}
+                variant="ghost"
+                style={{ marginTop: 6 }}
+                onPress={restore}
+                disabled={buying !== null}
+              />
             </>
           )}
         </Card>

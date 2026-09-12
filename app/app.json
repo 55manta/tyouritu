@@ -43,12 +43,13 @@
         "expo-image-picker",
         {
           "photosPermission": "作業の記録に写真を添えるため、写真へのアクセスを求めています。お客様の同意をいただいた場合にだけ保存します。",
-          "cameraPermission": "ピアノの作業前後を撮って記録に残すため、カメラの使用を求めています。お客様の同意をいただいた場合にだけ保存します。"
+          "cameraPermission": "ピアノの作業前後を撮って記録に残すため、カメラの使用を求めています。お客様の同意をいただいた場合にだけ保存します。",
+          "microphonePermission": false
         }
       ]
     ],
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "jp.izumikawa.choritsunote",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false

@@ -28,7 +28,23 @@ export type WorkRecord = {
   bill: BillState;
   billedAt?: string;
   paidAt?: string;
+  addWorks: AddWork[];        // 追加で承諾いただいた作業
+  addWorksApprovedAt: string | null;  // 承諾をいただいた日時（口頭）の記録。無ければ未承諾
 };
+
+/** 追加作業の1件。金額はメニューが後で変わっても記録が動かないよう、その場でコピーして持つ */
+export type AddWork = { key: string; name: string; fee: number };
+
+export const WORK_MENU: { key: string; name: string; fee: number; why: string; risk: string }[] = [
+  { key: 'seichou', name: '整調（タッチの調整）', fee: 15000, why: '鍵盤の深さと戻りを規定値にそろえます。', risk: '弾き心地のばらつきが残り、指が疲れやすくなります。' },
+  { key: 'seion', name: '整音（音色の調整）', fee: 20000, why: 'ハンマーの当たりを整えて音色をそろえます。', risk: '音のばらつきが残ります。' },
+  { key: 'hammer', name: 'ハンマー整形', fee: 12000, why: '弦の当たり跡で潰れた先端を削り、形を戻します。', risk: '打弦点がずれたままになり、音がぼやけます。' },
+  { key: 'string', name: '弦の交換（1本）', fee: 7000, why: 'サビや傷みで切れる恐れのある弦を交換します。', risk: '演奏中に切れると、その音が出なくなります。' },
+  { key: 'key', name: '鍵盤の修理（1本）', fee: 1500, why: '戻りの悪い鍵盤のブッシングを調整します。', risk: 'その鍵盤が沈んだままになることがあります。' },
+  { key: 'spring', name: 'スプリング折れの修理（1箇所）', fee: 1000, why: '折れたスプリングを交換します。', risk: '連打がきかなくなります。' },
+  { key: 'punch', name: 'パンチングクロスの交換', fee: 18000, why: 'へたったフェルトを交換し、鍵盤の深さをそろえます。', risk: '鍵盤の深さが不均一なままになります。' },
+  { key: 'dry', name: '防湿装置の取り付け', fee: 25000, why: '湿度の影響を抑え、狂いにくくします。', risk: '湿気でサビ・カビが進み、狂いも早くなります。' },
+];
 
 export type Condition = {
   strings: CondLevel;
@@ -72,6 +88,10 @@ export type Visit = {
   note: string;
   /** 訪問前のご案内を送った日。二度送りを防ぐ */
   prepSent?: string;
+  /** 臨時のご依頼で入った予定のとき、その種別（定期調律以外） */
+  kind?: RecordKind;
+  /** 臨時のご依頼のとき、お客様からのお話 */
+  intake?: { items: string[]; note: string } | null;
 };
 
 /** お客様から「お願いします」が届いた状態 */

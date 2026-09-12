@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>プライバシーポリシー｜調律ノート</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --ground:#F4F2EC; --surface:#FFFFFF; --ink:#1E1C17; --ink2:#5E594F; --ink3:#6E695F;
+  --line:#E7E2D6; --accent-ink:#0A6A60; --brass-soft:#F0E7D2; --brass-ink:#785C27;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground:#12110D; --surface:#1B1A15; --ink:#F2EFE6; --ink2:#B0A999; --ink3:#948B78;
+    --line:#2E2B22; --accent-ink:#63D8C7; --brass-soft:#2E2612; --brass-ink:#D9B063;
+  }
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; background:var(--ground); color:var(--ink); line-height:1.9;
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;
+  font-size:16px; padding:32px 20px 64px;
+}
+main { max-width:720px; margin:0 auto; }
+h1 { font-size:26px; font-weight:800; margin:0 0 6px; }
+.sub { color:var(--ink2); font-size:14px; margin:0 0 28px; }
+h2 { font-size:18px; font-weight:800; margin:34px 0 8px; padding-top:20px; border-top:1px solid var(--line); }
+p, li { color:var(--ink2); font-size:15px; }
+p { margin:0 0 12px; }
+ul { margin:0 0 12px; padding-left:1.3em; }
+li { margin-bottom:6px; }
+strong { color:var(--ink); }
+table { width:100%; border-collapse:collapse; margin:0 0 14px; font-size:14px; color:var(--ink2); }
+th, td { border:1px solid var(--line); padding:9px 11px; text-align:left; vertical-align:top; }
+th { background:var(--surface); color:var(--ink); font-weight:700; }
+.note { background:var(--brass-soft); color:var(--brass-ink); border-radius:12px; padding:14px 16px; font-size:14px; }
+footer { margin-top:40px; padding-top:18px; border-top:1px solid var(--line); color:var(--ink3); font-size:13px; }
+a { color:var(--accent-ink); }
+</style>
+</head>
+<body>
+<main>
+  <h1>プライバシーポリシー</h1>
+  <p class="sub">調律ノート（以下「本アプリ」）　最終更新日 2026年8月30日</p>
+
+  <p>
+    本アプリは、ピアノ調律師の方がご自身のお客様の台帳を管理し、調律時期のご案内を行うための道具です。
+    本アプリが扱う情報は、その大半が<strong>ご利用の調律師の方がご自身のお客様について入力された情報</strong>です。
+    この文書では、その情報がどこに保存され、誰が見られるのかを説明します。
+  </p>
+
+  <h2>1. お預かりする情報</h2>
+  <table>
+    <tr><th>種類</th><th>内容</th></tr>
+    <tr><td>お客様の情報</td><td>お名前、ふりがな、ご住所、お電話番号、メールアドレス、LINEの表示名、駐車場所や搬入経路のメモ</td></tr>
+    <tr><td>ピアノの情報</td><td>設置場所の呼び名、メーカー、機種、製造番号、製造年、設置環境、料金</td></tr>
+    <tr><td>作業の記録</td><td>実施日、作業の種類と内容、料金、基準ピッチ、湿度、メモ、お支払い方法</td></tr>
+    <tr><td>作業の写真</td><td>作業前・作業後の写真（お客様の同意をいただいた場合のみ）</td></tr>
+    <tr><td>ご利用者ご本人の情報</td><td>サインインに使われたメールアドレス</td></tr>
+  </table>
+
+  <h2>2. 保存される場所</h2>
+  <p>
+    <strong>台帳はまず、お使いの端末の中に保存されます。</strong>
+    サインインしていない状態では、これらの情報が端末の外に出ることはありません。
+  </p>
+  <p>
+    サインインしていただくと、台帳の控えが Google の Firebase（Cloud Firestore、東京リージョン）に保存されます。
+    端末を紛失・初期化された場合に、新しい端末で台帳を復元するためです。
+    控えはご利用者ご本人のアカウントに紐づいて保存され、ほかの利用者から読むことはできません。
+  </p>
+  <p class="note">
+    <strong>作業の写真は、お使いの端末の中だけに保存されます。</strong>
+    クラウドへは送られません。そのため、端末を紛失された場合、写真は復元できません。
+  </p>
+
+  <h2>3. 使いみち</h2>
+  <ul>
+    <li>調律時期のご案内、お見積りの提示、作業の記録の作成</li>
+    <li>端末を替えたときに台帳を復元すること</li>
+  </ul>
+  <p>これ以外の目的には使いません。<strong>第三者へ提供したり、販売したり、広告に使ったりすることはありません。</strong></p>
+
+  <h2>4. 収集していない情報</h2>
+  <p>本アプリは、以下を一切取得しません。</p>
+  <ul>
+    <li>位置情報</li>
+    <li>端末の電話帳（連絡先）、通話履歴、SMSの内容</li>
+    <li>閲覧履歴、検索履歴、インストール済みアプリの一覧</li>
+    <li>広告ID。<strong>本アプリに広告は含まれません</strong></li>
+    <li>利用状況の分析（Google アナリティクスは無効にしています）</li>
+    <li>クラッシュレポート</li>
+  </ul>
+
+  <h2>5. お客様に届く予約ページについて</h2>
+  <p>
+    調律師の方がご案内を送ると、お客様には鍵つきのURL（<code>/b/…</code>）が届きます。
+    このページに載るのは<strong>お名前・ピアノの部屋と機種・次回の時期・料金の目安</strong>だけです。
+  </p>
+  <p>
+    <strong>ご住所・お電話番号・メールアドレス・メモ・写真・売上は、このページには一切含まれません。</strong>
+    URLの鍵は推測できない乱数で、調律師の方はいつでも作り直して古いURLを無効にできます。
+  </p>
+
+  <h2>6. ご案内の送信について</h2>
+  <p>
+    本アプリは、メッセージを送信するサーバーを持っていません。
+    ご案内の文面は、お使いの端末の LINE・SMS・メールのアプリに渡されるだけです。
+    そのため、お客様の連絡先が本アプリの運営者に送られることはありません。
+  </p>
+
+  <h2>7. 情報の削除</h2>
+  <p>
+    アプリ内でお客様を削除すると、端末内の情報、クラウド上の控え、その方に紐づく写真が削除されます。
+    設定画面から、登録されているお客様をすべて削除することもできます。
+  </p>
+  <p>
+    お客様ご本人から「情報を消してほしい」とのお申し出があった場合は、ご担当の調律師の方へお伝えください。
+  </p>
+
+  <h2>8. お客様の情報についての責任</h2>
+  <p>
+    本アプリに登録される情報の正確さと、お客様へのご説明の責任は、ご利用の調律師の方にあります。
+    お取り扱いの内容によっては、個人情報取扱事業者としての義務が生じる場合があります。
+  </p>
+
+  <h2>9. 安全のための措置</h2>
+  <ul>
+    <li>通信はすべて暗号化されています（HTTPS / TLS）</li>
+    <li>クラウド上の台帳は、サインインしたご本人以外は読み書きできない設定にしています</li>
+    <li>予約ページは1件ずつしか開けず、一覧で取得することはできません</li>
+  </ul>
+
+  <h2>10. お問い合わせ</h2>
+  <p>
+    本アプリについてのお問い合わせ：<a href="mailto:manabu@izumikawa.jp">manabu@izumikawa.jp</a>
+  </p>
+  <p>
+    お客様の情報の削除など、個々の台帳についてのご要望は、ご担当の調律師の方へお願いいたします。
+  </p>
+
+  <h2>11. 変更について</h2>
+  <p>
+    本ポリシーの内容を変更する場合は、このページを更新し、最終更新日を書き換えます。
+  </p>
+
+  <footer>調律ノート ／ 泉川学</footer>
+</main>
+</body>
+</html>

@@ -32,6 +32,7 @@ export default function AddCustomerScreen({ navigation }: Props) {
   const [maker, setMaker] = useState('');
   const [model, setModel] = useState('');
   const [fee, setFee] = useState('13000');
+  const [interval, setInterval] = useState('12');
   const [region, setRegion] = useState('');
   const [city, setCity] = useState('');
   const [line1, setLine1] = useState('');
@@ -79,7 +80,7 @@ export default function AddCustomerScreen({ navigation }: Props) {
         id: uid('p'),
         room: room.trim() || 'リビング', maker: maker.trim(), model: model.trim(),
         type: 'アップライト', serial: '', made: '', env: '',
-        fee: parseInt(fee, 10) || 13000, intervalMonths: 12,
+        fee: parseInt(fee, 10) || 13000, intervalMonths: parseInt(interval, 10) || 12,
         lastTunedOn: lastIso, initialLast: lastIso, nextDue: null,
         remindedCycle: null, skippedCycle: null, custSkippedCycle: null,
         history: [],
@@ -129,6 +130,20 @@ export default function AddCustomerScreen({ navigation }: Props) {
             <F label="メーカー"><I value={maker} onChangeText={setMaker} placeholder="例：YAMAHA" /></F>
             <F label="型番"><I value={model} onChangeText={setModel} placeholder="例：U3" /></F>
             <F label="調律の料金（円）"><I value={fee} onChangeText={setFee} inputMode="numeric" /></F>
+            <F label="次回までの目安">
+              <View style={st.chips}>
+                {(['12', '6', '24'] as const).map((v) => {
+                  const on = v === interval;
+                  const label = v === '12' ? '1年ごと（標準）' : v === '6' ? '半年ごと' : '2年ごと';
+                  return (
+                    <Text key={v} onPress={() => setInterval(v)}
+                      style={[st.chip, { backgroundColor: on ? c.accent : c.surface, borderColor: on ? c.accent : c.lineStrong, color: on ? c.onAccent : c.ink2 }]}>
+                      {label}
+                    </Text>
+                  );
+                })}
+              </View>
+            </F>
             <F label="都道府県"><I value={region} onChangeText={setRegion} placeholder="例：神奈川県" /></F>
             <F label="市区町村"><I value={city} onChangeText={setCity} placeholder="例：横浜市青葉区" /></F>
             <F label="番地"><I value={line1} onChangeText={setLine1} placeholder="例：あざみ野1-14-2" /></F>

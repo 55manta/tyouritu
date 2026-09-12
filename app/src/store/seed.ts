@@ -46,6 +46,7 @@ function piano(o: PianoSpec): Piano {
       pitch: '', humid: '', cond: null,
       photoBefore: null, photoAfter: null,
       via: !!h.via, pay: '現金', bill: 'paid',
+      addWorks: [], addWorksApprovedAt: null,
     })),
   };
 }

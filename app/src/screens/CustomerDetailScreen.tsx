@@ -11,7 +11,7 @@ import { fmtJ, fmtJd, fmtMd, fromIso, iso, today } from '../lib/date';
 import { prepMessage } from '../lib/messages';
 import { gapText, money, needsRoughTuning } from '../lib/pricing';
 import {
-  customerStats, fullAddr, pendingPianos, pianoName, quoted, recordTotal, reminderState,
+  condTodo, customerStats, fullAddr, pendingPianos, pianoName, quoted, recordTotal, reminderState,
 } from '../lib/select';
 import { newToken, uid } from '../store/db';
 import { useApp } from '../store/AppContext';
@@ -140,6 +140,9 @@ export default function CustomerDetailScreen({ route, navigation }: Props) {
           <Text style={{ color: c.ink, fontSize: 15 }}>{fullAddr(customer) || '（住所が未登録）'}</Text>
           {customer.parking ? <Text style={{ color: c.ink2, fontSize: 13.5 }}>駐車場　{customer.parking}</Text> : null}
           {customer.access ? <Text style={{ color: c.ink2, fontSize: 13.5 }}>搬入経路　{customer.access}</Text> : null}
+          {customer.email ? <Text style={{ color: c.ink2, fontSize: 13.5 }}>メール　{customer.email}</Text> : null}
+          {customer.line ? <Text style={{ color: c.ink2, fontSize: 13.5 }}>LINE　{customer.line}</Text> : null}
+          {customer.memo ? <Text style={{ color: c.ink2, fontSize: 13.5 }}>メモ　{customer.memo}</Text> : null}
           <View style={st.row}>
             {customer.phone ? (
               <Button label="電話する" variant="ghost" style={{ flex: 1 }}
@@ -148,6 +151,8 @@ export default function CustomerDetailScreen({ route, navigation }: Props) {
             <Button label="地図" variant="ghost" style={{ flex: 1 }}
               onPress={() => Linking.openURL(`https://maps.google.com/?q=${encodeURIComponent(fullAddr(customer))}`)} />
           </View>
+          <Button label="お客様の情報を直す" variant="ghost" style={{ marginTop: 8 }}
+            onPress={() => navigation.navigate('EditCustomer', { id })} />
         </Card>
 
         {stats.count > 0 && (
@@ -236,10 +241,18 @@ export default function CustomerDetailScreen({ route, navigation }: Props) {
                 {gapText(p.lastTunedOn)}あいています。粗調律（下準備）が必要です
               </Text>
             )}
+            {condTodo(p.history[0]).length > 0 && (
+              <Text style={[st.warn, { color: c.brassInk, backgroundColor: c.brassSoft }]}>
+                次回の申し送り　{condTodo(p.history[0]).join('／')} を要相談として記録しています。
+              </Text>
+            )}
 
-            <Button label="この台を記録する"
-              onPress={() => navigation.navigate('RecordForm', { customerId: id, pianoId: p.id })}
-              style={{ marginTop: 8 }} />
+            <View style={st.row}>
+              <Button label="この台を記録する" style={{ flex: 2 }}
+                onPress={() => navigation.navigate('RecordForm', { customerId: id, pianoId: p.id })} />
+              <Button label="直す" variant="ghost" style={{ flex: 1 }}
+                onPress={() => navigation.navigate('EditPiano', { customerId: id, pianoId: p.id })} />
+            </View>
 
             {p.history.length > 0 && (
               <Pressable onPress={() => setOpenHistory(openHistory === p.id ? null : p.id)} style={st.toggle}>
@@ -275,6 +288,9 @@ export default function CustomerDetailScreen({ route, navigation }: Props) {
 
         <Button label="このお客様にピアノを追加" variant="ghost"
           onPress={() => navigation.navigate('AddPiano', { customerId: id })} />
+
+        <Button label="臨時のご依頼を受ける" variant="ghost" style={{ marginTop: 8 }}
+          onPress={() => navigation.navigate('SpotJob', { customerId: id })} />
 
         <Text style={[st.sec, { color: c.ink, marginTop: 16 }]}>お客様の情報の扱い</Text>
         <Card>

@@ -1,7 +1,7 @@
 import { cycleKey, dueDate, dueStatus, STATUS_RANK, type DueStatus } from './cycle';
 import { fromIso, iso, monthIndex, today } from './date';
 import { quotedFee } from './pricing';
-import type { Customer, Piano, Visit, WorkRecord } from '../types';
+import type { Condition, Customer, Piano, Visit, WorkRecord } from '../types';
 
 /** 一覧や集計のための引き出し。画面はここを通して値を得る */
 
@@ -78,7 +78,7 @@ export function lastVisitOf(c: Customer): string {
 }
 
 export function recordTotal(r: WorkRecord): number {
-  return r.fee || 0;
+  return (r.fee || 0) + (r.addWorks || []).reduce((s, w) => s + w.fee, 0);
 }
 
 export function salesOf(c: Customer): number {
@@ -142,6 +142,31 @@ export function shortAddr(c: Customer): string {
 export function fullAddr(c: Customer): string {
   const a = c.addr;
   return [a.region, a.city, a.line1, a.line2].filter(Boolean).join(' ');
+}
+
+const COND_LABELS: Record<keyof Condition, string> = {
+  strings: '弦・チューニングピン',
+  action: 'ハンマー・アクション',
+  keys: '鍵盤・タッチ',
+  humid: '湿度・設置環境',
+};
+
+/** 前回「要相談」だった項目。次回の訪問時に申し送りとして見せる */
+export function condTodo(rec: WorkRecord | undefined): string[] {
+  if (!rec?.cond) return [];
+  const cond = rec.cond;
+  return (Object.keys(COND_LABELS) as (keyof Condition)[])
+    .filter((k) => cond[k] === 'act')
+    .map((k) => COND_LABELS[k]);
+}
+
+/** ざっくりしたエリア。お客様一覧のエリア表示で使う */
+export function areaBucket(c: Customer): string {
+  const city = c.addr.city || '';
+  if (city.startsWith('横浜市')) return '横浜市';
+  if (city.startsWith('川崎市')) return '川崎市';
+  if ((c.addr.region || '').startsWith('東京')) return '東京都';
+  return 'その他';
 }
 
 export function pianoName(p: Piano): string {

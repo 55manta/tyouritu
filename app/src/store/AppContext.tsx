@@ -9,6 +9,8 @@ import { DEFAULT_SETTINGS, FREE_LIMIT } from '../types';
 import * as db from './db';
 import { cloud } from './cloud';
 import type { CloudUser, SignInMethod } from './cloudTypes';
+import { purchases } from './purchases';
+import type { PurchasePlan } from './purchasesTypes';
 
 /**
  * アプリ全体の状態。
@@ -39,6 +41,7 @@ type Ctx = {
   deleteCustomer: (id: string) => Promise<boolean>;
 
   addPiano: (customerId: string, p: Piano) => Promise<boolean>;
+  updatePiano: (customerId: string, pianoId: string, patch: Partial<Piano>) => Promise<boolean>;
   deletePiano: (customerId: string, pianoId: string) => Promise<boolean>;
 
   saveRecord: (customerId: string, pianoId: string, rec: WorkRecord, nextDue: string | null) => Promise<boolean>;
@@ -76,6 +79,13 @@ type Ctx = {
   signInMethods: SignInMethod[];
   signIn: (method: SignInMethod) => Promise<{ ok: true } | { ok: false; reason: string }>;
   signOut: () => Promise<void>;
+  /** アカウントとクラウド上の控えを削除する。端末の中の台帳は残す */
+  deleteAccount: () => Promise<{ ok: true } | { ok: false; reason: string }>;
+
+  // ── 課金 ──────────────────────────────────────
+  purchasesAvailable: boolean;
+  purchasePlan: (plan: PurchasePlan) => Promise<{ ok: true } | { ok: false; reason: string }>;
+  restorePurchases: () => Promise<{ ok: true } | { ok: false; reason: string }>;
 };
 
 const AppCtx = createContext<Ctx | null>(null);
@@ -100,6 +110,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setReady(true);
     })();
     cloud.availableSignIn().then(setSignInMethods);
+    purchases.init();
     return cloud.onUser(setUser);
   }, []);
 
@@ -149,6 +160,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // 効果の中から最新の値を読むための控え。値が変わるたびに効果を回したくない
   const latest = useRef({ customers, settings });
   latest.current = { customers, settings };
+
+  /**
+   * 有効なプランの実際の状態（ストア側）を、端末の設定に反映する。
+   * 更新の失敗・解約・別端末での購入も、ここで自動的に追随する。
+   * `updateSettings` を経由しない（まだ ready でない起動直後にも届くため、
+   * 直接 db に保存してから state を更新する）。
+   */
+  useEffect(() => {
+    return purchases.onPlanChange(async (plan) => {
+      if (!ready) return;
+      if (latest.current.settings.plan === plan) return;
+      const next = { ...latest.current.settings, plan };
+      const res = await db.saveSettings(next);
+      if (!res.ok) return;
+      setSettings(next);
+      db.markTouched();
+      if (user) cloud.pushSettings(user.uid, next).catch(() => setSyncState('failed'));
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, user]);
 
   /**
    * サインインした直後の一度だけ。
@@ -281,6 +312,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       },
 
       addPiano: (cid, p) => commit(replace(cid, (c) => ({ ...c, pianos: [...c.pianos, p] }))),
+
+      updatePiano: (cid, pid, patch) =>
+        commit(replace(cid, (c) => ({
+          ...c,
+          pianos: c.pianos.map((p) => (p.id === pid ? { ...p, ...patch } : p)),
+        }))),
 
       deletePiano: (cid, pid) => {
         const gone = customers.find((c) => c.id === cid)?.pianos.find((p) => p.id === pid);
@@ -430,7 +467,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       signIn: async (method) => {
         try {
-          await cloud.signIn(method);
+          const u = await cloud.signIn(method);
+          if (u) purchases.logIn(u.uid);
           return { ok: true as const };
         } catch (e) {
           const code = (e as { code?: string }).code || '';
@@ -444,8 +482,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       signOut: async () => {
         await cloud.signOut();
+        await purchases.logOut();
         pushed.current.clear();
         setSyncState('off');
+      },
+
+      deleteAccount: async () => {
+        const res = await cloud.deleteAccount();
+        if (!res.ok) return res;
+        await purchases.logOut();
+        pushed.current.clear();
+        setSyncState('off');
+        return { ok: true as const };
+      },
+
+      purchasesAvailable: purchases.available,
+
+      purchasePlan: (plan) => purchases.purchase(plan),
+
+      restorePurchases: async () => {
+        const res = await purchases.restore();
+        return res.ok ? { ok: true as const } : res;
       },
 
       resetToSamples: async () => {
