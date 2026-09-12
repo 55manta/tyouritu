@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>利用規約｜調律ノート</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --ground:#F4F2EC; --surface:#FFFFFF; --ink:#1E1C17; --ink2:#5E594F; --ink3:#6E695F;
+  --line:#E7E2D6; --accent-ink:#0A6A60; --brass-soft:#F0E7D2; --brass-ink:#785C27;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground:#12110D; --surface:#1B1A15; --ink:#F2EFE6; --ink2:#B0A999; --ink3:#948B78;
+    --line:#2E2B22; --accent-ink:#63D8C7; --brass-soft:#2E2612; --brass-ink:#D9B063;
+  }
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; background:var(--ground); color:var(--ink); line-height:1.9;
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;
+  font-size:16px; padding:32px 20px 64px;
+}
+main { max-width:720px; margin:0 auto; }
+h1 { font-size:26px; font-weight:800; margin:0 0 6px; }
+.sub { color:var(--ink2); font-size:14px; margin:0 0 28px; }
+h2 { font-size:18px; font-weight:800; margin:34px 0 8px; padding-top:20px; border-top:1px solid var(--line); }
+p, li { color:var(--ink2); font-size:15px; }
+p { margin:0 0 12px; }
+ul { margin:0 0 12px; padding-left:1.3em; }
+li { margin-bottom:6px; }
+strong { color:var(--ink); }
+table { width:100%; border-collapse:collapse; margin:0 0 14px; font-size:14px; color:var(--ink2); }
+th, td { border:1px solid var(--line); padding:9px 11px; text-align:left; vertical-align:top; }
+th { background:var(--surface); color:var(--ink); font-weight:700; }
+.note { background:var(--brass-soft); color:var(--brass-ink); border-radius:12px; padding:14px 16px; font-size:14px; }
+footer { margin-top:40px; padding-top:18px; border-top:1px solid var(--line); color:var(--ink3); font-size:13px; }
+a { color:var(--accent-ink); }
+</style>
+</head>
+<body>
+<main>
+  <h1>利用規約</h1>
+  <p class="sub">調律ノート（以下「本アプリ」）　最終更新日 2026年9月13日</p>
+
+  <p>
+    本アプリは、ピアノ調律師の方がご自身のお客様の台帳を管理し、調律時期のご案内を行うための道具です。
+    本アプリをダウンロード・ご利用いただくことで、この規約に同意いただいたものとします。
+  </p>
+
+  <h2>1. お客様の情報の管理について</h2>
+  <p>
+    本アプリに登録される情報の正確さと、お客様へのご説明の責任は、ご利用の調律師の方にあります。
+    お取り扱いの内容によっては、個人情報取扱事業者としての義務が生じる場合があります。
+  </p>
+
+  <h2>2. ご利用料金・自動更新サブスクリプションについて</h2>
+  <p>お客様の登録は<strong>10軒まで無料</strong>でお使いいただけます。</p>
+  <p>11軒以上を登録するには、以下いずれかの自動更新サブスクリプションへのご加入が必要です。加入すると、お客様の登録軒数が無制限になります。</p>
+  <table>
+    <tr><th>プラン</th><th>期間</th><th>価格（税込）</th></tr>
+    <tr><td>月額プラン</td><td>1ヶ月ごとに自動更新</td><td>1,200円</td></tr>
+    <tr><td>年額プラン</td><td>1年ごとに自動更新</td><td>12,000円（月あたり1,000円相当）</td></tr>
+  </table>
+  <ul>
+    <li>お支払いは、ご購入時にお使いのApple ID または Googleアカウントに請求されます</li>
+    <li>各プランは、期間終了の24時間前までに解約されない限り、自動的に同じ期間・同じ価格で更新されます</li>
+    <li>解約は、購入いただいたストア（App Store／Google Play）のサブスクリプション管理からいつでも行えます。本アプリの「設定」画面から管理画面を開くこともできます</li>
+    <li>期間の途中で解約されても、既にお支払いいただいた期間の終わりまではご利用いただけます</li>
+    <li>無料の範囲（10軒まで）で登録済みのお客様の情報は、ご購読の有無にかかわらずいつでもご覧いただけます</li>
+  </ul>
+
+  <h2>3. データの保管</h2>
+  <p>
+    台帳はまずお使いの端末の中に保存されます。サインインしていただくと、控えが
+    Firebase（Cloud Firestore）にも保存され、機種変更時に復元できるようになります。
+    詳しくは<a href="/privacy/">プライバシーポリシー</a>をご覧ください。
+  </p>
+
+  <h2>4. 禁止事項</h2>
+  <ul>
+    <li>本アプリを、ご自身が管理する調律のお客様以外の情報を無断で登録する目的で使用すること</li>
+    <li>本アプリの複製、改変、リバースエンジニアリング</li>
+    <li>法令または公序良俗に反する目的での利用</li>
+  </ul>
+
+  <h2>5. 免責事項</h2>
+  <p>
+    本アプリは、調律時期のご案内や記録の作成を補助する道具であり、その内容の正確性・完全性を保証するものではありません。
+    本アプリの利用により生じた損害について、開発者は法令上許される範囲で責任を負いません。
+  </p>
+
+  <h2>6. サービスの変更・終了</h2>
+  <p>
+    やむを得ない事情により、本アプリの内容を変更し、または提供を終了することがあります。
+    その場合、可能な範囲で事前にお知らせします。
+  </p>
+
+  <h2>7. お問い合わせ</h2>
+  <p>
+    本アプリについてのお問い合わせ：<a href="mailto:manabu@izumikawa.jp">manabu@izumikawa.jp</a>
+  </p>
+
+  <h2>8. 変更について</h2>
+  <p>
+    本規約の内容を変更する場合は、このページを更新し、最終更新日を書き換えます。
+  </p>
+
+  <h2>関連</h2>
+  <p><a href="/privacy/">プライバシーポリシー</a></p>
+
+  <footer>調律ノート ／ 泉川学</footer>
+</main>
+</body>
+</html>
