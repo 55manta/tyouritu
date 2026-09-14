@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DEFAULT_SETTINGS, type Customer, type Settings } from '../types';
-import { seed } from './seed';
 
 /**
  * 端末内の保存。
@@ -16,8 +15,8 @@ import { seed } from './seed';
 const KEY_CUSTOMERS = 'choritsu.customers.v1';
 const KEY_SETTINGS = 'choritsu.settings.v1';
 /**
- * 「まだサンプルのまま、一度も触っていない」印。
- * 新しい端末でサインインしたとき、サンプルでクラウドの台帳を
+ * 「まだ一度も触っていない、届いたままの状態」の印。
+ * 新しい端末でサインインしたとき、空のままの端末でクラウドの台帳を
  * 上書きしてしまわないために要る。
  */
 const KEY_PRISTINE = 'choritsu.pristine.v1';
@@ -27,7 +26,7 @@ export type SaveResult = { ok: true } | { ok: false; error: string };
 export async function loadCustomers(): Promise<Customer[]> {
   try {
     const raw = await AsyncStorage.getItem(KEY_CUSTOMERS);
-    // キーが無いときだけ初期投入する。空配列は「利用者が消した結果」として尊重する
+    // キーが無いときだけ初期化する。空配列は「利用者が消した結果」として尊重する
     // （試作では空配列を未初期化と同じ扱いにしていたため、全部消しても
     //   次に開くとサンプルが復活していた＝監査で見つけた不具合）
     if (raw !== null) {
@@ -35,12 +34,11 @@ export async function loadCustomers(): Promise<Customer[]> {
       if (Array.isArray(parsed)) return parsed as Customer[];
     }
   } catch {
-    // 壊れていたら初期投入に落とす
+    // 壊れていたら初期化に落とす
   }
-  const s = seed();
-  await saveCustomers(s);
+  await saveCustomers([]);
   await AsyncStorage.setItem(KEY_PRISTINE, '1');
-  return s;
+  return [];
 }
 
 /** サンプルのまま、一度も編集していないか */
