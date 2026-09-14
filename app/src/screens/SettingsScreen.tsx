@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Card, Title } from '../components/ui';
@@ -39,7 +39,6 @@ export default function SettingsScreen({ navigation }: Props) {
 
   const [dur, setDur] = useState(String(settings.durationMinutes));
   const [rate, setRate] = useState(String(settings.taxRate));
-  const [doc, setDoc] = useState<null | 'privacy' | 'terms'>(null);
   const [buying, setBuying] = useState<'monthly' | 'yearly' | 'restore' | null>(null);
 
   const buy = async (plan: 'monthly' | 'yearly') => {
@@ -312,8 +311,10 @@ export default function SettingsScreen({ navigation }: Props) {
 
         <Text style={[st.sec, { color: c.ink }]}>お客様の情報について</Text>
         <View style={st.row}>
-          <Button label="プライバシーポリシー" variant="ghost" style={{ flex: 1 }} onPress={() => setDoc('privacy')} />
-          <Button label="利用規約" variant="ghost" style={{ flex: 1 }} onPress={() => setDoc('terms')} />
+          <Button label="プライバシーポリシー" variant="ghost" style={{ flex: 1 }}
+            onPress={() => Linking.openURL('https://choritsu-note.web.app/privacy/')} />
+          <Button label="利用規約" variant="ghost" style={{ flex: 1 }}
+            onPress={() => Linking.openURL('https://choritsu-note.web.app/terms/')} />
         </View>
 
         <Text style={[st.sec, { color: c.ink }]}>お試し用</Text>
@@ -343,54 +344,7 @@ export default function SettingsScreen({ navigation }: Props) {
           />
         </Card>
       </ScrollView>
-
-      <DocSheet which={doc} onClose={() => setDoc(null)} />
     </SafeAreaView>
-  );
-}
-
-/** 規約類。公開前に内容の確認が要るので、試作である旨をここに明記しておく */
-function DocSheet({ which, onClose }: { which: null | 'privacy' | 'terms'; onClose: () => void }) {
-  const c = useColors();
-  if (!which) return null;
-
-  const privacy: [string, string][] = [
-    ['お預かりするもの', 'お客様のお名前・ご住所・お電話番号・メールアドレス、ピアノの情報、作業の履歴、および同意をいただいた場合の作業写真。'],
-    ['使いみち', '調律のご案内、お見積り、作業報告書の作成にのみ使います。第三者へ提供したり、広告に使ったりすることはありません。'],
-    ['写真について', 'お客様ごとに保存の同意をうかがい、辞退された場合は保存しません。'],
-    ['削除のご要望', '「情報を消してほしい」とのお申し出があれば、写真を含めてすべて削除します。お客様の画面から実行できます。'],
-    ['お問い合わせ', 'ご担当の調律師までお願いいたします。'],
-  ];
-  const terms: [string, string][] = [
-    ['このアプリについて', 'ピアノ調律師の方が、ご自身のお客様の台帳を管理し、調律時期のご案内を行うための道具です。'],
-    ['お客様の情報の管理', '登録された情報の正確さと、お客様への説明の責任は、ご利用の調律師の方にあります。個人情報取扱事業者としての義務が生じる場合があります。'],
-    ['料金', `お客様 ${FREE_LIMIT} 軒までは無料。それを超える場合は月額 ${money(PLANS.monthly.price)}、または年額 ${money(PLANS.yearly.price)}。`],
-    ['データの保管', 'いまのところ、データはこの端末の中にのみ保存されます。端末の紛失・初期化により失われることがあります。'],
-  ];
-  const items = which === 'privacy' ? privacy : terms;
-
-  return (
-    <Modal visible animationType="slide" transparent onRequestClose={onClose}>
-      <View style={[st.scrim, { backgroundColor: c.scrim }]}>
-        <View style={[st.sheet, { backgroundColor: c.surface, borderColor: c.line }]}>
-          <ScrollView contentContainerStyle={st.docPad}>
-            <Text style={{ color: c.ink, fontSize: 19, fontWeight: '800' }}>
-              {which === 'privacy' ? 'プライバシーポリシー' : '利用規約'}
-            </Text>
-            {items.map(([h, b]) => (
-              <View key={h} style={{ gap: 2 }}>
-                <Text style={{ color: c.ink, fontSize: 14.5, fontWeight: '700' }}>{h}</Text>
-                <Text style={{ color: c.ink2, fontSize: 14, lineHeight: 22 }}>{b}</Text>
-              </View>
-            ))}
-            <Text style={{ color: c.brassInk, fontSize: 13, lineHeight: 20 }}>
-              ※ これは試作版の文面です。公開前に内容の確認が必要です。
-            </Text>
-            <Button label="閉じる" onPress={onClose} style={{ marginTop: 6 }} />
-          </ScrollView>
-        </View>
-      </View>
-    </Modal>
   );
 }
 
@@ -405,7 +359,4 @@ const st = StyleSheet.create({
   },
   row: { flexDirection: 'row', gap: 9, marginTop: 6 },
   plan: { flexDirection: 'row', alignItems: 'center', gap: 10, borderTopWidth: 1, paddingTop: 10, marginTop: 6 },
-  scrim: { flex: 1, justifyContent: 'flex-end' },
-  sheet: { borderTopLeftRadius: 22, borderTopRightRadius: 22, borderWidth: 1, maxHeight: '88%' },
-  docPad: { padding: 20, gap: 12, paddingBottom: 34 },
 });
