@@ -3,7 +3,7 @@
     "name": "調律ノート",
     "slug": "choritsu-note",
     "scheme": "choritsunote",
-    "version": "0.4.1",
+    "version": "0.4.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -52,7 +52,9 @@
       "supportsTablet": false,
       "bundleIdentifier": "jp.izumikawa.choritsunote",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDevelopmentRegion": "ja",
+        "CFBundleLocalizations": ["ja"]
       },
       "usesAppleSignIn": true,
       "googleServicesFile": "./GoogleService-Info.plist"
